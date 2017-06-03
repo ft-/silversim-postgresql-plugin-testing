@@ -59,6 +59,7 @@ namespace SilverSim.Database.PostgreSQL
         #region Connection String Creator
         public static string BuildConnectionString(IConfig config, ILog log)
         {
+            NpgsqlConnectionStringBuilder sb = new NpgsqlConnectionStringBuilder();
             if (!(config.Contains("Username") && config.Contains("Password") && config.Contains("Database")))
             {
                 string configName = config.Name;
@@ -76,30 +77,42 @@ namespace SilverSim.Database.PostgreSQL
                 }
                 throw new ConfigurationLoader.ConfigurationErrorException();
             }
-            var connectionString = new StringBuilder();
+
             if (config.Contains("SslMode"))
             {
-                connectionString.AppendFormat("SSL Mode={0};", config.GetString("SslMode"));
+                switch(config.GetString("SslMode").ToLower())
+                {
+                    case "disable":
+                        sb.SslMode = SslMode.Disable;
+                        break;
+
+                    case "prefer":
+                        sb.SslMode = SslMode.Prefer;
+                        break;
+
+                    case "require":
+                        sb.SslMode = SslMode.Require;
+                        break;
+                }
             }
 
-            connectionString.AppendFormat("Host={0};", config.GetString("Server", "localhost"));
+            sb.Host = config.GetString("Server", "localhost");
 
-            connectionString.AppendFormat("Username={0};Password={1};Database={2};",
-                config.GetString("Username"),
-                config.GetString("Password"),
-                config.GetString("Database"));
+            sb.Username = config.GetString("Username");
+            sb.Password = config.GetString("Password");
+            sb.Database = config.GetString("Database");
 
             if(config.Contains("Port"))
             {
-                connectionString.AppendFormat("Port={0};", config.GetString("Port"));
+                sb.Port = config.GetInt("Port");
             }
 
             if(config.Contains("MaximumPoolsize"))
             {
-                connectionString.AppendFormat("Maximum Pool Size={0};", config.GetString("MaximumPoolsize"));
+                sb.MaxPoolSize = config.GetInt("MaximumPoolsize");
             }
 
-            return connectionString.ToString();
+            return sb.ToString();
         }
         #endregion
 
@@ -850,10 +863,10 @@ namespace SilverSim.Database.PostgreSQL
             using(var cmd = new NpgsqlCommand("SELECT description FROM pg_description " +
                         "JOIN pg_class ON pg_description.objoid = pg_class.oid " +
                         "JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid " +
-                        "WHERE relname = ?name AND nspname=?dbname", connection))
+                        "WHERE relname = @name AND nspname=@dbname", connection))
             {
-                cmd.Parameters.AddWithValue("?name", name);
-                cmd.Parameters.AddWithValue("?dbname", connection.Database);
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@dbname", connection.Database);
                 using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                 {
                     if (dbReader.Read())
