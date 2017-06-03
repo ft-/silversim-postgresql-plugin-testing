@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package>
+	<name>Npgsql</name>
+	<license>PostgreSQL License</license>
+	<files>
+		<file name="bin/Npgsql.dll"/>
+		<file name="bin/Npgsql.xml"/>
+	</files>
+</package>
