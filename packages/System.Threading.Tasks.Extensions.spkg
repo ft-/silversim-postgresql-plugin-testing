@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<package>
+	<name>System.Threading.Tasks.Extensions</name>
+	<files>
+		<file name="bin/System.Threading.Tasks.Extensions.dll"/>
+		<file name="bin/System.Threading.Tasks.Extensions.xml"/>
+	</files>
+</package>
