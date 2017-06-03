@@ -420,7 +420,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
                 {
                     def = Convert.ChangeType(def, f.GetEnumUnderlyingType());
                 }
-                result.Add(colInfo.Name, string.Format("{0} {1} DEFAULT '{2}'",
+                result.Add(colInfo.Name, string.Format("{0} {1} DEFAULT {2}",
                     typeSql,
                     notNull,
                     def.ToString().ToNpgsqlQuoted()));

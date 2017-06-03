@@ -262,7 +262,11 @@ namespace SilverSim.Database.PostgreSQL
             {
                 mysqlparam.AddWithValue(key, (bool)value ? 1 : 0);
             }
-            else if (t == typeof(UUID) || t == typeof(UUI) || t == typeof(UGI) || t == typeof(Uri))
+            else if (t == typeof(UUID))
+            {
+                mysqlparam.AddWithValue(key, value.ToString());
+            }
+            else if (t == typeof(UUI) || t == typeof(UGI) || t == typeof(Uri))
             {
                 mysqlparam.AddWithValue(key, value.ToString());
             }
@@ -526,7 +530,7 @@ namespace SilverSim.Database.PostgreSQL
                 }
                 else if (t == typeof(UUID) || t == typeof(UUI) || t == typeof(UGI) || t == typeof(Uri) || t == typeof(string))
                 {
-                    resvals.Add("'" + value.ToString().ToNpgsqlQuoted() + "'");
+                    resvals.Add(value.ToString().ToNpgsqlQuoted());
                 }
                 else if (t == typeof(AnArray))
                 {
