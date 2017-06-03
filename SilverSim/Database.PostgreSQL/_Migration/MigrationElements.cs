@@ -145,7 +145,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             if (f == typeof(string))
             {
                 typeSql = (colInfo.Cardinality == 0) ?
-                    (colInfo.IsLong ? "LONGTEXT" : "TEXT") :
+                    "text" :
                     (colInfo.IsFixed ? "CHAR" : "VARCHAR") + "(" + colInfo.Cardinality.ToString() + ")";
             }
             else if (f == typeof(UUI) || f == typeof(UGI))
@@ -154,30 +154,30 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(UUID))
             {
-                typeSql = "CHAR(36)";
+                typeSql = "uuid";
             }
             else if (f == typeof(double))
             {
-                typeSql = "DOUBLE";
+                typeSql = "float8";
             }
             else if(f.IsEnum)
             {
                 Type enumType = f.GetEnumUnderlyingType();
                 if (enumType == typeof(ulong))
                 {
-                    typeSql = "BIGINT UNSIGNED";
+                    typeSql = "int8 UNSIGNED";
                 }
                 else if (enumType == typeof(long))
                 {
-                    typeSql = "BIGINT";
+                    typeSql = "int8";
                 }
                 else if (enumType == typeof(byte) || enumType == typeof(ushort) || enumType == typeof(uint))
                 {
-                    typeSql = "INT UNSIGNED";
+                    typeSql = "int4 UNSIGNED";
                 }
                 else
                 {
-                    typeSql = "INT";
+                    typeSql = "int4";
                 }
             }
             else if (f == typeof(int))
@@ -186,19 +186,19 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(uint))
             {
-                typeSql = "INT UNSIGNED";
+                typeSql = "INT4 UNSIGNED";
             }
             else if (f == typeof(bool))
             {
-                typeSql = "INT(1) UNSIGNED";
+                typeSql = "bool UNSIGNED";
             }
             else if (f == typeof(long))
             {
-                typeSql = "BIGINT";
+                typeSql = "int8";
             }
             else if (f == typeof(ulong) || f == typeof(Date))
             {
-                typeSql = "BIGINT UNSIGNED";
+                typeSql = "int8 UNSIGNED";
             }
             else if (f == typeof(Vector3))
             {
@@ -210,15 +210,15 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (Vector3)colInfo.Default;
-                    result.Add(colInfo.Name + "X", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.X));
-                    result.Add(colInfo.Name + "Y", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Y));
-                    result.Add(colInfo.Name + "Z", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Z));
+                    result.Add(colInfo.Name + "X", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.X));
+                    result.Add(colInfo.Name + "Y", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Y));
+                    result.Add(colInfo.Name + "Z", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Z));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "X", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Y", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Z", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "X", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Y", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Z", "float8 " + notNull);
                 }
                 return result;
             }
@@ -232,13 +232,13 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (GridVector)colInfo.Default;
-                    result.Add(colInfo.Name + "X", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.X));
-                    result.Add(colInfo.Name + "Y", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Y));
+                    result.Add(colInfo.Name + "X", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.X));
+                    result.Add(colInfo.Name + "Y", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Y));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "X", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Y", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "X", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Y", "float8 " + notNull);
                 }
                 return result;
             }
@@ -252,17 +252,17 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (Vector4)colInfo.Default;
-                    result.Add(colInfo.Name + "X", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.X));
-                    result.Add(colInfo.Name + "Y", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Y));
-                    result.Add(colInfo.Name + "Z", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Z));
-                    result.Add(colInfo.Name + "W", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.W));
+                    result.Add(colInfo.Name + "X", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.X));
+                    result.Add(colInfo.Name + "Y", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Y));
+                    result.Add(colInfo.Name + "Z", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Z));
+                    result.Add(colInfo.Name + "W", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.W));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "X", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Y", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Z", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "W", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "X", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Y", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Z", "float8 " + notNull);
+                    result.Add(colInfo.Name + "W", "float8 " + notNull);
                 }
                 return result;
             }
@@ -276,17 +276,17 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (Quaternion)colInfo.Default;
-                    result.Add(colInfo.Name + "X", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.X));
-                    result.Add(colInfo.Name + "Y", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Y));
-                    result.Add(colInfo.Name + "Z", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Z));
-                    result.Add(colInfo.Name + "W", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.W));
+                    result.Add(colInfo.Name + "X", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.X));
+                    result.Add(colInfo.Name + "Y", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Y));
+                    result.Add(colInfo.Name + "Z", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Z));
+                    result.Add(colInfo.Name + "W", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.W));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "X", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Y", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Z", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "W", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "X", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Y", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Z", "float8 " + notNull);
+                    result.Add(colInfo.Name + "W", "float8 " + notNull);
                 }
                 return result;
             }
@@ -300,13 +300,13 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (EnvironmentController.WLVector2)colInfo.Default;
-                    result.Add(colInfo.Name + "X", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.X));
-                    result.Add(colInfo.Name + "Y", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Y));
+                    result.Add(colInfo.Name + "X", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.X));
+                    result.Add(colInfo.Name + "Y", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Y));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "X", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Y", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "X", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Y", "float8 " + notNull);
                 }
                 return result;
             }
@@ -320,17 +320,17 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (EnvironmentController.WLVector4)colInfo.Default;
-                    result.Add(colInfo.Name + "Red", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.X));
-                    result.Add(colInfo.Name + "Green", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Y));
-                    result.Add(colInfo.Name + "Blue", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.Z));
-                    result.Add(colInfo.Name + "Value", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.W));
+                    result.Add(colInfo.Name + "Red", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.X));
+                    result.Add(colInfo.Name + "Green", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Y));
+                    result.Add(colInfo.Name + "Blue", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.Z));
+                    result.Add(colInfo.Name + "Value", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.W));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "Red", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Green", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Blue", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Value", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "Red", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Green", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Blue", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Value", "float8 " + notNull);
                 }
                 return result;
             }
@@ -344,15 +344,15 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (Color)colInfo.Default;
-                    result.Add(colInfo.Name + "Red", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.R));
-                    result.Add(colInfo.Name + "Green", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.G));
-                    result.Add(colInfo.Name + "Blue", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.B));
+                    result.Add(colInfo.Name + "Red", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.R));
+                    result.Add(colInfo.Name + "Green", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.G));
+                    result.Add(colInfo.Name + "Blue", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.B));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "Red", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Green", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Blue", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "Red", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Green", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Blue", "float8 " + notNull);
                 }
                 return result;
             }
@@ -366,17 +366,17 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var v = (ColorAlpha)colInfo.Default;
-                    result.Add(colInfo.Name + "Red", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.R));
-                    result.Add(colInfo.Name + "Green", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.G));
-                    result.Add(colInfo.Name + "Blue", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.B));
-                    result.Add(colInfo.Name + "Alpha", string.Format("DOUBLE {0} DEFAULT '{1}'", notNull, v.A));
+                    result.Add(colInfo.Name + "Red", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.R));
+                    result.Add(colInfo.Name + "Green", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.G));
+                    result.Add(colInfo.Name + "Blue", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.B));
+                    result.Add(colInfo.Name + "Alpha", string.Format("float8 {0} DEFAULT '{1}'", notNull, v.A));
                 }
                 else
                 {
-                    result.Add(colInfo.Name + "Red", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Green", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Blue", "DOUBLE " + notNull);
-                    result.Add(colInfo.Name + "Alpha", "DOUBLE " + notNull);
+                    result.Add(colInfo.Name + "Red", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Green", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Blue", "float8 " + notNull);
+                    result.Add(colInfo.Name + "Alpha", "float8 " + notNull);
                 }
                 return result;
             }
