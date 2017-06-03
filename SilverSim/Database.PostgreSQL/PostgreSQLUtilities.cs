@@ -264,7 +264,7 @@ namespace SilverSim.Database.PostgreSQL
             }
             else if (t == typeof(UUID))
             {
-                mysqlparam.AddWithValue(key, value.ToString());
+                mysqlparam.AddWithValue(key, (Guid)(UUID)value);
             }
             else if (t == typeof(UUI) || t == typeof(UGI) || t == typeof(Uri))
             {
@@ -298,7 +298,7 @@ namespace SilverSim.Database.PostgreSQL
             {
                 if (kvp.Value != null)
                 {
-                    AddParameter(mysqlparam, "?v_" + kvp.Key, kvp.Value);
+                    AddParameter(mysqlparam, "@v_" + kvp.Key, kvp.Value);
                 }
             }
         }
@@ -363,12 +363,13 @@ namespace SilverSim.Database.PostgreSQL
                 }
             }
 
+            var cb = new NpgsqlCommandBuilder();
             var q1 = new StringBuilder();
             var q2 = new StringBuilder();
             q1.Append(cmd);
-            q1.Append(" INTO `");
-            q1.Append(tablename);
-            q1.Append("` (");
+            q1.Append(" INTO ");
+            q1.Append(cb.QuoteIdentifier(tablename));
+            q1.Append(" (");
             q2.Append(") VALUES (");
             bool first = true;
             foreach(string p in q)
@@ -379,10 +380,8 @@ namespace SilverSim.Database.PostgreSQL
                     q2.Append(",");
                 }
                 first = false;
-                q1.Append("`");
-                q1.Append(p);
-                q1.Append("`");
-                q2.Append("?v_");
+                q1.Append(cb.QuoteIdentifier(p));
+                q2.Append("@v_");
                 q2.Append(p);
             }
             q1.Append(q2);
@@ -867,10 +866,9 @@ namespace SilverSim.Database.PostgreSQL
             using(var cmd = new NpgsqlCommand("SELECT description FROM pg_description " +
                         "JOIN pg_class ON pg_description.objoid = pg_class.oid " +
                         "JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid " +
-                        "WHERE relname = @name AND nspname=@dbname", connection))
+                        "WHERE relname = @name", connection))
             {
                 cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@dbname", connection.Database);
                 using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                 {
                     if (dbReader.Read())
