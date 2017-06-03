@@ -35,11 +35,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
     public class SqlTable : IMigrationElement
     {
         public string Name { get; }
-        public bool IsDynamicRowFormat { get; set; }
         
         public SqlTable(string name)
         {
-            IsDynamicRowFormat = false;
             Name = name;
         }
 
@@ -387,8 +385,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
                 }
                 else
                 {
-                    typeSql = colInfo.IsLong ? "LONGBLOB" : "BLOB";
-                    notNull = string.Empty;
+                    typeSql = "BYTEA";
                 }
             }
             else

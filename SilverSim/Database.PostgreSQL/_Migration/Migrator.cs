@@ -75,10 +75,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
             string cmd = "CREATE TABLE " + escapedTableName + " (";
             cmd += string.Join(",", fieldSqls);
             cmd += ")";
-            if(table.IsDynamicRowFormat)
-            {
-                cmd += " ROW_FORMAT=DYNAMIC";
-            }
             cmd += "; COMMENT ON TABLE " + escapedTableName + " IS '" + tableRevision.ToString() + "';";
             ExecuteStatement(conn, cmd, log);
         }
