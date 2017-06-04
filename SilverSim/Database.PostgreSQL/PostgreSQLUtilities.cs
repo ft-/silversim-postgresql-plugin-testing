@@ -32,11 +32,17 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Data;
 
 namespace SilverSim.Database.PostgreSQL
 {
     public static class PostgreSQLUtilities
     {
+        public static bool HasOnConflict(this NpgsqlConnection conn)
+        {
+            Version version = conn.PostgreSqlVersion;
+            return version.Major > 9 || (version.Major == 9 && version.Minor >= 5);
+        }
 
         public static string ToNpgsqlQuoted(this string unquoted)
         {
@@ -190,7 +196,12 @@ namespace SilverSim.Database.PostgreSQL
         #region Transaction Helper
         public static void InsideTransaction(this NpgsqlConnection connection, Action del)
         {
-            NpgsqlTransaction transaction = connection.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            InsideTransaction(connection, IsolationLevel.Serializable, del);
+        }
+
+        public static void InsideTransaction(this NpgsqlConnection connection, IsolationLevel level, Action del)
+        {
+            NpgsqlTransaction transaction = connection.BeginTransaction(level);
             try
             {
                 del();

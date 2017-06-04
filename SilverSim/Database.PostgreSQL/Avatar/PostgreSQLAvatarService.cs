@@ -40,11 +40,13 @@ namespace SilverSim.Database.PostgreSQL.Avatar
     public sealed class PostgreSQLAvatarService : AvatarServiceInterface, IDBServiceInterface, IPlugin, IUserAccountDeleteServiceInterface
     {
         private readonly string m_ConnectionString;
+        private readonly bool m_EnableOnConflict;
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL AVATAR SERVICE");
 
         public PostgreSQLAvatarService(IConfig ownSection)
         {
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
+            m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
         }
 
         public void Startup(ConfigurationLoader loader)
@@ -212,14 +214,24 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    ReplaceInto(connection, avatarID, itemKey, value);
+                    connection.InsideTransaction(() => ReplaceInto(connection, avatarID, itemKey, value));
                 }
             }
         }
 
-        private static void ReplaceInto(NpgsqlConnection conn, UUID avatarID, string itemKey, string value)
+        private void ReplaceInto(NpgsqlConnection conn, UUID avatarID, string itemKey, string value)
         {
-            using (var cmd = new NpgsqlCommand("INSERT INTO avatars (\"PrincipalID\", \"Name\", \"Value\") VALUES (@principalid, @name, @value) ON CONFLICT (\"PrincipalID\", \"Name\") DO UPDATE SET \"Value\"=@value", conn))
+            string cmdstring;
+            if (conn.HasOnConflict() && m_EnableOnConflict)
+            {
+                cmdstring = "INSERT INTO avatars (\"PrincipalID\", \"Name\", \"Value\") VALUES (@principalid, @name, @value) ON CONFLICT (\"PrincipalID\", \"Name\") DO UPDATE SET \"Value\"=@value";
+            }
+            else
+            {
+                cmdstring = "UPDATE avatars SET \"Value\"=@value WHERE \"PrincipalID\"=@principalid AND \"Name\"=@value;";
+                cmdstring += "INSERT INTO avatars (\"PrincipalID\", \"Name\", \"Value\") SELECT @principalid, @name, @value WHERE NOT EXISTS (SELECT 1 FROM avatars WHERE \"PrincipalID\"=@principalid AND \"Name\"=@name);";
+            }
+            using (var cmd = new NpgsqlCommand(cmdstring, conn))
             {
                 cmd.Parameters.AddParameter("@principalid", avatarID);
                 cmd.Parameters.AddParameter("@Name", itemKey);

@@ -40,6 +40,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
     {
         private readonly string m_ConnectionString;
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL SERVER PARAM SERVICE");
+        private readonly bool m_EnableOnConflict;
 
         #region Cache
         private readonly RwLockedDictionaryAutoAdd<UUID, RwLockedDictionary<string, string>> m_Cache = new RwLockedDictionaryAutoAdd<UUID, RwLockedDictionary<string, string>>(() => new RwLockedDictionary<string, string>());
@@ -49,6 +50,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
         public PostgreSQLServerParamService(IConfig ownSection)
         {
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
+            m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
         }
 
         public void Startup(ConfigurationLoader loader)
@@ -240,23 +242,38 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    connection.InsideTransaction(() =>
+                    if (connection.HasOnConflict() && m_EnableOnConflict)
                     {
-                        var param = new Dictionary<string, object>
-                        {
-                            ["regionid"] = (Guid)regionID,
-                            ["parametername"] = parameter,
-                            ["parametervalue"] = value
-                        };
-                        using (NpgsqlCommand cmd = new NpgsqlCommand("DELETE FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
+                        using (NpgsqlCommand cmd = new NpgsqlCommand("INSERT INTO serverparams (regionid, parametername, parametervalue) VALUES (@regionid, @parametername, @parametervalue) ON CONFLICT (regionid, parametername) DO UPDATE SET parametervalue=@parametervalue", connection))
                         {
                             cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
                             cmd.Parameters.AddParameter("@parametername", parameter);
-                            cmd.ExecuteNonQuery();
+                            cmd.Parameters.AddParameter("@parametervalue", value);
+                            if(cmd.ExecuteNonQuery() < 1)
+                            {
+                                throw new PostgreSQLUtilities.PostgreSQLInsertException();
+                            }
                         }
-                        connection.InsertInto("serverparams", param);
-                        m_Cache[regionID][parameter] = value;
-                    });
+                    }
+                    else
+                    {
+                        connection.InsideTransaction(() =>
+                        {
+                            string cmdstring = "UPDATE serverparams SET parametervalue = @value WHERE regionid = @regionid AND parametername = @parametername;";
+                            cmdstring += "INSERT INTO serverparms (regionid, parametername, parametervalue) SELECT @regionid, @parametername, @parametervalue WHERE NOT EXISTS (SELECT 1 FROM serverparams WHERE regionid = @regionid AND parametername = @parametername);";
+                            using (NpgsqlCommand cmd = new NpgsqlCommand(cmdstring, connection))
+                            {
+                                cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
+                                cmd.Parameters.AddParameter("@parametername", parameter);
+                                cmd.Parameters.AddParameter("@parametervalue", value);
+                                if (cmd.ExecuteNonQuery() < 1)
+                                {
+                                    throw new PostgreSQLUtilities.PostgreSQLInsertException();
+                                }
+                            }
+                        });
+                    }
+                    m_Cache[regionID][parameter] = value;
                 }
             }
         }
@@ -269,19 +286,16 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    connection.InsideTransaction(() =>
+                    using (var cmd = new NpgsqlCommand("SELECT regionid, parametername FROM serverparams", connection))
                     {
-                        using (var cmd = new NpgsqlCommand("SELECT regionid, parametername FROM serverparams", connection))
+                        using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
-                            using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                            while (dbReader.Read())
                             {
-                                while (dbReader.Read())
-                                {
-                                    result.Add(new KeyValuePair<UUID, string>(dbReader.GetUUID("regionid"), (string)dbReader["parametername"]));
-                                }
+                                result.Add(new KeyValuePair<UUID, string>(dbReader.GetUUID("regionid"), (string)dbReader["parametername"]));
                             }
                         }
-                    });
+                    }
                 }
                 return result;
             }
@@ -293,19 +307,16 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.InsideTransaction(() =>
+                using (var cmd = new NpgsqlCommand("DELETE FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
+                    cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
+                    cmd.Parameters.AddParameter("@parametername", parameter);
+                    if (cmd.ExecuteNonQuery() >= 1)
                     {
-                        cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
-                        cmd.Parameters.AddParameter("@parametername", parameter);
-                        if (cmd.ExecuteNonQuery() >= 1)
-                        {
-                            result = true;
-                        }
+                        result = true;
                     }
-                    m_Cache[regionID].Remove(parameter);
-                });
+                }
+                m_Cache[regionID].Remove(parameter);
             }
 
             return result;

@@ -143,16 +143,38 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                 {
                     connection.Open();
 
-                    using (var cmd = new NpgsqlCommand("INSERT INTO avatarnames (AvatarID, HomeURI, FirstName, LastName) VALUES (@avatarid, @homeuri, @firstname, @lastname) ON CONFLICT (AvatarID) UPDATE HomeURI=@homeuri, FirstName=@firstname,LastName=@lastname", connection))
+                    if(connection.HasOnConflict())
                     {
-                        cmd.Parameters.AddParameter("@avatarid", (Guid)value.ID);
-                        cmd.Parameters.AddParameter("@homeuri",value.HomeURI);
-                        cmd.Parameters.AddParameter("@firstname", value.FirstName);
-                        cmd.Parameters.AddParameter("@lastname", value.LastName);
-                        if (cmd.ExecuteNonQuery() < 1)
+                        using (var cmd = new NpgsqlCommand("INSERT INTO avatarnames (\"AvatarID\", \"HomeURI\", \"FirstName\", \"LastName\") VALUES (@avatarid, @homeuri, @firstname, @lastname) ON CONFLICT (AvatarID) DO UPDATE SET \"HomeURI\"=@homeuri, \"FirstName\"=@firstname,\"LastName\"=@lastname", connection))
                         {
-                            throw new PostgreSQLInsertException();
+                            cmd.Parameters.AddParameter("@avatarid", (Guid)value.ID);
+                            cmd.Parameters.AddParameter("@homeuri", value.HomeURI);
+                            cmd.Parameters.AddParameter("@firstname", value.FirstName);
+                            cmd.Parameters.AddParameter("@lastname", value.LastName);
+                            if (cmd.ExecuteNonQuery() < 1)
+                            {
+                                throw new PostgreSQLInsertException();
+                            }
                         }
+                    }
+                    else
+                    {
+                        string cmdstring = "UPDATE avatarnames SET \"HomeURI\"=@homeuri, \"FirstName\"=@firstname,\"LastName\"=@lastname WHERE \"AvatarID\" = @avatarid;";
+                        cmdstring += "INSERT INTO avatarnames (\"AvatarID\", \"HomeURI\", \"FirstName\", \"LastName\") SELECT @avatarid, @homeuri, @firstname, @lastname WHERE NOT EXISTS (SELECT 1 FROM avatarnames WHERE \"AvatarID\"=@avatarid);";
+                        connection.InsideTransaction(() =>
+                        {
+                            using (var cmd = new NpgsqlCommand(cmdstring, connection))
+                            {
+                                cmd.Parameters.AddParameter("@avatarid", (Guid)value.ID);
+                                cmd.Parameters.AddParameter("@homeuri", value.HomeURI);
+                                cmd.Parameters.AddParameter("@firstname", value.FirstName);
+                                cmd.Parameters.AddParameter("@lastname", value.LastName);
+                                if (cmd.ExecuteNonQuery() < 1)
+                                {
+                                    throw new PostgreSQLInsertException();
+                                }
+                            }
+                        });
                     }
                 }
             }
@@ -164,7 +186,7 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("DELETE FROM avatarnames WHERE AvatarID = @id", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM avatarnames WHERE \"AvatarID\" = @id", connection))
                 {
                     cmd.Parameters.AddParameter("@id", key);
                     return cmd.ExecuteNonQuery() == 1;
