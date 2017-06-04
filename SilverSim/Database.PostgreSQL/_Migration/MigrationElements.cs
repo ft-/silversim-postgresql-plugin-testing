@@ -161,45 +161,41 @@ namespace SilverSim.Database.PostgreSQL._Migration
             {
                 typeSql = "float8";
             }
-            else if(f.IsEnum)
+            else if (f.IsEnum)
             {
                 Type enumType = f.GetEnumUnderlyingType();
-                if (enumType == typeof(ulong))
-                {
-                    typeSql = "bigint UNSIGNED";
-                }
-                else if (enumType == typeof(long))
+                if (enumType == typeof(ulong) || enumType == typeof(long))
                 {
                     typeSql = "bigint";
                 }
-                else if (enumType == typeof(byte) || enumType == typeof(ushort) || enumType == typeof(uint))
+                else if (enumType == typeof(byte) || enumType == typeof(ushort) || enumType == typeof(sbyte) || enumType == typeof(short))
                 {
-                    typeSql = "integer UNSIGNED";
+                    typeSql = "smallint";
+                }
+                else if (enumType == typeof(uint))
+                {
+                    typeSql = "integer";
                 }
                 else
                 {
                     typeSql = "integer";
                 }
             }
-            else if (f == typeof(int))
+            else if (f == typeof(int) || f == typeof(uint))
             {
                 typeSql = "integer";
             }
-            else if (f == typeof(uint))
+            else if (f == typeof(short) || f == typeof(ushort) || f == typeof(byte) || f == typeof(sbyte))
             {
-                typeSql = "integer unsigned";
+                typeSql = "smallint";
             }
             else if (f == typeof(bool))
             {
                 typeSql = "bool";
             }
-            else if (f == typeof(long))
+            else if (f == typeof(long) || f == typeof(ulong) || f == typeof(Date))
             {
                 typeSql = "bigint";
-            }
-            else if (f == typeof(ulong) || f == typeof(Date))
-            {
-                typeSql = "bigint unsigned";
             }
             else if (f == typeof(Vector3))
             {
@@ -383,18 +379,11 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(byte[]))
             {
-                if(colInfo.Cardinality > 0)
-                {
-                    typeSql = (colInfo.IsFixed ? "BINARY" : "VARBINARY") + "(" + colInfo.Cardinality.ToString() + ")";
-                }
-                else
-                {
-                    typeSql = "BYTEA";
-                }
+                typeSql = "BYTEA";
             }
             else
             {
-                throw new ArgumentOutOfRangeException("FieldType " + f.FullName +  " is not supported in field " + colInfo.Name);
+                throw new ArgumentOutOfRangeException("FieldType " + f.FullName + " is not supported in field " + colInfo.Name);
             }
 
             if (colInfo.Default != null && !colInfo.IsNullAllowed)

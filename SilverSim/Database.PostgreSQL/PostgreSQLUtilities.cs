@@ -271,7 +271,7 @@ namespace SilverSim.Database.PostgreSQL
             }
             else if (t == typeof(bool))
             {
-                mysqlparam.AddWithValue(key, (bool)value ? 1 : 0);
+                mysqlparam.AddWithValue(key, (bool)value);
             }
             else if (t == typeof(UUID))
             {
@@ -291,11 +291,45 @@ namespace SilverSim.Database.PostgreSQL
             }
             else if (t == typeof(Date))
             {
-                mysqlparam.AddWithValue(key, ((Date)value).AsULong);
+                mysqlparam.AddWithValue(key, ((Date)value).AsLong);
+            }
+            else if(t == typeof(ulong))
+            {
+                mysqlparam.AddWithValue(key, (long)(ulong)value);
+            }
+            else if (t == typeof(uint))
+            {
+                mysqlparam.AddWithValue(key, (int)(uint)value);
+            }
+            else if (t == typeof(ushort))
+            {
+                mysqlparam.AddWithValue(key, (short)(ushort)value);
+            }
+            else if (t == typeof(byte))
+            {
+                mysqlparam.AddWithValue(key, (short)(byte)value);
+            }
+            else if (t == typeof(byte))
+            {
+                mysqlparam.AddWithValue(key, (short)(byte)value);
             }
             else if (t.IsEnum)
             {
-                mysqlparam.AddWithValue(key, Convert.ChangeType(value, t.GetEnumUnderlyingType()));
+                Type utype = t.GetEnumUnderlyingType();
+                if(utype == typeof(byte) || utype == typeof(sbyte) || utype == typeof(ushort))
+                {
+                    utype = typeof(short);
+                }
+                else if(utype == typeof(uint))
+                {
+                    utype = typeof(int);
+                }
+                else if (utype == typeof(ulong))
+                {
+                    utype = typeof(long);
+                }
+
+                mysqlparam.AddWithValue(key, Convert.ChangeType(value, utype));
             }
             else
             {
@@ -798,32 +832,6 @@ namespace SilverSim.Database.PostgreSQL
                 (double)dbReader[prefix + "Green"],
                 (double)dbReader[prefix + "Blue"],
                 (double)dbReader[prefix + "Alpha"]);
-
-        public static bool GetBool(this NpgsqlDataReader dbReader, string prefix)
-        {
-            object o = dbReader[prefix];
-            var t = o?.GetType();
-            if(t == typeof(uint))
-            {
-                return (uint)o != 0;
-            }
-            else if(t == typeof(int))
-            {
-                return (int)o != 0;
-            }
-            else if(t == typeof(sbyte))
-            {
-                return (sbyte)o != 0;
-            }
-            else if (t == typeof(byte))
-            {
-                return (byte)o != 0;
-            }
-            else
-            {
-                throw new InvalidCastException("GetBoolean could not convert value for " + prefix + ": got type " + o.GetType().FullName);
-            }
-        }
 
         public static byte[] GetBytes(this NpgsqlDataReader dbReader, string prefix)
         {
