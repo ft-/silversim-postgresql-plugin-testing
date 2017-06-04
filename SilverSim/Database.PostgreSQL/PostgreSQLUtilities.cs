@@ -45,6 +45,23 @@ namespace SilverSim.Database.PostgreSQL
             return version.Major > 9 || (version.Major == 9 && version.Minor >= 5);
         }
 
+        public static string ToNpgsqlQuotedWithoutQuotes(this string unquoted)
+        {
+            StringBuilder b = new StringBuilder();
+            foreach (char c in unquoted)
+            {
+                if (c == '\'')
+                {
+                    b.Append("''");
+                }
+                else
+                {
+                    b.Append(c);
+                }
+            }
+            return b.ToString();
+        }
+
         public static string ToNpgsqlQuoted(this string unquoted)
         {
             StringBuilder b = new StringBuilder("'");
