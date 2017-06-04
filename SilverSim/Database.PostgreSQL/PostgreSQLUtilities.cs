@@ -39,7 +39,7 @@ namespace SilverSim.Database.PostgreSQL
 {
     public static class PostgreSQLUtilities
     {
-        private static bool HasOnConflict(this NpgsqlConnection conn)
+        public static bool HasOnConflict(this NpgsqlConnection conn)
         {
             Version version = conn.PostgreSqlVersion;
             return version.Major > 9 || (version.Major == 9 && version.Minor >= 5);

@@ -26,10 +26,8 @@ using SilverSim.Types;
 using SilverSim.Viewer.Messages.LayerData;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SilverSim.Database.PostgreSQL.SimulationData
 {
@@ -38,14 +36,16 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         readonly RwLockedList<PostgreSQLTerrainListener> m_TerrainListenerThreads = new RwLockedList<PostgreSQLTerrainListener>();
         public class PostgreSQLTerrainListener : TerrainListener
         {
-            readonly RwLockedList<PostgreSQLTerrainListener> m_TerrainListenerThreads;
-            readonly string m_ConnectionString;
+            private readonly RwLockedList<PostgreSQLTerrainListener> m_TerrainListenerThreads;
+            private readonly string m_ConnectionString;
+            private readonly bool m_EnableOnConflict;
 
-            public PostgreSQLTerrainListener(string connectionString, UUID regionID, RwLockedList<PostgreSQLTerrainListener> terrainListenerThreads)
+            public PostgreSQLTerrainListener(string connectionString, UUID regionID, RwLockedList<PostgreSQLTerrainListener> terrainListenerThreads, bool enableOnConflict)
             {
                 m_ConnectionString = connectionString;
                 RegionID = regionID;
                 m_TerrainListenerThreads = terrainListenerThreads;
+                m_EnableOnConflict = enableOnConflict;
             }
 
             public UUID RegionID { get; }
@@ -56,7 +56,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 return new QueueStat(count != 0 ? "PROCESSING" : "IDLE", count, (uint)m_ProcessedPatches);
             }
 
-            int m_ProcessedPatches;
+            private int m_ProcessedPatches;
 
             protected override void StorageTerrainThread()
             {
@@ -66,8 +66,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     Thread.CurrentThread.Name = "Storage Terrain Thread: " + RegionID.ToString();
 
                     var knownSerialNumbers = new C5.TreeDictionary<uint, uint>();
-                    string replaceIntoTerrain = string.Empty;
-                    var updateRequests = new List<string>();
+                    Dictionary<string, object> updateRequestData = new Dictionary<string, object>();
+                    int updateRequestCount = 0;
 
                     while (!m_StopStorageThread || m_StorageTerrainRequestQueue.Count != 0)
                     {
@@ -87,32 +87,50 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         {
                             var data = new Dictionary<string, object>
                             {
-                                ["RegionID"] = RegionID,
-                                ["PatchID"] = req.ExtendedPatchID,
-                                ["TerrainData"] = req.Serialization
+                                ["RegionID" + updateRequestCount] = RegionID,
+                                ["PatchID" + updateRequestCount] = req.ExtendedPatchID,
+                                ["TerrainData" + updateRequestCount] = req.Serialization
                             };
-                            if (replaceIntoTerrain.Length == 0)
-                            {
-                                replaceIntoTerrain = "REPLACE INTO terrains (" + PostgreSQLUtilities.GenerateFieldNames(data) + ") VALUES ";
-                            }
-                            updateRequests.Add("(" + PostgreSQLUtilities.GenerateValues(data) + ")");
+                            ++updateRequestCount;
                             knownSerialNumbers[req.ExtendedPatchID] = serialNumber;
                         }
 
-                        if ((m_StorageTerrainRequestQueue.Count == 0 && updateRequests.Count > 0) || updateRequests.Count >= 256)
+                        if ((m_StorageTerrainRequestQueue.Count == 0 && updateRequestCount > 0) || updateRequestCount >= 256)
                         {
-                            string elems = string.Join(",", updateRequests);
+                            StringBuilder updateCmd = new StringBuilder();
                             try
                             {
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
+                                using (NpgsqlConnection conn = new NpgsqlConnection(m_ConnectionString))
                                 {
                                     conn.Open();
-                                    using (var cmd = new NpgsqlCommand(replaceIntoTerrain + elems, conn))
+                                    if (conn.HasOnConflict() && m_EnableOnConflict)
                                     {
+                                        for (int i = 0; i < updateRequestCount; ++i)
+                                        {
+                                            updateCmd.AppendFormat("INSERT INTO terrains (\"RegionID\", \"PatchID\", \"TerrainData\") VALUES (@regionid, @patchid{0}, @terraindata{0}) ON CONFLICT(\"RegionID\", \"PatchID\") DO UPDATE SET \"TerrainData\"= @terraindata{0};", i);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < updateRequestCount; ++i)
+                                        {
+                                            updateCmd.AppendFormat("UPDATE terrains SET \"TerrainData\"=@terraindata{0} WHERE \"RegionID\" = @regionid AND \"PatchID\" = @patchid{0};", i);
+                                            updateCmd.AppendFormat("INSERT INTO terrains (\"RegionID\", \"PatchID\", \"TerrainData\") SELECT @regionid, @patchid{0}, @terraindata{0} WHERE NOT EXISTS " +
+                                                    "(SELECT 1 FROM terrains WHERE \"RegionID\" = @regionid AND \"PatchID\" = @patchid{0});", i);
+                                        }
+                                    }
+                                    using (NpgsqlCommand cmd = new NpgsqlCommand(updateCmd.ToString(), conn))
+                                    {
+                                        cmd.Parameters.AddParameter("@regionid", RegionID);
+                                        foreach (KeyValuePair<string, object> kvp in updateRequestData)
+                                        {
+                                            cmd.Parameters.AddParameter(kvp.Key, kvp.Value);
+                                        }
                                         cmd.ExecuteNonQuery();
                                     }
                                 }
-                                updateRequests.Clear();
+                                updateRequestData.Clear();
+                                updateRequestCount = 0;
                                 Interlocked.Increment(ref m_ProcessedPatches);
                             }
                             catch (Exception e)
@@ -130,6 +148,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         }
 
         public override TerrainListener GetTerrainListener(UUID regionID) =>
-            new PostgreSQLTerrainListener(m_ConnectionString, regionID, m_TerrainListenerThreads);
+            new PostgreSQLTerrainListener(m_ConnectionString, regionID, m_TerrainListenerThreads, m_EnableOnConflict);
     }
 }
