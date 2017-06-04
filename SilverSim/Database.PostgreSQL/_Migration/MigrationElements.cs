@@ -75,30 +75,34 @@ namespace SilverSim.Database.PostgreSQL._Migration
         public string Sql(string tableName) => "ALTER TABLE " + tableName + " DROP PRIMARY KEY;";
     }
 
-    public class UniqueKeyInfo : IMigrationElement
+    public class NamedKeyInfo : IMigrationElement
     {
+        public bool IsUnique { get; set; }
         public string Name { get; }
         public string[] FieldNames { get; }
 
-        public UniqueKeyInfo(string name, params string[] fieldNames)
+        public NamedKeyInfo(string name, params string[] fieldNames)
         {
             Name = name;
             FieldNames = fieldNames;
         }
 
-        public string FieldSql()
+        private string FieldSql()
         {
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
             var fieldNames = new List<string>();
-            foreach(string fName in FieldNames)
+            foreach (string fName in FieldNames)
             {
                 fieldNames.Add(b.QuoteIdentifier(fName));
             }
-            return "CONSTRAINT " + b.QuoteIdentifier(Name) + " UNIQE (" + string.Join(",", fieldNames) + ")";
+            return "(" + string.Join(",", fieldNames) + ")";
         }
 
-        public string Sql(string tableName) => "ALTER TABLE " + tableName + " CONSTRAINT " + FieldSql() + ";";
-
+        public string Sql(string tableName)
+        {
+            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+            return "CREATE " + (IsUnique ? " UNIQUE " : "") + b.QuoteIdentifier(tableName + "_" + Name) + " ON " + b.QuoteIdentifier(tableName) + " " + FieldSql() + ";";
+        }
     }
 
     public class DropNamedKeyInfo : IMigrationElement
@@ -110,7 +114,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             Name = name;
         }
 
-        public string Sql(string tableName) => "ALTER TABLE DROP CONSTRAINT " + new NpgsqlCommandBuilder().QuoteIdentifier(Name) + ";";
+        public string Sql(string tableName) => "DROP INDEX " + new NpgsqlCommandBuilder().QuoteIdentifier(tableName + "_" + Name) + ";";
     }
 
     #region Table fields

@@ -31,6 +31,7 @@ using SilverSim.Types;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using PostgreSQLInsertException = SilverSim.Database.PostgreSQL.PostgreSQLUtilities.PostgreSQLInsertException;
 
 namespace SilverSim.Database.PostgreSQL.Avatar
 {
@@ -81,7 +82,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     connection.Open();
                     if (value == null)
                     {
-                        using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid:uuid", connection))
+                        using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid", connection))
                         {
                             cmd.Parameters.AddParameter("@principalid", avatarID);
                             cmd.ExecuteNonQuery();
@@ -91,7 +92,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     {
                         connection.InsideTransaction(() =>
                         {
-                            using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid:uuid", connection))
+                            using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid", connection))
                             {
                                 cmd.Parameters.AddParameter("@principalid", avatarID);
                                 cmd.ExecuteNonQuery();
@@ -105,7 +106,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                             {
                                 vals["Name"] = kvp.Key;
                                 vals["Value"] = kvp.Value;
-                                connection.ReplaceInto("avatars", vals);
+                                connection.InsertInto("avatars", vals);
                             }
                         });
                     }
@@ -126,10 +127,10 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     {
                         foreach (string key in itemKeys)
                         {
-                            using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid:uuid AND \"Name\" = @name", connection))
+                            using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
                             {
-                                cmd.Parameters.AddWithValue("@principalid", avatarID.ToString());
-                                cmd.Parameters.AddWithValue("@name", key);
+                                cmd.Parameters.AddParameter("@principalid", avatarID);
+                                cmd.Parameters.AddParameter("@name", key);
                                 using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                                 {
                                     result.Add(dbReader.Read() ? (string)dbReader["Value"] : string.Empty);
@@ -160,17 +161,11 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 {
                     connection.Open();
 
-                    var vals = new Dictionary<string, object>
-                    {
-                        ["PrincipalID"] = avatarID
-                    };
                     connection.InsideTransaction(() =>
                     {
                         for (int i = 0; i < itemKeys.Count; ++i)
                         {
-                            vals["Name"] = itemKeys[i];
-                            vals["Value"] = value[i];
-                            connection.ReplaceInto("avatars", vals);
+                            ReplaceInto(connection, avatarID, itemKeys[i], value[i]);
                         }
                     });
                 }
@@ -182,10 +177,10 @@ namespace SilverSim.Database.PostgreSQL.Avatar
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid:uuid AND \"Name\" = @name", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
                 {
-                    cmd.Parameters.AddWithValue("@principalid", avatarID.ToString());
-                    cmd.Parameters.AddWithValue("@name", itemKey);
+                    cmd.Parameters.AddParameter("@principalid", avatarID);
+                    cmd.Parameters.AddParameter("@name", itemKey);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         if (dbReader.Read())
@@ -217,13 +212,21 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    var vals = new Dictionary<string, object>
-                    {
-                        ["PrincipalID"] = avatarID,
-                        ["Name"] = itemKey,
-                        ["Value"] = value
-                    };
-                    connection.ReplaceInto("avatars", vals);
+                    ReplaceInto(connection, avatarID, itemKey, value);
+                }
+            }
+        }
+
+        private static void ReplaceInto(NpgsqlConnection conn, UUID avatarID, string itemKey, string value)
+        {
+            using (var cmd = new NpgsqlCommand("INSERT INTO avatars (\"PrincipalID\", \"Name\", \"Value\") VALUES (@principalid, @name, @value) ON CONFLICT (\"PrincipalID\", \"Name\") DO UPDATE SET \"Value\"=@value", conn))
+            {
+                cmd.Parameters.AddParameter("@principalid", avatarID);
+                cmd.Parameters.AddParameter("@Name", itemKey);
+                cmd.Parameters.AddParameter("@Value", value);
+                if (cmd.ExecuteNonQuery() < 1)
+                {
+                    throw new PostgreSQLInsertException();
                 }
             }
         }
@@ -237,10 +240,10 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 {
                     foreach (string name in nameList)
                     {
-                        using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid:uuid AND \"Name\" = @name", connection))
+                        using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
                         {
-                            cmd.Parameters.AddWithValue("@principalid", avatarID);
-                            cmd.Parameters.AddWithValue("@name", name);
+                            cmd.Parameters.AddParameter("@principalid", avatarID);
+                            cmd.Parameters.AddParameter("@name", name);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -253,10 +256,10 @@ namespace SilverSim.Database.PostgreSQL.Avatar
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid:uuid AND \"Name\" = @name", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
                 {
-                    cmd.Parameters.AddWithValue("@principalid", avatarID);
-                    cmd.Parameters.AddWithValue("@name", name);
+                    cmd.Parameters.AddParameter("@principalid", avatarID);
+                    cmd.Parameters.AddParameter("@name", name);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -286,6 +289,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
             new AddColumn<string>("Name") { Cardinality = 32, IsNullAllowed = false, Default = string.Empty },
             new AddColumn<string>("Value"),
             new PrimaryKeyInfo("PrincipalID", "Name"),
+            new NamedKeyInfo("avatars_principalid", new string[] { "PrincipalID" })
         };
 
         public void Remove(UUID scopeID, UUID userAccount)

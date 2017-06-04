@@ -409,11 +409,6 @@ namespace SilverSim.Database.PostgreSQL.Asset
             new AddColumn<UUI>("CreatorID") { IsNullAllowed = false, Default = UUID.Zero },
             new AddColumn<byte[]>("data") { IsLong = true },
             new PrimaryKeyInfo("id"),
-            new TableRevision(2),
-            /* entries which are only used when table is found at revision 1 */
-            new ChangeColumn<bool>("temporary") { IsNullAllowed = false },
-            new ChangeColumn<AssetFlags>("asset_flags") { IsNullAllowed = false },
-            new ChangeColumn<UUI>("CreatorID") { IsNullAllowed = false, Default = UUID.Zero },
         };
         #endregion
 

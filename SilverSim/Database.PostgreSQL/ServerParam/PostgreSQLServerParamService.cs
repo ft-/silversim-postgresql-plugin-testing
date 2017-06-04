@@ -323,9 +323,8 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
             new AddColumn<string>("parametername") { Cardinality = 255, IsNullAllowed = false, Default = string.Empty },
             new AddColumn<string>("parametervalue"),
             new PrimaryKeyInfo("regionid", "parametername"),
-            //new TableRevision(2),
-            //new NamedKeyInfo("regionid", "regionid"),
-            //new NamedKeyInfo("parametername", "parametername")
+            new NamedKeyInfo("regionid", "regionid"),
+            new NamedKeyInfo("parametername", "parametername")
         };
 
         public ShutdownOrder ShutdownOrder => ShutdownOrder.LogoutDatabase;

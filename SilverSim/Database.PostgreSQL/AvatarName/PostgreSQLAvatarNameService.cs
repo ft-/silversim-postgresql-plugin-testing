@@ -27,8 +27,10 @@ using SilverSim.Main.Common;
 using SilverSim.ServiceInterfaces.AvatarName;
 using SilverSim.ServiceInterfaces.Database;
 using SilverSim.Types;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using PostgreSQLInsertException = SilverSim.Database.PostgreSQL.PostgreSQLUtilities.PostgreSQLInsertException;
 
 namespace SilverSim.Database.PostgreSQL.AvatarName
 {
@@ -141,7 +143,17 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                 {
                     connection.Open();
 
-                    connection.ReplaceInto("avatarnames", data);
+                    using (var cmd = new NpgsqlCommand("INSERT INTO avatarnames (AvatarID, HomeURI, FirstName, LastName) VALUES (@avatarid, @homeuri, @firstname, @lastname) ON CONFLICT (AvatarID) UPDATE HomeURI=@homeuri, FirstName=@firstname,LastName=@lastname", connection))
+                    {
+                        cmd.Parameters.AddParameter("@avatarid", (Guid)value.ID);
+                        cmd.Parameters.AddParameter("@homeuri",value.HomeURI);
+                        cmd.Parameters.AddParameter("@firstname", value.FirstName);
+                        cmd.Parameters.AddParameter("@lastname", value.LastName);
+                        if (cmd.ExecuteNonQuery() < 1)
+                        {
+                            throw new PostgreSQLInsertException();
+                        }
+                    }
                 }
             }
         }

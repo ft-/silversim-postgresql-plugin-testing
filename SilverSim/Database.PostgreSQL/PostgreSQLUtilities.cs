@@ -304,8 +304,8 @@ namespace SilverSim.Database.PostgreSQL
         }
         #endregion
 
-        #region Common REPLACE INTO/INSERT INTO helper
-        public static void AnyInto(this NpgsqlConnection connection, string cmd, string tablename, Dictionary<string, object> vals)
+        #region Common INSERT INTO helper
+        public static void InsertInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals)
         {
             var q = new List<string>();
             foreach (KeyValuePair<string, object> kvp in vals)
@@ -366,8 +366,7 @@ namespace SilverSim.Database.PostgreSQL
             var cb = new NpgsqlCommandBuilder();
             var q1 = new StringBuilder();
             var q2 = new StringBuilder();
-            q1.Append(cmd);
-            q1.Append(" INTO ");
+            q1.Append("INSERT INTO ");
             q1.Append(cb.QuoteIdentifier(tablename));
             q1.Append(" (");
             q2.Append(") VALUES (");
@@ -571,20 +570,6 @@ namespace SilverSim.Database.PostgreSQL
                 }
             }
             return string.Join(",", resvals);
-        }
-        #endregion
-
-        #region REPLACE INSERT INTO helper
-        public static void ReplaceInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals)
-        {
-            connection.AnyInto("REPLACE", tablename, vals);
-        }
-        #endregion
-
-        #region INSERT INTO helper
-        public static void InsertInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals)
-        {
-            connection.AnyInto("INSERT", tablename, vals);
         }
         #endregion
 

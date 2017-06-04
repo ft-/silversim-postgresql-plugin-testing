@@ -51,7 +51,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
             SqlTable table,
             PrimaryKeyInfo primaryKey,
             Dictionary<string, IColumnInfo> fields,
-            Dictionary<string, UniqueKeyInfo> tableKeys,
             uint tableRevision,
             ILog log)
         {
@@ -65,10 +64,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
             if(null != primaryKey)
             {
                 fieldSqls.Add(primaryKey.FieldSql());
-            }
-            foreach(UniqueKeyInfo key in tableKeys.Values)
-            {
-                fieldSqls.Add(key.FieldSql());
             }
 
             string escapedTableName = b.QuoteIdentifier(table.Name);
@@ -84,7 +79,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
             var tableFields = new Dictionary<string, IColumnInfo>();
             PrimaryKeyInfo primaryKey = null;
-            var tableKeys = new Dictionary<string, UniqueKeyInfo>();
             SqlTable table = null;
             uint processingTableRevision = 0;
             uint currentAtRevision = 0;
@@ -121,11 +115,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
                                 table,
                                 primaryKey,
                                 tableFields,
-                                tableKeys,
                                 processingTableRevision,
                                 log);
                         }
-                        tableKeys.Clear();
                         tableFields.Clear();
                         primaryKey = null;
                     }
@@ -231,10 +223,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
                         }
                         primaryKey = null;
                     }
-                    else if(migrationType == typeof(UniqueKeyInfo))
+                    else if(migrationType == typeof(NamedKeyInfo))
                     {
-                        var namedKey = (UniqueKeyInfo)migration;
-                        tableKeys.Add(namedKey.Name, namedKey);
+                        var namedKey = (NamedKeyInfo)migration;
                         if (insideTransaction != null)
                         {
                             ExecuteStatement(conn, namedKey.Sql(table.Name), log);
@@ -243,7 +234,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     else if(migrationType == typeof(DropNamedKeyInfo))
                     {
                         var namedKey = (DropNamedKeyInfo)migration;
-                        tableKeys.Remove(namedKey.Name);
                         if (insideTransaction != null)
                         {
                             ExecuteStatement(conn, namedKey.Sql(table.Name), log);
@@ -273,7 +263,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     table,
                     primaryKey,
                     tableFields,
-                    tableKeys,
                     processingTableRevision,
                     log);
             }
