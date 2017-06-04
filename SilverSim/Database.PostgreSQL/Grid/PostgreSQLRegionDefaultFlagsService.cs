@@ -33,7 +33,7 @@ using System.ComponentModel;
 
 namespace SilverSim.Database.PostgreSQL.Grid
 {
-    [Description("MySQL RegionDefaultFlags Backend")]
+    [Description("PostgreSQL RegionDefaultFlags Backend")]
     [PluginName("RegionDefaultFlags")]
     public sealed class PostgreSQLRegionDefaultFlagsService : RegionDefaultFlagsServiceInterface, IPlugin, IDBServiceInterface
     {

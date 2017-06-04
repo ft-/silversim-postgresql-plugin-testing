@@ -234,102 +234,102 @@ namespace SilverSim.Database.PostgreSQL
         #endregion
 
         #region Push parameters
-        public static void AddParameter(this NpgsqlParameterCollection mysqlparam, string key, object value)
+        public static void AddParameter(this NpgsqlParameterCollection sqlparam, string key, object value)
         {
             var t = value?.GetType();
             if (t == typeof(Vector3))
             {
                 var v = (Vector3)value;
-                mysqlparam.AddWithValue(key + "X", v.X);
-                mysqlparam.AddWithValue(key + "Y", v.Y);
-                mysqlparam.AddWithValue(key + "Z", v.Z);
+                sqlparam.AddWithValue(key + "X", v.X);
+                sqlparam.AddWithValue(key + "Y", v.Y);
+                sqlparam.AddWithValue(key + "Z", v.Z);
             }
             else if (t == typeof(GridVector))
             {
                 var v = (GridVector)value;
-                mysqlparam.AddWithValue(key + "X", v.X);
-                mysqlparam.AddWithValue(key + "Y", v.Y);
+                sqlparam.AddWithValue(key + "X", v.X);
+                sqlparam.AddWithValue(key + "Y", v.Y);
             }
             else if (t == typeof(Quaternion))
             {
                 var v = (Quaternion)value;
-                mysqlparam.AddWithValue(key + "X", v.X);
-                mysqlparam.AddWithValue(key + "Y", v.Y);
-                mysqlparam.AddWithValue(key + "Z", v.Z);
-                mysqlparam.AddWithValue(key + "W", v.W);
+                sqlparam.AddWithValue(key + "X", v.X);
+                sqlparam.AddWithValue(key + "Y", v.Y);
+                sqlparam.AddWithValue(key + "Z", v.Z);
+                sqlparam.AddWithValue(key + "W", v.W);
             }
             else if (t == typeof(Color))
             {
                 var v = (Color)value;
-                mysqlparam.AddWithValue(key + "Red", v.R);
-                mysqlparam.AddWithValue(key + "Green", v.G);
-                mysqlparam.AddWithValue(key + "Blue", v.B);
+                sqlparam.AddWithValue(key + "Red", v.R);
+                sqlparam.AddWithValue(key + "Green", v.G);
+                sqlparam.AddWithValue(key + "Blue", v.B);
             }
             else if (t == typeof(ColorAlpha))
             {
                 var v = (ColorAlpha)value;
-                mysqlparam.AddWithValue(key + "Red", v.R);
-                mysqlparam.AddWithValue(key + "Green", v.G);
-                mysqlparam.AddWithValue(key + "Blue", v.B);
-                mysqlparam.AddWithValue(key + "Alpha", v.A);
+                sqlparam.AddWithValue(key + "Red", v.R);
+                sqlparam.AddWithValue(key + "Green", v.G);
+                sqlparam.AddWithValue(key + "Blue", v.B);
+                sqlparam.AddWithValue(key + "Alpha", v.A);
             }
             else if (t == typeof(EnvironmentController.WLVector2))
             {
                 var vec = (EnvironmentController.WLVector2)value;
-                mysqlparam.AddWithValue(key + "X", vec.X);
-                mysqlparam.AddWithValue(key + "Y", vec.Y);
+                sqlparam.AddWithValue(key + "X", vec.X);
+                sqlparam.AddWithValue(key + "Y", vec.Y);
             }
             else if (t == typeof(EnvironmentController.WLVector4))
             {
                 var vec = (EnvironmentController.WLVector4)value;
-                mysqlparam.AddWithValue(key + "Red", vec.X);
-                mysqlparam.AddWithValue(key + "Green", vec.Y);
-                mysqlparam.AddWithValue(key + "Blue", vec.Z);
-                mysqlparam.AddWithValue(key + "Value", vec.W);
+                sqlparam.AddWithValue(key + "Red", vec.X);
+                sqlparam.AddWithValue(key + "Green", vec.Y);
+                sqlparam.AddWithValue(key + "Blue", vec.Z);
+                sqlparam.AddWithValue(key + "Value", vec.W);
             }
             else if (t == typeof(bool))
             {
-                mysqlparam.AddWithValue(key, (bool)value);
+                sqlparam.AddWithValue(key, (bool)value);
             }
             else if (t == typeof(UUID))
             {
-                mysqlparam.AddWithValue(key, (Guid)(UUID)value);
+                sqlparam.AddWithValue(key, (Guid)(UUID)value);
             }
             else if (t == typeof(UUI) || t == typeof(UGI) || t == typeof(Uri))
             {
-                mysqlparam.AddWithValue(key, value.ToString());
+                sqlparam.AddWithValue(key, value.ToString());
             }
             else if (t == typeof(AnArray))
             {
                 using (var stream = new MemoryStream())
                 {
                     LlsdBinary.Serialize((AnArray)value, stream);
-                    mysqlparam.AddWithValue(key, stream.ToArray());
+                    sqlparam.AddWithValue(key, stream.ToArray());
                 }
             }
             else if (t == typeof(Date))
             {
-                mysqlparam.AddWithValue(key, ((Date)value).AsLong);
+                sqlparam.AddWithValue(key, ((Date)value).AsLong);
             }
             else if(t == typeof(ulong))
             {
-                mysqlparam.AddWithValue(key, (long)(ulong)value);
+                sqlparam.AddWithValue(key, (long)(ulong)value);
             }
             else if (t == typeof(uint))
             {
-                mysqlparam.AddWithValue(key, (int)(uint)value);
+                sqlparam.AddWithValue(key, (int)(uint)value);
             }
             else if (t == typeof(ushort))
             {
-                mysqlparam.AddWithValue(key, (short)(ushort)value);
+                sqlparam.AddWithValue(key, (short)(ushort)value);
             }
             else if (t == typeof(byte))
             {
-                mysqlparam.AddWithValue(key, (short)(byte)value);
+                sqlparam.AddWithValue(key, (short)(byte)value);
             }
             else if (t == typeof(byte))
             {
-                mysqlparam.AddWithValue(key, (short)(byte)value);
+                sqlparam.AddWithValue(key, (short)(byte)value);
             }
             else if (t.IsEnum)
             {
@@ -347,21 +347,21 @@ namespace SilverSim.Database.PostgreSQL
                     utype = typeof(long);
                 }
 
-                mysqlparam.AddWithValue(key, Convert.ChangeType(value, utype));
+                sqlparam.AddWithValue(key, Convert.ChangeType(value, utype));
             }
             else
             {
-                mysqlparam.AddWithValue(key, value);
+                sqlparam.AddWithValue(key, value);
             }
         }
 
-        private static void AddParameters(this NpgsqlParameterCollection mysqlparam, Dictionary<string, object> vals)
+        private static void AddParameters(this NpgsqlParameterCollection sqlparam, Dictionary<string, object> vals)
         {
             foreach (KeyValuePair<string, object> kvp in vals)
             {
                 if (kvp.Value != null)
                 {
-                    AddParameter(mysqlparam, "@v_" + kvp.Key, kvp.Value);
+                    AddParameter(sqlparam, "@v_" + kvp.Key, kvp.Value);
                 }
             }
         }

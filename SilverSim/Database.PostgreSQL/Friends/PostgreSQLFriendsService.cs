@@ -56,7 +56,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
     {
         private readonly string m_ConnectionString;
         private readonly bool m_EnableOnConflict;
-        private static readonly ILog m_Log = LogManager.GetLogger("MYSQL FRIENDS SERVICE");
+        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL FRIENDS SERVICE");
         private readonly string[] m_AvatarNameServiceNames;
         private AggregatingAvatarNameService m_AvatarNameService;
 

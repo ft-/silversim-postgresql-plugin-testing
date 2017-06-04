@@ -42,7 +42,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
     {
         private readonly string m_ConnectionString;
         private readonly string m_TableName;
-        private static readonly ILog m_Log = LogManager.GetLogger("MYSQL GRID SERVICE");
+        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL GRID SERVICE");
         private bool m_IsDeleteOnUnregister;
         private readonly bool m_EnableOnConflict;
         private bool m_AllowDuplicateRegionNames;
