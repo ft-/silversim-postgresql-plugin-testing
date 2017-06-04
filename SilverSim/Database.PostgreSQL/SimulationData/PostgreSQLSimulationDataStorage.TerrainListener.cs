@@ -85,12 +85,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
                         if (!knownSerialNumbers.Contains(req.ExtendedPatchID) || knownSerialNumbers[req.ExtendedPatchID] != req.Serial)
                         {
-                            var data = new Dictionary<string, object>
-                            {
-                                ["RegionID" + updateRequestCount] = RegionID,
-                                ["PatchID" + updateRequestCount] = req.ExtendedPatchID,
-                                ["TerrainData" + updateRequestCount] = req.Serialization
-                            };
+                            updateRequestData.Add("PatchID" + updateRequestCount, req.ExtendedPatchID);
+                            updateRequestData.Add("TerrainData" + updateRequestCount, req.Serialization);
                             ++updateRequestCount;
                             knownSerialNumbers[req.ExtendedPatchID] = serialNumber;
                         }

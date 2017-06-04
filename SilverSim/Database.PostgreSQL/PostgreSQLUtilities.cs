@@ -664,7 +664,7 @@ namespace SilverSim.Database.PostgreSQL
 #endregion
 
 #region Generate values
-        public static string GenerateFieldNames(Dictionary<string, object> vals)
+        public static string GenerateFieldNames(Dictionary<string, object> vals, string suffix = "")
         {
             var q = new List<string>();
             foreach (KeyValuePair<string, object> kvp in vals)
@@ -676,41 +676,41 @@ namespace SilverSim.Database.PostgreSQL
 
                 if (t == typeof(Vector3))
                 {
-                    q.Add(key + "X");
-                    q.Add(key + "Y");
-                    q.Add(key + "Z");
+                    q.Add(key + "X" + suffix);
+                    q.Add(key + "Y" + suffix);
+                    q.Add(key + "Z" + suffix);
                 }
                 else if (t == typeof(GridVector) || t == typeof(EnvironmentController.WLVector2))
                 {
-                    q.Add(key + "X");
-                    q.Add(key + "Y");
+                    q.Add(key + "X" + suffix);
+                    q.Add(key + "Y" + suffix);
                 }
                 else if (t == typeof(Quaternion))
                 {
-                    q.Add(key + "X");
-                    q.Add(key + "Y");
-                    q.Add(key + "Z");
-                    q.Add(key + "W");
+                    q.Add(key + "X" + suffix);
+                    q.Add(key + "Y" + suffix);
+                    q.Add(key + "Z" + suffix);
+                    q.Add(key + "W" + suffix);
                 }
                 else if (t == typeof(Color))
                 {
-                    q.Add(key + "Red");
-                    q.Add(key + "Green");
-                    q.Add(key + "Blue");
+                    q.Add(key + "Red" + suffix);
+                    q.Add(key + "Green" + suffix);
+                    q.Add(key + "Blue" + suffix);
                 }
                 else if (t == typeof(EnvironmentController.WLVector4))
                 {
-                    q.Add(key + "Red");
-                    q.Add(key + "Green");
-                    q.Add(key + "Blue");
-                    q.Add(key + "Value");
+                    q.Add(key + "Red" + suffix);
+                    q.Add(key + "Green" + suffix);
+                    q.Add(key + "Blue" + suffix);
+                    q.Add(key + "Value" + suffix);
                 }
                 else if (t == typeof(ColorAlpha))
                 {
-                    q.Add(key + "Red");
-                    q.Add(key + "Green");
-                    q.Add(key + "Blue");
-                    q.Add(key + "Alpha");
+                    q.Add(key + "Red" + suffix);
+                    q.Add(key + "Green" + suffix);
+                    q.Add(key + "Blue" + suffix);
+                    q.Add(key + "Alpha" + suffix);
                 }
                 else
                 {
@@ -725,9 +725,9 @@ namespace SilverSim.Database.PostgreSQL
                 {
                     q1.Append(",");
                 }
-                q1.Append("`");
-                q1.Append(p);
-                q1.Append("`");
+                q1.Append("\"");
+                q1.Append(p + suffix);
+                q1.Append("\"");
             }
             return q1.ToString();
         }

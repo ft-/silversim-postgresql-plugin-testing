@@ -28,6 +28,7 @@ using SilverSim.Types.StructuredData.Llsd;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace SilverSim.Database.PostgreSQL.SimulationData
@@ -38,13 +39,15 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         public class PostgreSQLSceneListener : SceneListener
         {
             private readonly string m_ConnectionString;
+            private readonly bool m_EnableOnConflict;
             private readonly RwLockedList<PostgreSQLSceneListener> m_SceneListenerThreads;
 
-            public PostgreSQLSceneListener(string connectionString, UUID regionID, RwLockedList<PostgreSQLSceneListener> sceneListenerThreads)
+            public PostgreSQLSceneListener(string connectionString, UUID regionID, RwLockedList<PostgreSQLSceneListener> sceneListenerThreads, bool enableOnConflict)
             {
                 m_ConnectionString = connectionString;
                 RegionID = regionID;
                 m_SceneListenerThreads = sceneListenerThreads;
+                m_EnableOnConflict = enableOnConflict;
             }
 
             public UUID RegionID { get; }
@@ -57,6 +60,224 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
             private int m_ProcessedPrims;
 
+            private readonly Dictionary<int, string> m_CachedUpdateObjectCmds = new Dictionary<int, string>();
+
+            private string GenerateUpdateObjectCmd(NpgsqlConnection conn, List<string> vals, int index)
+            {
+                string cmd;
+                if(m_CachedUpdateObjectCmds.TryGetValue(index, out cmd))
+                {
+                    return cmd;
+                }
+
+                NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+                StringBuilder sb = new StringBuilder();
+
+                if(conn.HasOnConflict() && m_EnableOnConflict)
+                {
+                    sb.Append("INSERT INTO objects (\"RegionID\", \"ID\"");
+                    StringBuilder sb2 = new StringBuilder();
+                    sb2.AppendFormat(" VALUES (@v_RegionID,@v_ID{0},", index);
+                    StringBuilder sb3 = new StringBuilder();
+                    foreach(string f in vals)
+                    {
+                        sb.Append(",");
+                        sb.Append(b.QuoteIdentifier(f));
+                        sb2.Append(",");
+                        sb2.Append("@v_" + f + index.ToString());
+                        sb3.Append(",");
+                        sb3.Append(b.QuoteIdentifier(f));
+                        sb3.Append("=");
+                        sb3.Append("@v_" + f + index.ToString());
+                    }
+                    sb.Append(sb2);
+                    sb.Append(" ON CONFLICT(\"RegionID\",\"ID\") DO UPDATE SET ");
+                    sb.Append(sb3);
+                    sb.Append(";");
+                }
+                else
+                {
+                    sb.Append("UPDATE objects SET ");
+                    StringBuilder sb2 = new StringBuilder();
+                    StringBuilder sb3 = new StringBuilder();
+                    StringBuilder sb4 = new StringBuilder();
+                    sb3.Append("INSERT INTO objects (\"RegionID\", \"ID\",");
+                    sb4.AppendFormat("@v_RegionID, @v_ID{0}", index);
+                    foreach (string f in vals)
+                    {
+                        /* UPDATE SET */
+                        if(sb2.Length != 0)
+                        {
+                            sb2.Append(",");
+                        }
+                        sb2.Append(b.QuoteIdentifier(f));
+                        sb2.Append("=@v_" + f + index.ToString());
+
+                        /* INSERT INTO */
+                        sb3.Append(",");
+                        sb3.Append(b.QuoteIdentifier(f));
+
+                        /* SELECT INTO */
+                        sb4.Append(",");
+                        sb4.Append("@v_" + f + index.ToString());
+                    }
+                    sb.Append(sb2);
+                    sb.AppendFormat(" WHERE \"RegionID\"=@v_RegionID AND \"ID\"=@v_ID{0}\";", index);
+                    sb.Append(sb3);
+                    sb.Append(") SELECT ");
+                    sb.Append(sb4);
+                    sb.AppendFormat(" WHERE NOT EXISTS (SELECT 1 FROM objects WHERE \"RegionID\"=@v_RegionID AND \"ID\"=@v_ID{0};", index);
+                }
+
+                cmd = sb.ToString();
+                m_CachedUpdateObjectCmds.Add(index, cmd);
+                return cmd;
+            }
+
+            private readonly Dictionary<int, string> m_CachedUpdatePrimCmds = new Dictionary<int, string>();
+            private string GenerateUpdatePrimCmd(NpgsqlConnection conn, List<string> vals, int index)
+            {
+                string cmd;
+                if (m_CachedUpdatePrimCmds.TryGetValue(index, out cmd))
+                {
+                    return cmd;
+                }
+
+                NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+                StringBuilder sb = new StringBuilder();
+
+                if (conn.HasOnConflict() && m_EnableOnConflict)
+                {
+                    sb.Append("INSERT INTO prims (\"RegionID\", \"ID\"");
+                    StringBuilder sb2 = new StringBuilder();
+                    sb2.AppendFormat(" VALUES (@v_RegionID,@v_ID{0},", index);
+                    StringBuilder sb3 = new StringBuilder();
+                    foreach (string f in vals)
+                    {
+                        sb.Append(",");
+                        sb.Append(b.QuoteIdentifier(f));
+                        sb2.Append(",");
+                        sb2.Append("@v_" + f + index.ToString());
+                        sb3.Append(",");
+                        sb3.Append(b.QuoteIdentifier(f));
+                        sb3.Append("=");
+                        sb3.Append("@v_" + f + index.ToString());
+                    }
+                    sb.Append(sb2);
+                    sb.Append(" ON CONFLICT(\"RegionID\",\"ID\") DO UPDATE SET ");
+                    sb.Append(sb3);
+                    sb.Append(";");
+                }
+                else
+                {
+                    sb.Append("UPDATE prims SET ");
+                    StringBuilder sb2 = new StringBuilder();
+                    StringBuilder sb3 = new StringBuilder();
+                    StringBuilder sb4 = new StringBuilder();
+                    sb3.Append("INSERT INTO prims (\"RegionID\", \"PrimID\",");
+                    foreach (string f in vals)
+                    {
+                        /* UPDATE SET */
+                        if (sb2.Length != 0)
+                        {
+                            sb2.Append(",");
+                        }
+                        sb2.Append(b.QuoteIdentifier(f));
+                        sb2.Append("=@v_" + f + index.ToString());
+
+                        /* INSERT INTO */
+                        sb3.Append(",");
+                        sb3.Append(b.QuoteIdentifier(f));
+
+                        /* SELECT INTO */
+                        sb4.Append(",");
+                        sb4.Append("@v_" + f + index.ToString());
+                    }
+                    sb.Append(sb2);
+                    sb.AppendFormat(" WHERE \"RegionID\"=@v_RegionID AND \"ID\"=@v_ID{0}\";", index);
+                    sb.Append(sb3);
+                    sb.Append(") SELECT ");
+                    sb.Append(sb4);
+                    sb.AppendFormat(" WHERE NOT EXISTS (SELECT 1 FROM prims WHERE \"RegionID\"=@v_RegionID AND \"ID\"=@v_ID{0};", index);
+                }
+
+                cmd = sb.ToString();
+                m_CachedUpdatePrimCmds.Add(index, cmd);
+                return cmd;
+            }
+
+            private readonly Dictionary<int, string> m_CachedUpdatePrimItemCmds = new Dictionary<int, string>();
+            private string GenerateUpdatePrimItemCmd(NpgsqlConnection conn, List<string> vals, int index)
+            {
+                string cmd;
+                if (m_CachedUpdatePrimItemCmds.TryGetValue(index, out cmd))
+                {
+                    return cmd;
+                }
+
+                NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+                StringBuilder sb = new StringBuilder();
+
+                if (conn.HasOnConflict() && m_EnableOnConflict)
+                {
+                    sb.Append("INSERT INTO primitems (\"RegionID\",\"PrimID\",\"InventoryID\"");
+                    StringBuilder sb2 = new StringBuilder();
+                    sb2.Append(" VALUES (@v_RegionID,@v_PrimID,@v_IventoryID,");
+                    StringBuilder sb3 = new StringBuilder();
+                    foreach (string f in vals)
+                    {
+                        sb.Append(",");
+                        sb.Append(b.QuoteIdentifier(f));
+                        sb2.Append(",");
+                        sb2.Append("@v_" + f + index.ToString());
+                        sb3.Append(",");
+                        sb3.Append(b.QuoteIdentifier(f));
+                        sb3.Append("=");
+                        sb3.Append("@v_" + f + index.ToString());
+                    }
+                    sb.Append(sb2);
+                    sb.Append(" ON CONFLICT(\"RegionID\",\"PrimID\",\"InventoryID\") DO UPDATE SET ");
+                    sb.Append(sb3);
+                    sb.Append(";");
+                }
+                else
+                {
+                    sb.Append("UPDATE prims SET ");
+                    StringBuilder sb2 = new StringBuilder();
+                    StringBuilder sb3 = new StringBuilder();
+                    StringBuilder sb4 = new StringBuilder();
+                    sb3.Append("INSERT INTO prims (\"RegionID\",\"PrimID\",\"InventoryID\",");
+                    foreach (string f in vals)
+                    {
+                        /* UPDATE SET */
+                        if (sb2.Length != 0)
+                        {
+                            sb2.Append(",");
+                        }
+                        sb2.Append(b.QuoteIdentifier(f));
+                        sb2.Append("=@v_" + f + index.ToString());
+
+                        /* INSERT INTO */
+                        sb3.Append(",");
+                        sb3.Append(b.QuoteIdentifier(f));
+
+                        /* SELECT INTO */
+                        sb4.Append(",");
+                        sb4.Append("@v_" + f + index.ToString());
+                    }
+                    sb.Append(sb2);
+                    sb.AppendFormat(" WHERE \"RegionID\"=@v_RegionID AND \"PrimID\"=@v_PrimID{0}\" AND \"InventoryID\"=@v_InventoryID{0};", index);
+                    sb.Append(sb3);
+                    sb.Append(") SELECT ");
+                    sb.Append(sb4);
+                    sb.AppendFormat(" WHERE NOT EXISTS (SELECT 1 FROM prims WHERE \"RegionID\"=@v_RegionID AND \"PrimID\"=@v_PrimID{0} AND \"ItemID\"=@v_ItemID{0};", index);
+                }
+
+                cmd = sb.ToString();
+                m_CachedUpdatePrimItemCmds.Add(index, cmd);
+                return cmd;
+            }
+
             protected override void StorageMainThread()
             {
                 try
@@ -66,17 +287,20 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     var primDeletionRequests = new List<string>();
                     var primItemDeletionRequests = new List<string>();
                     var objectDeletionRequests = new List<string>();
-                    var updateObjectsRequests = new List<string>();
-                    var updatePrimsRequests = new List<string>();
-                    var updatePrimItemsRequests = new List<string>();
+                    int updateObjectsRequestCount = 0;
+                    int updatePrimsRequestCount = 0;
+                    int updatePrimItemsRequestCount = 0;
+                    var updateObjectsRequestData = new Dictionary<string, object>();
+                    var updatePrimsRequestData = new Dictionary<string, object>();
+                    var updatePrimItemsRequestData = new Dictionary<string, object>();
 
                     var knownSerialNumbers = new C5.TreeDictionary<uint, int>();
                     var knownInventorySerialNumbers = new C5.TreeDictionary<uint, int>();
                     var knownInventories = new C5.TreeDictionary<uint, List<UUID>>();
-
-                    string replaceIntoObjects = string.Empty;
-                    string replaceIntoPrims = string.Empty;
-                    string replaceIntoPrimItems = string.Empty;
+                    List<string> updatePrimFields = null;
+                    List<string> updatePrimItemFields = null;
+                    List<string> updateObjectFields = null;
+                    NpgsqlCommandBuilder cmdbuild = new NpgsqlCommandBuilder();
 
                     while (!m_StopStorageThread || m_StorageMainRequestQueue.Count != 0)
                     {
@@ -161,21 +385,30 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         if (updatePrim)
                         {
                             Dictionary<string, object> primData = GenerateUpdateObjectPart(req.Part);
-                            ObjectGroup grp = req.Part.ObjectGroup;
-                            primData.Add("RegionID", grp.Scene.ID);
-                            if (replaceIntoPrims.Length == 0)
-                            {
-                                replaceIntoPrims = PostgreSQLUtilities.GenerateFieldNames(primData);
+                            if (updatePrimFields == null)
+                            { 
+                                updatePrimFields = new List<string>(primData.Keys);
+                                updatePrimFields.Remove("ID");
                             }
-                            updatePrimsRequests.Add("(" + PostgreSQLUtilities.GenerateValues(primData) + ")");
+                            foreach(KeyValuePair<string, object> kvp in primData)
+                            {
+                                updatePrimsRequestData.Add(kvp.Key + updatePrimsRequestCount.ToString(), kvp.Value);
+                            }
+                            ++updatePrimsRequestCount;
+                            ObjectGroup grp = req.Part.ObjectGroup;
+                            
                             knownSerialNumbers[req.LocalID] = req.SerialNumber;
 
                             Dictionary<string, object> objData = GenerateUpdateObjectGroup(grp);
-                            if (replaceIntoObjects.Length == 0)
+                            if(updateObjectFields == null)
                             {
-                                replaceIntoObjects = PostgreSQLUtilities.GenerateFieldNames(objData);
+                                updateObjectFields = new List<string>(objData.Keys);
+                                updateObjectFields.Remove("ID");
                             }
-                            updateObjectsRequests.Add("(" + PostgreSQLUtilities.GenerateValues(objData) + ")");
+                            foreach(KeyValuePair<string, object> kvp in primData)
+                            {
+                                updateObjectsRequestData.Add(kvp.Key + updateObjectsRequestCount.ToString(), kvp.Value);
+                            }
                         }
 
                         if (updateInventory)
@@ -202,12 +435,16 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                                 foreach (KeyValuePair<UUID, ObjectPartInventoryItem> kvp in items)
                                 {
                                     Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(req.Part.ID, kvp.Value);
-                                    data["RegionID"] = req.Part.ObjectGroup.Scene.ID;
-                                    if (replaceIntoPrimItems.Length == 0)
+                                    if(updatePrimItemFields == null)
                                     {
-                                        replaceIntoPrimItems = PostgreSQLUtilities.GenerateFieldNames(data);
+                                        updatePrimItemFields = new List<string>(data.Keys);
+                                        updatePrimItemFields.Remove("PrimID");
+                                        updatePrimItemFields.Remove("InventoryID");
                                     }
-                                    updatePrimItemsRequests.Add("(" + PostgreSQLUtilities.GenerateValues(data) + ")");
+                                    foreach(KeyValuePair<string, object> kvpInner in data)
+                                    {
+                                        updatePrimItemsRequestData.Add(kvpInner.Key + updatePrimItemsRequestCount.ToString(), kvp.Value);
+                                    }
                                 }
                             }
                             else
@@ -215,12 +452,10 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                                 foreach (KeyValuePair<UUID, ObjectPartInventoryItem> kvp in items)
                                 {
                                     Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(req.Part.ID, kvp.Value);
-                                    data["RegionID"] = req.Part.ObjectGroup.Scene.ID;
-                                    if (replaceIntoPrimItems.Length == 0)
+                                    foreach (KeyValuePair<string, object> kvpInner in data)
                                     {
-                                        replaceIntoPrimItems = PostgreSQLUtilities.GenerateFieldNames(data);
+                                        updatePrimItemsRequestData.Add(kvpInner.Key + updatePrimItemsRequestCount.ToString(), kvp.Value);
                                     }
-                                    updatePrimItemsRequests.Add("(" + PostgreSQLUtilities.GenerateValues(data) + ")");
                                 }
                             }
                             knownInventories[req.Part.LocalID] = new List<UUID>(items.Keys);
@@ -228,9 +463,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         }
 
                         bool emptyQueue = m_StorageMainRequestQueue.Count == 0;
-                        bool processUpdateObjects = updateObjectsRequests.Count != 0;
-                        bool processUpdatePrims = updatePrimsRequests.Count != 0;
-                        bool processUpdatePrimItems = updatePrimItemsRequests.Count != 0;
+                        bool processUpdateObjects = updateObjectsRequestCount != 0;
+                        bool processUpdatePrims = updatePrimsRequestCount != 0;
+                        bool processUpdatePrimItems = updatePrimItemsRequestCount != 0;
 
                         if (((emptyQueue || processUpdateObjects) && objectDeletionRequests.Count > 0) || objectDeletionRequests.Count > 256)
                         {
@@ -298,21 +533,31 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             }
                         }
 
-                        if ((emptyQueue && updateObjectsRequests.Count > 0) || updateObjectsRequests.Count > 256)
+                        if ((emptyQueue && updateObjectsRequestCount > 0) || updateObjectsRequestCount > 256)
                         {
-                            string command = "REPLACE INTO objects (" + replaceIntoObjects + ") VALUES " + string.Join(",", updateObjectsRequests);
                             try
                             {
                                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                                 {
                                     conn.Open();
-                                    using (var cmd = new NpgsqlCommand(command, conn))
+                                    StringBuilder command = new StringBuilder();
+                                    for (int i = 0; i < updateObjectsRequestCount; ++i)
                                     {
+                                        command.Append(GenerateUpdateObjectCmd(conn, updateObjectFields, i));
+                                    }
+                                    using (var cmd = new NpgsqlCommand(command.ToString(), conn))
+                                    {
+                                        cmd.Parameters.AddParameter("@v_RegionID", RegionID);
+                                        foreach(KeyValuePair<string, object> kvp in updateObjectsRequestData)
+                                        {
+                                            cmd.Parameters.AddParameter("@v_" + kvp.Key, kvp.Value);
+                                        }
                                         cmd.ExecuteNonQuery();
                                     }
                                 }
 
-                                updateObjectsRequests.Clear();
+                                updateObjectsRequestData.Clear();
+                                updateObjectsRequestCount = 0;
                             }
                             catch (Exception e)
                             {
@@ -320,21 +565,31 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             }
                         }
 
-                        if ((emptyQueue && updatePrimsRequests.Count > 0) || updatePrimsRequests.Count > 256)
+                        if ((emptyQueue && updatePrimsRequestCount > 0) || updatePrimsRequestCount > 256)
                         {
-                            string command = "REPLACE INTO prims (" + replaceIntoPrims + ") VALUES " + string.Join(",", updatePrimsRequests);
                             try
                             {
                                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                                 {
                                     conn.Open();
-                                    using (var cmd = new NpgsqlCommand(command, conn))
+                                    StringBuilder command = new StringBuilder();
+                                    for (int i = 0; i < updatePrimsRequestCount; ++i)
                                     {
+                                        command.Append(GenerateUpdatePrimCmd(conn, updatePrimFields, i));
+                                    }
+                                    using (var cmd = new NpgsqlCommand(command.ToString(), conn))
+                                    {
+                                        cmd.Parameters.AddParameter("@v_RegionID", RegionID);
+                                        foreach (KeyValuePair<string, object> kvp in updateObjectsRequestData)
+                                        {
+                                            cmd.Parameters.AddParameter("@v_" + kvp.Key, kvp.Value);
+                                        }
                                         cmd.ExecuteNonQuery();
                                     }
                                 }
 
-                                updatePrimsRequests.Clear();
+                                updatePrimsRequestData.Clear();
+                                updatePrimsRequestCount = 0;
                             }
                             catch (Exception e)
                             {
@@ -342,21 +597,31 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             }
                         }
 
-                        if ((emptyQueue && updatePrimItemsRequests.Count > 0) || updatePrimItemsRequests.Count > 256)
+                        if ((emptyQueue && updatePrimItemsRequestCount > 0) || updatePrimItemsRequestCount > 256)
                         {
-                            string command = "REPLACE INTO primitems (" + replaceIntoPrimItems + ") VALUES " + string.Join(",", updatePrimItemsRequests);
                             try
                             {
                                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                                 {
                                     conn.Open();
-                                    using (var cmd = new NpgsqlCommand(command, conn))
+                                    StringBuilder command = new StringBuilder();
+                                    for (int i = 0; i < updateObjectsRequestCount; ++i)
                                     {
+                                        command.Append(GenerateUpdatePrimItemCmd(conn, updatePrimItemFields, i));
+                                    }
+                                    using (var cmd = new NpgsqlCommand(command.ToString(), conn))
+                                    {
+                                        cmd.Parameters.AddParameter("@v_RegionID", RegionID);
+                                        foreach (KeyValuePair<string, object> kvp in updateObjectsRequestData)
+                                        {
+                                            cmd.Parameters.AddParameter("@v_" + kvp.Key, kvp.Value);
+                                        }
                                         cmd.ExecuteNonQuery();
                                     }
                                 }
 
-                                updatePrimItemsRequests.Clear();
+                                updatePrimItemsRequestData.Clear();
+                                updatePrimItemsRequestCount = 0;
                             }
                             catch (Exception e)
                             {
@@ -500,6 +765,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         }
 
         public override SceneListener GetSceneListener(UUID regionID) =>
-            new PostgreSQLSceneListener(m_ConnectionString, regionID, m_SceneListenerThreads);
+            new PostgreSQLSceneListener(m_ConnectionString, regionID, m_SceneListenerThreads, m_EnableOnConflict);
     }
 }
