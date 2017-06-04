@@ -631,41 +631,41 @@ namespace SilverSim.Database.PostgreSQL
 
                 if (t == typeof(Vector3))
                 {
-                    updates.Add("`" + key + "X` = ?v_" + key + "X");
-                    updates.Add("`" + key + "Y` = ?v_" + key + "Y");
-                    updates.Add("`" + key + "Z` = ?v_" + key + "Z");
+                    updates.Add("`" + key + "X` = @v_" + key + "X");
+                    updates.Add("`" + key + "Y` = @v_" + key + "Y");
+                    updates.Add("`" + key + "Z` = @v_" + key + "Z");
                 }
                 else if (t == typeof(GridVector) || t == typeof(EnvironmentController.WLVector2))
                 {
-                    updates.Add("`" + key + "X` = ?v_" + key + "X");
-                    updates.Add("`" + key + "Y` = ?v_" + key + "Y");
+                    updates.Add("`" + key + "X` = @v_" + key + "X");
+                    updates.Add("`" + key + "Y` = @v_" + key + "Y");
                 }
                 else if (t == typeof(Quaternion))
                 {
-                    updates.Add("`" + key + "X` = ?v_" + key + "X");
-                    updates.Add("`" + key + "Y` = ?v_" + key + "Y");
-                    updates.Add("`" + key + "Z` = ?v_" + key + "Z");
-                    updates.Add("`" + key + "W` = ?v_" + key + "W");
+                    updates.Add("`" + key + "X` = @v_" + key + "X");
+                    updates.Add("`" + key + "Y` = @v_" + key + "Y");
+                    updates.Add("`" + key + "Z` = @v_" + key + "Z");
+                    updates.Add("`" + key + "W` = @v_" + key + "W");
                 }
                 else if (t == typeof(Color))
                 {
-                    updates.Add("`" + key + "Red` = ?v_" + key + "Red");
-                    updates.Add("`" + key + "Green` = ?v_" + key + "Green");
-                    updates.Add("`" + key + "Blue` = ?v_" + key + "Blue");
+                    updates.Add("`" + key + "Red` = @v_" + key + "Red");
+                    updates.Add("`" + key + "Green` = @v_" + key + "Green");
+                    updates.Add("`" + key + "Blue` = @v_" + key + "Blue");
                 }
                 else if (t == typeof(EnvironmentController.WLVector4))
                 {
-                    updates.Add("`" + key + "Red` = ?v_" + key + "Red");
-                    updates.Add("`" + key + "Green` = ?v_" + key + "Green");
-                    updates.Add("`" + key + "Blue` = ?v_" + key + "Blue");
-                    updates.Add("`" + key + "Value` = ?v_" + key + "Value");
+                    updates.Add("`" + key + "Red` = @v_" + key + "Red");
+                    updates.Add("`" + key + "Green` = @v_" + key + "Green");
+                    updates.Add("`" + key + "Blue` = @v_" + key + "Blue");
+                    updates.Add("`" + key + "Value` = @v_" + key + "Value");
                 }
                 else if (t == typeof(ColorAlpha))
                 {
-                    updates.Add("`" + key + "Red` = ?v_" + key + "Red");
-                    updates.Add("`" + key + "Green` = ?v_" + key + "Green");
-                    updates.Add("`" + key + "Blue` = ?v_" + key + "Blue");
-                    updates.Add("`" + key + "Alpha` = ?v_" + key + "Alpha");
+                    updates.Add("`" + key + "Red` = @v_" + key + "Red");
+                    updates.Add("`" + key + "Green` = @v_" + key + "Green");
+                    updates.Add("`" + key + "Blue` = @v_" + key + "Blue");
+                    updates.Add("`" + key + "Alpha` = @v_" + key + "Alpha");
                 }
                 else if (value == null)
                 {
@@ -673,7 +673,7 @@ namespace SilverSim.Database.PostgreSQL
                 }
                 else
                 {
-                    updates.Add("`" + key + "` = ?v_" + key);
+                    updates.Add("`" + key + "` = @v_" + key);
                 }
             }
             return updates;
@@ -708,7 +708,7 @@ namespace SilverSim.Database.PostgreSQL
                 {
                     wherestr.Append(" AND ");
                 }
-                wherestr.AppendFormat("{0} LIKE ?w_{0}", w.Key);
+                wherestr.AppendFormat("{0} LIKE @w_{0}", w.Key);
             }
 
             using (var command = new NpgsqlCommand(q1 + " WHERE " + wherestr, connection))
@@ -716,7 +716,7 @@ namespace SilverSim.Database.PostgreSQL
                 AddParameters(command.Parameters, vals);
                 foreach(KeyValuePair<string, object> w in where)
                 {
-                    command.Parameters.AddWithValue("?w_" + w.Key, w.Value);
+                    command.Parameters.AddWithValue("@w_" + w.Key, w.Value);
                 }
                 if (command.ExecuteNonQuery() < 1)
                 {
