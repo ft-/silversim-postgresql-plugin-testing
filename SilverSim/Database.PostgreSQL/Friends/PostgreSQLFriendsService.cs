@@ -67,7 +67,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             m_AvatarNameServiceNames = ownSection.GetString("AvatarNameServices", string.Empty).Split(',');
         }
 
-        private const string m_InnerJoinSelectFull = "SELECT A.*, B.\"RightsToFriend\" AS RightsToUser FROM friends AS A INNER JOIN friends as B ON A.\"FriendID\" LIKE B.\"UserID\" AND A.\"UserID\" LIKE B.\"FriendID\" ";
+        private const string m_InnerJoinSelectFull = "SELECT A.*, B.\"RightsToFriend\" AS RightsToUser FROM friends AS A INNER JOIN friends as B ON A.\"FriendID\" = B.\"UserID\" AND A.\"UserID\" = B.\"FriendID\" ";
 
         public void ResolveUUI(FriendInfo fi)
         {
@@ -92,7 +92,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    using (var cmd = new NpgsqlCommand(m_InnerJoinSelectFull + "WHERE A.\"UserID\" LIKE @id", connection))
+                    using (var cmd = new NpgsqlCommand(m_InnerJoinSelectFull + "WHERE A.\"UserID\" = @id", connection))
                     {
                         cmd.Parameters.AddParameter("@id", user.ID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -130,7 +130,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM friends WHERE (\"UserID\" LIKE @userid AND \"FriendID\" LIKE @friendid) OR (\"UserID\" LIKE @friendid AND \"FriendID\" LIKE @userid)", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM friends WHERE (\"UserID\" = @userid AND \"FriendID\" = @friendid) OR (\"UserID\" = @friendid AND \"FriendID\" = @userid)", connection))
                 {
                     cmd.Parameters.AddParameter("@userid", fi.User.ID);
                     cmd.Parameters.AddParameter("@friendid", fi.Friend.ID);
@@ -153,7 +153,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM friends WHERE \"UserID\" LIKE @id OR \"FriendID\" LIKE @id", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM friends WHERE \"UserID\" = @id OR \"FriendID\" = @id", connection))
                 {
                     cmd.Parameters.AddParameter("@id", accountID);
                     cmd.ExecuteNonQuery();
@@ -216,7 +216,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("UPDATE friends SET \"RightsToFriend\" = @rights WHERE \"UserID\" LIKE @userid AND \"FriendID\" LIKE @friendid", connection))
+                using (var cmd = new NpgsqlCommand("UPDATE friends SET \"RightsToFriend\" = @rights WHERE \"UserID\" = @userid AND \"FriendID\" = @friendid", connection))
                 {
                     cmd.Parameters.AddParameter("@rights", fi.FriendGivenFlags);
                     cmd.Parameters.AddParameter("@userid", fi.User.ID);
@@ -234,7 +234,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(m_InnerJoinSelectFull + "WHERE A.\"UserID\" LIKE @userid AND A.\"FriendID\" LIKE @friendid", connection))
+                using (var cmd = new NpgsqlCommand(m_InnerJoinSelectFull + "WHERE A.\"UserID\" = @userid AND A.\"FriendID\" = @friendid", connection))
                 {
                     cmd.Parameters.AddParameter("@userid", user.ID);
                     cmd.Parameters.AddParameter("@friendid", friend.ID);

@@ -124,7 +124,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" LIKE @id AND \"ScopeID\" LIKE @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -148,7 +148,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE uuid LIKE @id AND ScopeID LIKE @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE uuid = @id AND ScopeID = @scopeid", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -258,7 +258,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" LIKE @name AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid", connection))
                 {
                     cmd.Parameters.AddParameter("@name", regionName);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -288,7 +288,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" LIKE @id", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -311,7 +311,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" LIKE @id", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -389,7 +389,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
                 if (!m_AllowDuplicateRegionNames)
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT uuid FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" LIKE @name LIMIT 1", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT uuid FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" = @name LIMIT 1", conn))
                     {
                         cmd.Parameters.AddParameter("@scopeid", regionInfo.ScopeID);
                         cmd.Parameters.AddParameter("@name", regionInfo.Name);
@@ -408,7 +408,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 using (var cmd = new NpgsqlCommand("SELECT uuid FROM " + m_TableName + " WHERE (" +
                             "(\"locX\" >= @minx AND \"locY\" >= @miny AND \"locX\" < @maxx AND \"locY\" < @maxy) OR " +
                             "(\"locX\" + \"sizeX\" > @minx AND \"locY\"+\"sizeY\" > @miny AND \"locX\" + \"sizeX\" < @maxx AND \"locY\" + \"sizeY\" < @maxy)" +
-                            ") AND \"uuid\" NOT LIKE @regionid AND " +
+                            ") AND (NOT \"uuid\" = @regionid) AND " +
                             "\"ScopeID\" = @scopeid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@min", regionInfo.Location);
@@ -509,7 +509,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 connection.Open();
                 using (var cmd = new NpgsqlCommand(scopeID == UUID.Zero ?
                     "SELECT * FROM regions WHERE \"flags\" & @flag != 0" :
-                    "SELECT * FROM regions WHERE \"flags\" & @flag != 0 AND \"ScopeID\" LIKE @scopeid", connection))
+                    "SELECT * FROM regions WHERE \"flags\" & @flag != 0 AND \"ScopeID\" = @scopeid", connection))
                 {
                     cmd.Parameters.AddParameter("@flag", flags);
                     if (scopeID != UUID.Zero)
@@ -559,7 +559,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                         "(\"locX\" + \"sizeX\" >= @xmin AND \"locY\"+\"sizeY\" >= @ymin AND \"locX\" + \"sizeX\" <= @xmax AND \"locY\" + \"sizeY\" <= @ymax) OR " +
                         "(\"locX\" >= @xmin AND \"locY\" >= @ymin AND \"locX\" + \"sizeX\" > @xmin AND \"locY\" + \"sizeY\" > @ymin) OR " +
                         "(\"locX\" >= @xmax AND \"locY\" >= @ymax AND \"locX\" + \"sizeX\" > @xmax AND \"locY\" + \"sizeY\" > @ymax)" +
-                        ") AND ScopeID LIKE @scopeid", connection))
+                        ") AND ScopeID = @scopeid", connection))
                 {
                     cmd.Parameters.AddWithValue("@scopeid", scopeID.ToString());
                     cmd.Parameters.AddWithValue("@xmin", min.X);
@@ -594,7 +594,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                                                             "((\"locY\" = @maxY OR \"locY\" + \"sizeY\" = @locY) AND " +
                                                             "(\"locX\" <= @maxX AND \"locX\" + \"sizeX\" >= @locX))" +
                                                             ") AND " +
-                                                            "\"ScopeID\" LIKE @scopeid", connection))
+                                                            "\"ScopeID\" = @scopeid", connection))
                 {
                     cmd.Parameters.AddWithValue("@scopeid", scopeID.ToString());
                     cmd.Parameters.AddWithValue("@locX", ri.Location.X);

@@ -177,9 +177,9 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                 {
                     connection.Open();
 
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE position(@name in FirstName) > 0 OR position(@name in LastName) > 0", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE \"FirstName\" LIKE @name OR \"LastName\" LIKE @name", connection))
                     {
-                        cmd.Parameters.AddParameter("@name", names[0]);
+                        cmd.Parameters.AddParameter("@name", "%" + names[0] + "%");
 
                         return GetSearchResults(cmd);
                     }
@@ -191,10 +191,10 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                 {
                     connection.Open();
 
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE position(@firstname in FirstName) > 0 AND position(@lastname in LastName) > 0", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE \"FirstName\" LIKE @firstname AND \"LastName\" LIKE @lastname", connection))
                     {
-                        cmd.Parameters.AddParameter("@firstname", names[0]);
-                        cmd.Parameters.AddParameter("@lastname", names[1]);
+                        cmd.Parameters.AddParameter("@firstname", "%" + names[0] + "%");
+                        cmd.Parameters.AddParameter("@lastname", "%" + names[1] + "%");
 
                         return GetSearchResults(cmd);
                     }
