@@ -242,37 +242,13 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    if (connection.HasOnConflict() && m_EnableOnConflict)
+                    var param = new Dictionary<string, object>
                     {
-                        using (NpgsqlCommand cmd = new NpgsqlCommand("INSERT INTO serverparams (regionid, parametername, parametervalue) VALUES (@regionid, @parametername, @parametervalue) ON CONFLICT (regionid, parametername) DO UPDATE SET parametervalue=@parametervalue", connection))
-                        {
-                            cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
-                            cmd.Parameters.AddParameter("@parametername", parameter);
-                            cmd.Parameters.AddParameter("@parametervalue", value);
-                            if(cmd.ExecuteNonQuery() < 1)
-                            {
-                                throw new PostgreSQLUtilities.PostgreSQLInsertException();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        connection.InsideTransaction(() =>
-                        {
-                            string cmdstring = "UPDATE serverparams SET parametervalue = @value WHERE regionid = @regionid AND parametername = @parametername;";
-                            cmdstring += "INSERT INTO serverparms (regionid, parametername, parametervalue) SELECT @regionid, @parametername, @parametervalue WHERE NOT EXISTS (SELECT 1 FROM serverparams WHERE regionid = @regionid AND parametername = @parametername);";
-                            using (NpgsqlCommand cmd = new NpgsqlCommand(cmdstring, connection))
-                            {
-                                cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
-                                cmd.Parameters.AddParameter("@parametername", parameter);
-                                cmd.Parameters.AddParameter("@parametervalue", value);
-                                if (cmd.ExecuteNonQuery() < 1)
-                                {
-                                    throw new PostgreSQLUtilities.PostgreSQLInsertException();
-                                }
-                            }
-                        });
-                    }
+                        ["regionid"] = regionID,
+                        ["parametername"] = parameter,
+                        ["parametervalue"] = value
+                    };
+                    connection.ReplaceInto("serverparams", param, new string[] { "regionid", "parametername" }, m_EnableOnConflict);
                     m_Cache[regionID][parameter] = value;
                 }
             }

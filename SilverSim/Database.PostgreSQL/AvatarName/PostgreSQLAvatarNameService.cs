@@ -40,11 +40,13 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
     {
         private readonly string m_ConnectionString;
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL AVATAR NAMES SERVICE");
+        private readonly bool m_EnableOnConflict;
 
         #region Constructor
         public PostgreSQLAvatarNameService(IConfig ownSection)
         {
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
+            m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
         }
 
         public void Startup(ConfigurationLoader loader)
@@ -143,39 +145,7 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                 {
                     connection.Open();
 
-                    if(connection.HasOnConflict())
-                    {
-                        using (var cmd = new NpgsqlCommand("INSERT INTO avatarnames (\"AvatarID\", \"HomeURI\", \"FirstName\", \"LastName\") VALUES (@avatarid, @homeuri, @firstname, @lastname) ON CONFLICT (AvatarID) DO UPDATE SET \"HomeURI\"=@homeuri, \"FirstName\"=@firstname,\"LastName\"=@lastname", connection))
-                        {
-                            cmd.Parameters.AddParameter("@avatarid", (Guid)value.ID);
-                            cmd.Parameters.AddParameter("@homeuri", value.HomeURI);
-                            cmd.Parameters.AddParameter("@firstname", value.FirstName);
-                            cmd.Parameters.AddParameter("@lastname", value.LastName);
-                            if (cmd.ExecuteNonQuery() < 1)
-                            {
-                                throw new PostgreSQLInsertException();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        string cmdstring = "UPDATE avatarnames SET \"HomeURI\"=@homeuri, \"FirstName\"=@firstname,\"LastName\"=@lastname WHERE \"AvatarID\" = @avatarid;";
-                        cmdstring += "INSERT INTO avatarnames (\"AvatarID\", \"HomeURI\", \"FirstName\", \"LastName\") SELECT @avatarid, @homeuri, @firstname, @lastname WHERE NOT EXISTS (SELECT 1 FROM avatarnames WHERE \"AvatarID\"=@avatarid);";
-                        connection.InsideTransaction(() =>
-                        {
-                            using (var cmd = new NpgsqlCommand(cmdstring, connection))
-                            {
-                                cmd.Parameters.AddParameter("@avatarid", (Guid)value.ID);
-                                cmd.Parameters.AddParameter("@homeuri", value.HomeURI);
-                                cmd.Parameters.AddParameter("@firstname", value.FirstName);
-                                cmd.Parameters.AddParameter("@lastname", value.LastName);
-                                if (cmd.ExecuteNonQuery() < 1)
-                                {
-                                    throw new PostgreSQLInsertException();
-                                }
-                            }
-                        });
-                    }
+                    connection.ReplaceInto("avatarnames", data, new string[] { "AvatarID" }, m_EnableOnConflict);
                 }
             }
         }

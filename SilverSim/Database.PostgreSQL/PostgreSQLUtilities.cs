@@ -33,12 +33,13 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Data;
+using System.Linq;
 
 namespace SilverSim.Database.PostgreSQL
 {
     public static class PostgreSQLUtilities
     {
-        public static bool HasOnConflict(this NpgsqlConnection conn)
+        private static bool HasOnConflict(this NpgsqlConnection conn)
         {
             Version version = conn.PostgreSqlVersion;
             return version.Major > 9 || (version.Major == 9 && version.Minor >= 5);
@@ -349,7 +350,211 @@ namespace SilverSim.Database.PostgreSQL
         }
         #endregion
 
-        #region Common INSERT INTO helper
+        #region REPLACE INTO style helper
+        public static void ReplaceInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string[] keyfields, bool enableOnConflict)
+        {
+            bool useOnConflict = connection.HasOnConflict() && enableOnConflict;
+            var q = new List<string>();
+            foreach (KeyValuePair<string, object> kvp in vals)
+            {
+                object value = kvp.Value;
+
+                var t = value?.GetType();
+                string key = kvp.Key;
+
+                if (t == typeof(Vector3))
+                {
+                    q.Add(key + "X");
+                    q.Add(key + "Y");
+                    q.Add(key + "Z");
+                }
+                else if (t == typeof(GridVector) || t == typeof(EnvironmentController.WLVector2))
+                {
+                    q.Add(key + "X");
+                    q.Add(key + "Y");
+                }
+                else if (t == typeof(Quaternion))
+                {
+                    q.Add(key + "X");
+                    q.Add(key + "Y");
+                    q.Add(key + "Z");
+                    q.Add(key + "W");
+                }
+                else if (t == typeof(Color))
+                {
+                    q.Add(key + "Red");
+                    q.Add(key + "Green");
+                    q.Add(key + "Blue");
+                }
+                else if (t == typeof(EnvironmentController.WLVector4))
+                {
+                    q.Add(key + "Red");
+                    q.Add(key + "Green");
+                    q.Add(key + "Blue");
+                    q.Add(key + "Value");
+                }
+                else if (t == typeof(ColorAlpha))
+                {
+                    q.Add(key + "Red");
+                    q.Add(key + "Green");
+                    q.Add(key + "Blue");
+                    q.Add(key + "Alpha");
+                }
+                else if (value == null)
+                {
+                    /* skip */
+                }
+                else
+                {
+                    q.Add(key);
+                }
+            }
+
+            var cb = new NpgsqlCommandBuilder();
+
+            var q1 = new StringBuilder();
+            string quotedTableName = cb.QuoteIdentifier(tablename);
+            if (useOnConflict)
+            {
+                var insertIntoFields = new StringBuilder();
+                var conflictParams = new StringBuilder();
+                var updateParams = new StringBuilder();
+
+                q1.Append("INSERT INTO ");
+                q1.Append(quotedTableName);
+                q1.Append(" (");
+                insertIntoFields.Append(") VALUES (");
+
+                bool first = true;
+                foreach (string p in q)
+                {
+                    if (!first)
+                    {
+                        q1.Append(",");
+                        insertIntoFields.Append(",");
+                    }
+                    first = false;
+                    q1.Append(cb.QuoteIdentifier(p));
+                    insertIntoFields.Append("@v_");
+                    insertIntoFields.Append(p);
+                    if (keyfields.Contains(p))
+                    {
+                        if (conflictParams.Length != 0)
+                        {
+                            conflictParams.Append(",");
+                        }
+                        conflictParams.Append(cb.QuoteIdentifier(p));
+                    }
+                    else
+                    {
+                        if (updateParams.Length != 0)
+                        {
+                            updateParams.Append(",");
+                        }
+                        updateParams.Append(cb.QuoteIdentifier(p));
+                        updateParams.Append("=");
+                        updateParams.Append("@v_");
+                        updateParams.Append(p);
+                    }
+                }
+                q1.Append(insertIntoFields);
+                q1.Append(") ON CONFLICT (");
+                q1.Append(conflictParams);
+                q1.Append(") DO UPDATE SET ");
+                q1.Append(updateParams);
+            }
+            else
+            {
+                var insertIntoParams = new StringBuilder();
+                var insertIntoFields = new StringBuilder();
+                var updateParams = new StringBuilder();
+                var whereParams = new StringBuilder();
+
+                foreach (string p in q)
+                {
+                    string quotedFieldName = cb.QuoteIdentifier(p);
+                    if (insertIntoParams.Length != 0)
+                    {
+                        insertIntoParams.Append(",");
+                        insertIntoFields.Append(",");
+                    }
+                    insertIntoParams.Append("@v_");
+                    insertIntoParams.Append(p);
+                    insertIntoFields.Append(quotedFieldName);
+
+
+                    if (keyfields.Contains(p))
+                    {
+                        if (whereParams.Length != 0)
+                        {
+                            whereParams.Append(" AND ");
+                        }
+                        whereParams.Append(quotedFieldName);
+                        whereParams.Append(" = ");
+                        whereParams.Append("@v_");
+                        whereParams.Append(p);
+                    }
+                    else
+                    {
+                        if (updateParams.Length != 0)
+                        {
+                            updateParams.Append(",");
+                        }
+                        updateParams.Append(quotedFieldName);
+                        updateParams.Append("=");
+                        updateParams.Append("@v_");
+                        updateParams.Append(p);
+                    }
+                }
+                q1.Append("UPDATE ");
+                q1.Append(quotedTableName);
+                q1.Append(" SET ");
+                q1.Append(updateParams);
+                q1.Append(" WHERE ");
+                q1.Append(whereParams);
+
+                q1.Append("; INSERT INTO ");
+                q1.Append(quotedTableName);
+                q1.Append(" (");
+                q1.Append(insertIntoFields);
+                q1.Append(") SELECT ");
+                q1.Append(insertIntoParams);
+                q1.Append(" WHERE NOT EXISTS (SELECT 1 FROM ");
+                q1.Append(quotedTableName);
+                q1.Append(" WHERE ");
+                q1.Append(whereParams);
+                q1.Append(")");
+            }
+
+            if (useOnConflict)
+            {
+                using (var command = new NpgsqlCommand(q1.ToString(), connection))
+                {
+                    AddParameters(command.Parameters, vals);
+                    if (command.ExecuteNonQuery() < 1)
+                    {
+                        throw new PostgreSQLInsertException();
+                    }
+                }
+            }
+            else
+            {
+                connection.InsideTransaction(() =>
+                {
+                    using (var command = new NpgsqlCommand(q1.ToString(), connection))
+                    {
+                        AddParameters(command.Parameters, vals);
+                        if (command.ExecuteNonQuery() < 1)
+                        {
+                            throw new PostgreSQLInsertException();
+                        }
+                    }
+                });
+            }
+        }
+#endregion
+
+#region Common INSERT INTO helper
         public static void InsertInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals)
         {
             var q = new List<string>();
@@ -439,9 +644,9 @@ namespace SilverSim.Database.PostgreSQL
                 }
             }
         }
-        #endregion
+#endregion
 
-        #region Generate values
+#region Generate values
         public static string GenerateFieldNames(Dictionary<string, object> vals)
         {
             var q = new List<string>();
@@ -616,9 +821,9 @@ namespace SilverSim.Database.PostgreSQL
             }
             return string.Join(",", resvals);
         }
-        #endregion
+#endregion
 
-        #region UPDATE SET helper
+#region UPDATE SET helper
         private static List<string> UpdateSetFromVals(Dictionary<string, object> vals)
         {
             var updates = new List<string>();
@@ -724,9 +929,9 @@ namespace SilverSim.Database.PostgreSQL
                 }
             }
         }
-        #endregion
+#endregion
 
-        #region Data parsers
+#region Data parsers
         public static EnvironmentController.WLVector4 GetWLVector4(this NpgsqlDataReader dbReader, string prefix) =>
             new EnvironmentController.WLVector4(
                 (double)dbReader[prefix + "Red"],
@@ -862,9 +1067,9 @@ namespace SilverSim.Database.PostgreSQL
 
         public static GridVector GetGridVector(this NpgsqlDataReader dbReader, string prefix) =>
             new GridVector((uint)dbReader[prefix + "X"], (uint)dbReader[prefix + "Y"]);
-        #endregion
+#endregion
 
-        #region Migrations helper
+#region Migrations helper
         public static uint GetTableRevision(this NpgsqlConnection connection, string name)
         {
             using(var cmd = new NpgsqlCommand("SELECT description FROM pg_description " +
@@ -888,6 +1093,6 @@ namespace SilverSim.Database.PostgreSQL
             }
             return 0;
         }
-        #endregion
+#endregion
     }
 }

@@ -153,35 +153,7 @@ namespace SilverSim.Database.PostgreSQL.AuthInfo
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                if(connection.HasOnConflict() && m_EnableOnConflict)
-                {
-                    using (NpgsqlCommand cmd = new NpgsqlCommand("INSERT INTO auth (\"UserID\", \"PasswordHash\", \"PasswordSalt\") VALUES (@userid, @hash, @salt) ON CONFLICT (\"UserID\") DO UPDATE SET \"PasswordHash\" = @hash, \"PasswordSalt\" = @salt", connection))
-                    {
-                        cmd.Parameters.AddParameter("@userid", info.ID);
-                        cmd.Parameters.AddParameter("@hash", info.PasswordHash);
-                        cmd.Parameters.AddParameter("@salt", info.PasswordSalt);
-                        if(cmd.ExecuteNonQuery() < 1)
-                        {
-                            throw new PostgreSQLUtilities.PostgreSQLInsertException();
-                        }
-                    }
-                }
-                else
-                {
-                    using (NpgsqlCommand cmd = new NpgsqlCommand(
-                        "UPDATE auth SET \"PasswordHash\" = @hash, \"PasswordSalt\" = @salt WHERE \"UserID\" = @userid;" +
-                        "INSERT INTO auth (\"UserID\", \"PasswordHash\", \"PasswordSalt\") " +
-                        "SELECT @userid, @hash, @salt WHERE NOT EXISTS (SELECT 1 FROM auth WHERE \"UserID\" = @userid);", connection))
-                    {
-                        cmd.Parameters.AddParameter("@userid", info.ID);
-                        cmd.Parameters.AddParameter("@hash", info.PasswordHash);
-                        cmd.Parameters.AddParameter("@salt", info.PasswordSalt);
-                        if (cmd.ExecuteNonQuery() < 1)
-                        {
-                            throw new PostgreSQLUtilities.PostgreSQLInsertException();
-                        }
-                    }
-                }
+                connection.ReplaceInto("auth", vals, new string[] { "UserID" }, m_EnableOnConflict);
             }
         }
 

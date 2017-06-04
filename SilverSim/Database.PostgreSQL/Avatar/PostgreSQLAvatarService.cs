@@ -163,11 +163,17 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 {
                     connection.Open();
 
+                    var vals = new Dictionary<string, object>
+                    {
+                        ["PrincipalID"] = avatarID
+                    };
                     connection.InsideTransaction(() =>
                     {
                         for (int i = 0; i < itemKeys.Count; ++i)
                         {
-                            ReplaceInto(connection, avatarID, itemKeys[i], value[i]);
+                            vals["Name"] = itemKeys[i];
+                            vals["Value"] = value[i];
+                            connection.ReplaceInto("avatars", vals, new string[] { "PrincipalID", "Name" }, m_EnableOnConflict);
                         }
                     });
                 }
@@ -214,31 +220,13 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    connection.InsideTransaction(() => ReplaceInto(connection, avatarID, itemKey, value));
-                }
-            }
-        }
-
-        private void ReplaceInto(NpgsqlConnection conn, UUID avatarID, string itemKey, string value)
-        {
-            string cmdstring;
-            if (conn.HasOnConflict() && m_EnableOnConflict)
-            {
-                cmdstring = "INSERT INTO avatars (\"PrincipalID\", \"Name\", \"Value\") VALUES (@principalid, @name, @value) ON CONFLICT (\"PrincipalID\", \"Name\") DO UPDATE SET \"Value\"=@value";
-            }
-            else
-            {
-                cmdstring = "UPDATE avatars SET \"Value\"=@value WHERE \"PrincipalID\"=@principalid AND \"Name\"=@value;";
-                cmdstring += "INSERT INTO avatars (\"PrincipalID\", \"Name\", \"Value\") SELECT @principalid, @name, @value WHERE NOT EXISTS (SELECT 1 FROM avatars WHERE \"PrincipalID\"=@principalid AND \"Name\"=@name);";
-            }
-            using (var cmd = new NpgsqlCommand(cmdstring, conn))
-            {
-                cmd.Parameters.AddParameter("@principalid", avatarID);
-                cmd.Parameters.AddParameter("@Name", itemKey);
-                cmd.Parameters.AddParameter("@Value", value);
-                if (cmd.ExecuteNonQuery() < 1)
-                {
-                    throw new PostgreSQLInsertException();
+                    var vals = new Dictionary<string, object>
+                    {
+                        ["PrincipalID"] = avatarID,
+                        ["Name"] = itemKey,
+                        ["Value"] = value
+                    };
+                    connection.ReplaceInto("avatars", vals, new string[] { "PrincipalID", "Name" }, m_EnableOnConflict);
                 }
             }
         }
