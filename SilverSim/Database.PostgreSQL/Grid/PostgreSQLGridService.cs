@@ -74,7 +74,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
-            m_TableName = b.QuoteIdentifier(ownSection.GetString("TableName", "regions"));
+            m_TableName = ownSection.GetString("TableName", "regions");
         }
 
         public void Startup(ConfigurationLoader loader)
