@@ -85,7 +85,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             new AddColumn<int>("UserLevel") { IsNullAllowed = false, Default = 0 },
             new AddColumn<uint>("UserFlags") { IsNullAllowed = false, Default = (uint)0 },
             new AddColumn<string>("UserTitle") { Cardinality = 64, IsNullAllowed = false, Default = string.Empty },
-            new AddColumn<int>("IsEverLoggedIn") {IsNullAllowed = false, Default = 0 },
+            new AddColumn<bool>("IsEverLoggedIn") {IsNullAllowed = false, Default = false },
             new PrimaryKeyInfo("ID"),
             new NamedKeyInfo("Email", "Email"),
             new NamedKeyInfo("Name", "FirstName", "LastName") { IsUnique = true },
@@ -408,7 +408,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
                 ["UserLevel"] = userAccount.UserLevel,
                 ["UserFlags"] = userAccount.UserFlags,
                 ["UserTitle"] = userAccount.UserTitle,
-                ["IsEverLoggedIn"] = userAccount.IsEverLoggedIn ? 1 : 0
+                ["IsEverLoggedIn"] = userAccount.IsEverLoggedIn
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
@@ -428,7 +428,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
                 ["UserLevel"] = userAccount.UserLevel,
                 ["UserFlags"] = userAccount.UserFlags,
                 ["UserTitle"] = userAccount.UserTitle,
-                ["IsEverLoggedIn"] = userAccount.IsEverLoggedIn ? 1 : 0
+                ["IsEverLoggedIn"] = userAccount.IsEverLoggedIn
             };
             var w = new Dictionary<string, object>
             {
