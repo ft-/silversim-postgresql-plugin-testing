@@ -28,14 +28,10 @@ using SilverSim.ServiceInterfaces.Database;
 using SilverSim.ServiceInterfaces.Maptile;
 using SilverSim.Types;
 using SilverSim.Types.Maptile;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SilverSim.Database.PostgreSQL
+namespace SilverSim.Database.PostgreSQL.Maptile
 {
     [Description("PostgreSQL Maptile Backend")]
     [PluginName("Maptile")]
