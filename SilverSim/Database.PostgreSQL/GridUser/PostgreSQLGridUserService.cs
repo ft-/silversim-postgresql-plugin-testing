@@ -163,7 +163,7 @@ namespace SilverSim.Database.PostgreSQL.GridUser
                 {
                     ["ID"] = userID.ID,
                     ["LastLogin"] = Date.Now,
-                    ["IsOnline"] = 1
+                    ["IsOnline"] = true
                 };
                 conn.ReplaceInto("griduser", param, new string[] { "ID" }, m_EnableOnConflict);
             }

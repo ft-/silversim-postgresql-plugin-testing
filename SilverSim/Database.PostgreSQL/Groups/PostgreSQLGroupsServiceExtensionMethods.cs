@@ -48,8 +48,8 @@ namespace SilverSim.Database.PostgreSQL.Groups
             info.IsAllowPublish = (bool)reader["AllowPublish"];
             info.IsMaturePublish = (bool)reader["MaturePublish"];
             info.OwnerRoleID = reader.GetUUID("OwnerRoleID");
-            info.MemberCount = (int)reader[memberCount];
-            info.RoleCount = (int)reader["RoleCount"];
+            info.MemberCount = (int)(long)reader[memberCount];
+            info.RoleCount = (int)(long)reader["RoleCount"];
 
             return info;
         }
@@ -67,11 +67,11 @@ namespace SilverSim.Database.PostgreSQL.Groups
             };
             if (role.ID == UUID.Zero)
             {
-                role.Members = (uint)(int)reader["GroupMembers"];
+                role.Members = (uint)(long)reader["GroupMembers"];
             }
             else
             {
-                role.Members = (uint)(int)reader["RoleMembers"];
+                role.Members = (uint)(long)reader["RoleMembers"];
             }
 
             return role;
