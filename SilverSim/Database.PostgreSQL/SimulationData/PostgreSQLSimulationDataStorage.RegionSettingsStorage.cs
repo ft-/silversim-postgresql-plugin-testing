@@ -137,7 +137,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 conn.Open();
                 using (var cmd = new NpgsqlCommand("SELECT * FROM regionsettings WHERE \"RegionID\" = @regionid", conn))
                 {
-                    cmd.Parameters.AddWithValue("@regionid", regionID);
+                    cmd.Parameters.AddParameter("@regionid", regionID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())

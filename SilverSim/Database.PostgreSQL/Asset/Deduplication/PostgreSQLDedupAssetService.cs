@@ -89,8 +89,8 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                                     uconn.Open();
                                     using (var ucmd = new NpgsqlCommand("UPDATE assets SET \"access_time\" = @access WHERE \"id\" = @id", uconn))
                                     {
-                                        ucmd.Parameters.AddWithValue("@access", Date.GetUnixTime());
-                                        ucmd.Parameters.AddWithValue("@id", key);
+                                        ucmd.Parameters.AddParameter("@access", Date.GetUnixTime());
+                                        ucmd.Parameters.AddParameter("@id", key);
                                         ucmd.ExecuteNonQuery();
                                     }
                                 }
@@ -138,8 +138,8 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                                     uconn.Open();
                                     using (NpgsqlCommand ucmd = new NpgsqlCommand("UPDATE assetrefs SET \"access_time\" = @access WHERE \"id\" = @id", uconn))
                                     {
-                                        ucmd.Parameters.AddWithValue("@access", Date.GetUnixTime());
-                                        ucmd.Parameters.AddWithValue("@id", id);
+                                        ucmd.Parameters.AddParameter("@access", Date.GetUnixTime());
+                                        ucmd.Parameters.AddParameter("@id", id);
                                         ucmd.ExecuteNonQuery();
                                     }
                                 }
@@ -199,8 +199,8 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                                     uconn.Open();
                                     using (var ucmd = new NpgsqlCommand("UPDATE assetrefs SET access_time = @access WHERE \"id\" = @id", uconn))
                                     {
-                                        ucmd.Parameters.AddWithValue("@access", Date.GetUnixTime());
-                                        ucmd.Parameters.AddWithValue("@id", key);
+                                        ucmd.Parameters.AddParameter("@access", Date.GetUnixTime());
+                                        ucmd.Parameters.AddParameter("@id", key);
                                         ucmd.ExecuteNonQuery();
                                     }
                                 }

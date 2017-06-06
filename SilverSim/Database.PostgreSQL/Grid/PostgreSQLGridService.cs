@@ -561,11 +561,11 @@ namespace SilverSim.Database.PostgreSQL.Grid
                         "(\"locX\" >= @xmax AND \"locY\" >= @ymax AND \"locX\" + \"sizeX\" > @xmax AND \"locY\" + \"sizeY\" > @ymax)" +
                         ") AND ScopeID = @scopeid", connection))
                 {
-                    cmd.Parameters.AddWithValue("@scopeid", scopeID.ToString());
-                    cmd.Parameters.AddWithValue("@xmin", min.X);
-                    cmd.Parameters.AddWithValue("@ymin", min.Y);
-                    cmd.Parameters.AddWithValue("@xmax", max.X);
-                    cmd.Parameters.AddWithValue("@ymax", max.Y);
+                    cmd.Parameters.AddParameter("@scopeid", scopeID);
+                    cmd.Parameters.AddParameter("@xmin", min.X);
+                    cmd.Parameters.AddParameter("@ymin", min.Y);
+                    cmd.Parameters.AddParameter("@xmax", max.X);
+                    cmd.Parameters.AddParameter("@ymax", max.Y);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
@@ -596,11 +596,11 @@ namespace SilverSim.Database.PostgreSQL.Grid
                                                             ") AND " +
                                                             "\"ScopeID\" = @scopeid", connection))
                 {
-                    cmd.Parameters.AddWithValue("@scopeid", scopeID.ToString());
-                    cmd.Parameters.AddWithValue("@locX", ri.Location.X);
-                    cmd.Parameters.AddWithValue("@locY", ri.Location.Y);
-                    cmd.Parameters.AddWithValue("@maxX", ri.Size.X + ri.Location.X);
-                    cmd.Parameters.AddWithValue("@maxY", ri.Size.Y + ri.Location.Y);
+                    cmd.Parameters.AddParameter("@scopeid", scopeID);
+                    cmd.Parameters.AddParameter("@locX", ri.Location.X);
+                    cmd.Parameters.AddParameter("@locY", ri.Location.Y);
+                    cmd.Parameters.AddParameter("@maxX", ri.Size.X + ri.Location.X);
+                    cmd.Parameters.AddParameter("@maxY", ri.Size.Y + ri.Location.Y);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
@@ -646,7 +646,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
                 using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" LIKE '" + searchString.ToNpgsqlQuotedWithoutQuotes() + "%'", connection))
                 {
-                    cmd.Parameters.AddWithValue("@scopeid", scopeID.ToString());
+                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())

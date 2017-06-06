@@ -91,7 +91,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                         cmd.Parameters.AddParameter("@estateid", estateID);
                         if (value)
                         {
-                            cmd.Parameters.AddWithValue("@userid", agent.ID.ToString());
+                            cmd.Parameters.AddParameter("@userid", agent.ID);
                         }
                         if (cmd.ExecuteNonQuery() < 0 && value)
                         {

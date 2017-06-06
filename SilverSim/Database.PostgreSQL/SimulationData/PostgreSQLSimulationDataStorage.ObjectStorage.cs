@@ -46,7 +46,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ID FROM objects WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM objects WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
                 {
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
@@ -67,7 +67,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ID FROM prims WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM prims WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
                 {
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
@@ -272,7 +272,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             {
                                 try
                                 {
-                                    objgroupID = dbReader.GetUUID("id");
+                                    objgroupID = dbReader.GetUUID("ID");
                                     originalAssetIDs[objgroupID] = dbReader.GetUUID("OriginalAssetID");
                                     nextOwnerAssetIDs[objgroupID] = dbReader.GetUUID("NextOwnerAssetID");
                                     objGroups[objgroupID] = ObjectGroupFromDbReader(dbReader);
@@ -391,7 +391,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 for (int idx = 0; idx < removeObjGroups.Count; idx += 256)
                 {
                     int elemcnt = Math.Min(removeObjGroups.Count - idx, 256);
-                    string sqlcmd = "DELETE FROM objects WHERE RegionID = '" + regionID.ToString() + "' AND ID IN (" +
+                    string sqlcmd = "DELETE FROM objects WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ID\" IN (" +
                         string.Join(",", from id in removeObjGroups.GetRange(idx, elemcnt) select "'" + id.ToString() + "'") +
                         ")";
                     using (var conn = new NpgsqlConnection(m_ConnectionString))
@@ -407,7 +407,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 for (int idx = 0; idx < orphanedPrims.Count; idx += 256)
                 {
                     int elemcnt = Math.Min(orphanedPrims.Count - idx, 256);
-                    string sqlcmd = "DELETE FROM prims WHERE RegionID = '" + regionID.ToString() + "' AND ID IN (" +
+                    string sqlcmd = "DELETE FROM prims WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ID\" IN (" +
                         string.Join(",", from id in orphanedPrims.GetRange(idx, elemcnt) select "'" + id.ToString() + "'") +
                         ")";
                     using (var conn = new NpgsqlConnection(m_ConnectionString))
@@ -422,9 +422,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 for (int idx = 0; idx < orphanedPrimInventories.Count; idx += 256)
                 {
                     int elemcnt = Math.Min(orphanedPrimInventories.Count - idx, 256);
-                    string sqlcmd = "DELETE FROM primitems WHERE RegionID = '" + regionID.ToString() + "' AND (" +
+                    string sqlcmd = "DELETE FROM primitems WHERE \"RegionID\" = '" + regionID.ToString() + "' AND (" +
                         string.Join(" OR ", from id in orphanedPrimInventories.GetRange(idx, elemcnt)
-                                            select string.Format("PrimID = '{0}' AND ID = '{1}'", id.Key.ToString(), id.Value.ToString()));
+                                            select string.Format("\"PrimID\" = '{0}' AND \"ID\" = '{1}'", id.Key.ToString(), id.Value.ToString()));
                     using (var conn = new NpgsqlConnection(m_ConnectionString))
                     {
                         conn.Open();

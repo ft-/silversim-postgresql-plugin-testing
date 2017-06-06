@@ -118,8 +118,10 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM parcels WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "'", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM parcels WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid", connection))
                 {
+                    cmd.Parameters.AddParameter("@regionid", regionID);
+                    cmd.Parameters.AddParameter("@parcelid", parcelID);
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
@@ -131,8 +133,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ParcelID FROM parcels WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"ParcelID\" FROM parcels WHERE \"RegionID\" = @regionid", connection))
                 {
+                    cmd.Parameters.AddParameter("@regionid", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())

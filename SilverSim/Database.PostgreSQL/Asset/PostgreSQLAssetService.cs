@@ -65,7 +65,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                 conn.Open();
                 using (var cmd = new NpgsqlCommand("SELECT id, access_time FROM assets WHERE id = @id", conn))
                 {
-                    cmd.Parameters.AddWithValue("@id", (Guid)key);
+                    cmd.Parameters.AddParameter("@id", (Guid)key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         if (dbReader.Read())
@@ -78,8 +78,8 @@ namespace SilverSim.Database.PostgreSQL.Asset
                                     uconn.Open();
                                     using (var ucmd = new NpgsqlCommand("UPDATE assets SET access_time = @access WHERE id = @id", uconn))
                                     {
-                                        ucmd.Parameters.AddWithValue("@access", Date.GetUnixTime());
-                                        ucmd.Parameters.AddWithValue("@id", (Guid)key);
+                                        ucmd.Parameters.AddParameter("@access", Date.GetUnixTime());
+                                        ucmd.Parameters.AddParameter("@id", (Guid)key);
                                         ucmd.ExecuteNonQuery();
                                     }
                                 }
@@ -127,8 +127,8 @@ namespace SilverSim.Database.PostgreSQL.Asset
                                     uconn.Open();
                                     using (var ucmd = new NpgsqlCommand("UPDATE assets SET access_time = @access WHERE id = @id", uconn))
                                     {
-                                        ucmd.Parameters.AddWithValue("@access", Date.GetUnixTime());
-                                        ucmd.Parameters.AddWithValue("@id", (Guid)id);
+                                        ucmd.Parameters.AddParameter("@access", Date.GetUnixTime());
+                                        ucmd.Parameters.AddParameter("@id", (Guid)id);
                                         ucmd.ExecuteNonQuery();
                                     }
                                 }
@@ -157,7 +157,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                 conn.Open();
                 using (var cmd = new NpgsqlCommand("SELECT * FROM assets WHERE id = @id", conn))
                 {
-                    cmd.Parameters.AddWithValue("@id", (Guid)key);
+                    cmd.Parameters.AddParameter("@id", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         if (dbReader.Read())
@@ -182,8 +182,8 @@ namespace SilverSim.Database.PostgreSQL.Asset
                                     uconn.Open();
                                     using (var ucmd = new NpgsqlCommand("UPDATE assets SET access_time = @access WHERE id = @id", uconn))
                                     {
-                                        ucmd.Parameters.AddWithValue("@access", Date.GetUnixTime());
-                                        ucmd.Parameters.AddWithValue("@id", (Guid)key);
+                                        ucmd.Parameters.AddParameter("@access", Date.GetUnixTime());
+                                        ucmd.Parameters.AddParameter("@id", key);
                                         ucmd.ExecuteNonQuery();
                                     }
                                 }
