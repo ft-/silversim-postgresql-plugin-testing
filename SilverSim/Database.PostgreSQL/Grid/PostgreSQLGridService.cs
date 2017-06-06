@@ -680,7 +680,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             new AddColumn<UUI>("owner") { IsNullAllowed = false, Default = UUID.Zero },
             new AddColumn<uint>("access") { IsNullAllowed = false, Default = (uint)13 },
             new AddColumn<UUID>("ScopeID") { IsNullAllowed = false, Default = UUID.Zero },
-            new AddColumn<GridVector>("Size") { IsNullAllowed = false, Default = GridVector.Zero },
+            new AddColumn<GridVector>("size") { IsNullAllowed = false, Default = GridVector.Zero },
             new AddColumn<uint>("flags") { IsNullAllowed = false, Default = (uint)0 },
             new AddColumn<Date>("last_seen") { IsNullAllowed = false , Default = Date.UnixTimeToDateTime(0) },
             new AddColumn<string>("AuthenticatingToken") { Cardinality = 255, IsNullAllowed = false, Default = string.Empty },

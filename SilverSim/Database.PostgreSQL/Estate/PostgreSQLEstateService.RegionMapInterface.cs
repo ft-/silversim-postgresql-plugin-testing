@@ -109,7 +109,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    conn.ReplaceInto("estate_regionmap", vals, new string[] { "EstateID" }, m_EnableOnConflict);
+                    conn.ReplaceInto("estate_regionmap", vals, new string[] { "RegionID" }, m_EnableOnConflict);
                 }
             }
         }

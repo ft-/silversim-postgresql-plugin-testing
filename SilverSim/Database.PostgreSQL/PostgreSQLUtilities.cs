@@ -247,8 +247,8 @@ namespace SilverSim.Database.PostgreSQL
             else if (t == typeof(GridVector))
             {
                 var v = (GridVector)value;
-                sqlparam.AddWithValue(key + "X", v.X);
-                sqlparam.AddWithValue(key + "Y", v.Y);
+                sqlparam.AddWithValue(key + "X", (int)v.X);
+                sqlparam.AddWithValue(key + "Y", (int)v.Y);
             }
             else if (t == typeof(Quaternion))
             {
@@ -327,9 +327,9 @@ namespace SilverSim.Database.PostgreSQL
             {
                 sqlparam.AddWithValue(key, (short)(byte)value);
             }
-            else if (t == typeof(byte))
+            else if (t == typeof(sbyte))
             {
-                sqlparam.AddWithValue(key, (short)(byte)value);
+                sqlparam.AddWithValue(key, (short)(sbyte)value);
             }
             else if (t.IsEnum)
             {
@@ -962,7 +962,17 @@ namespace SilverSim.Database.PostgreSQL
         {
             var enumType = typeof(T).GetEnumUnderlyingType();
             object v = dbreader[prefix];
-            return (T)Convert.ChangeType(v, enumType);
+            Type dbType = v.GetType();
+            if (enumType == typeof(ulong) || enumType == typeof(long))
+            {
+                dbType = typeof(long);
+            }
+            else if (enumType == typeof(ushort) || enumType == typeof(byte) || enumType == typeof(uint) ||
+                enumType == typeof(short) || enumType == typeof(sbyte))
+            {
+                dbType = typeof(int);
+            }
+            return (T)Convert.ChangeType(Convert.ChangeType(v, dbType), enumType);
         }
 
         public static UUID GetUUID(this NpgsqlDataReader dbReader, string prefix)
@@ -1085,7 +1095,7 @@ namespace SilverSim.Database.PostgreSQL
         }
 
         public static GridVector GetGridVector(this NpgsqlDataReader dbReader, string prefix) =>
-            new GridVector((uint)dbReader[prefix + "X"], (uint)dbReader[prefix + "Y"]);
+            new GridVector((uint)(int)dbReader[prefix + "X"], (uint)(int)dbReader[prefix + "Y"]);
 #endregion
 
 #region Migrations helper
