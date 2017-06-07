@@ -26,17 +26,13 @@ using SilverSim.Database.PostgreSQL._Migration;
 using SilverSim.Main.Common;
 using SilverSim.ServiceInterfaces.Asset;
 using SilverSim.ServiceInterfaces.Database;
-using SilverSim.Threading;
 using SilverSim.Types;
 using SilverSim.Types.Asset;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
 {
@@ -324,8 +320,11 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                     {
                         using (var cmd =
                             new NpgsqlCommand(
+                                m_EnableOnConflict ?
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\")" +
-                                "VALUES(@hash, @assetType, @data) ON CONFLICT(\"hash\", \"assetType\") DO NOTHING",
+                                "VALUES(@hash, @assetType, @data) ON CONFLICT(\"hash\", \"assetType\") DO NOTHING" :
+                                "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\") " +
+                                "SELECT @hash, @assetType, @data WHERE NOT EXISTS (SELECT 1 FROM assetdata WHERE \"hash\"=@hash AND \"assetType\"=@assetType)",
                                 conn))
                         {
                             using (cmd)
@@ -401,6 +400,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                 using (var cmd = new NpgsqlCommand("DELETE FROM assetrefs WHERE \"id\"=@id AND \"asset_flags\" <> 0", conn))
                 {
                     cmd.Parameters.AddParameter("@id", id);
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
