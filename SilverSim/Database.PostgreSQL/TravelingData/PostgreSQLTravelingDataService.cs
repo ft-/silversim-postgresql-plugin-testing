@@ -34,7 +34,7 @@ using System.ComponentModel;
 
 namespace SilverSim.Database.PostgreSQL.TravelingData
 {
-    internal static class MySQLTravelingDataExtensionMethods
+    internal static class PostgreSQLTravelingDataExtensionMethods
     {
         public static TravelingDataInfo ToTravelingData(this NpgsqlDataReader reader) => new TravelingDataInfo()
         {
