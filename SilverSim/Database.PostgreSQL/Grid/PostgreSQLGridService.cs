@@ -147,7 +147,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE uuid = @id AND ScopeID = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
