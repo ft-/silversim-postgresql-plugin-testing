@@ -25,9 +25,6 @@ using SilverSim.Types;
 using SilverSim.Types.Groups;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SilverSim.Database.PostgreSQL.Groups
 {
@@ -177,7 +174,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
                             {
                                 info.ID.HomeURI = new Uri(uri, UriKind.Absolute);
                             }
-                            info.MemberCount = (int)reader["MemberCount"];
+                            info.MemberCount = (int)(long)reader["MemberCount"];
                             groups.Add(info);
                         }
                     }
@@ -280,7 +277,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.UpdateSet("groups", vals, "\"GroupID\" = \"" + group.ID.ID.ToString() + "\"");
+                conn.UpdateSet("groups", vals, "\"GroupID\" = '" + group.ID.ID.ToString() + "'");
             }
             return group;
         }
