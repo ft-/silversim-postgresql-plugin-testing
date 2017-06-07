@@ -38,7 +38,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
     [PluginName("Groups")]
     public sealed partial class PostgreSQLGroupsService : GroupsServiceInterface, IPlugin, IDBServiceInterface, IUserAccountDeleteServiceInterface
     {
-        private static readonly ILog m_Log = LogManager.GetLogger("MYSQL GROUPS SERVICE");
+        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL GROUPS SERVICE");
         private AggregatingAvatarNameService m_AvatarNameService;
 
         private const string GCountQuery = "(SELECT COUNT(m.\"PrincipalID\") FROM groupmemberships AS m WHERE m.\"GroupID\" = g.\"GroupID\") AS MemberCount," +

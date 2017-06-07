@@ -59,7 +59,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT \"UserID\" FROM estate_users WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE \"" + agent.ID.ToString() + "%\"", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"UserID\" FROM estate_users WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE '" + agent.ID.ToString() + "%'", conn))
                     {
                         cmd.Parameters.AddParameter("@estateid", estateID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -81,7 +81,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             {
                 string query = value ?
                     "INSERT INTO estate_users (\"EstateID\", \"UserID\") VALUES (@estateid, @userid)" :
-                    "DELETE FROM \"estate_users\" WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE \"" + agent.ID.ToString() + "%\"";
+                    "DELETE FROM \"estate_users\" WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE '" + agent.ID.ToString() + "'";
 
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
