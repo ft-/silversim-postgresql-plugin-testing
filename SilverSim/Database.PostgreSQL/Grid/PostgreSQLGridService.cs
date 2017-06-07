@@ -73,7 +73,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
             m_UseRegionDefaultServices = ownSection.GetBoolean("UseRegionDefaultServices", true);
             m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
-            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
             m_TableName = ownSection.GetString("TableName", "regions");
         }
 
