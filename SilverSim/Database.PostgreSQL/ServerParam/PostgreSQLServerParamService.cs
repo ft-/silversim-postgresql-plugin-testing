@@ -209,7 +209,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
 
                 using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
                 {
-                    cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
+                    cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@parametername", parameter);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
@@ -285,7 +285,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
                 connection.Open();
                 using (var cmd = new NpgsqlCommand("DELETE FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
                 {
-                    cmd.Parameters.AddParameter("@regionid", (Guid)regionID);
+                    cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@parametername", parameter);
                     if (cmd.ExecuteNonQuery() >= 1)
                     {

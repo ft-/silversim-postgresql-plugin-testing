@@ -64,7 +64,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     connection.Open();
                     using (var cmd = new NpgsqlCommand("SELECT \"Name\",\"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid", connection))
                     {
-                        cmd.Parameters.AddParameter("@principalid", (Guid)avatarID);
+                        cmd.Parameters.AddParameter("@principalid", avatarID);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
                             while (dbReader.Read())

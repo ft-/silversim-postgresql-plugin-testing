@@ -39,7 +39,7 @@ namespace SilverSim.Database.PostgreSQL.Maptile
     {
         private readonly string m_ConnectionString;
         private readonly bool m_EnableOnConflict;
-        private static readonly ILog m_Log = LogManager.GetLogger("MYSQL MAPTILE SERVICE");
+        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL MAPTILE SERVICE");
 
         public PostgreSQLMaptileService(IConfig ownSection)
         {
