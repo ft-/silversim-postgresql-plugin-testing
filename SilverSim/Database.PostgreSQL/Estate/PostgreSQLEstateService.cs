@@ -296,7 +296,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                     using (var conn = new NpgsqlConnection(m_ConnectionString))
                     {
                         conn.Open();
-                        using (var cmd = new NpgsqlCommand("DELETE FROM estates WHERE ID = @id", conn))
+                        using (var cmd = new NpgsqlCommand("DELETE FROM estates WHERE \"ID\" = @id", conn))
                         {
                             cmd.Parameters.AddParameter("@id", estateID);
                             if (cmd.ExecuteNonQuery() < 1)
