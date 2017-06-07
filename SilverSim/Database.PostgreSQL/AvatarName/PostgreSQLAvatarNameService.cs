@@ -27,16 +27,14 @@ using SilverSim.Main.Common;
 using SilverSim.ServiceInterfaces.AvatarName;
 using SilverSim.ServiceInterfaces.Database;
 using SilverSim.Types;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using PostgreSQLInsertException = SilverSim.Database.PostgreSQL.PostgreSQLUtilities.PostgreSQLInsertException;
 
 namespace SilverSim.Database.PostgreSQL.AvatarName
 {
     [Description("PostgreSQL AvatarName Backend")]
     [PluginName("AvatarNames")]
-    public class PostgreSQLAvatarNameService: AvatarNameServiceInterface, IDBServiceInterface, IPlugin
+    public class PostgreSQLAvatarNameService : AvatarNameServiceInterface, IDBServiceInterface, IPlugin
     {
         private readonly string m_ConnectionString;
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL AVATAR NAMES SERVICE");
