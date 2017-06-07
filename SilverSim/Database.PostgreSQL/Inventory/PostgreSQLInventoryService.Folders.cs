@@ -1,4 +1,25 @@
-﻿using Npgsql;
+﻿// SilverSim is distributed under the terms of the
+// GNU Affero General Public License v3 with
+// the following clarification and special exception.
+
+// Linking this library statically or dynamically with other modules is
+// making a combined work based on this library. Thus, the terms and
+// conditions of the GNU Affero General Public License cover the whole
+// combination.
+
+// As a special exception, the copyright holders of this library give you
+// permission to link this library with independent modules to produce an
+// executable, regardless of the license terms of these independent
+// modules, and to copy and distribute the resulting executable under
+// terms of your choice, provided that you also meet, for each linked
+// independent module, the terms and conditions of the license of that
+// module. An independent module is a module which is not derived from
+// or based on this library. If you modify this library, you may extend
+// this exception to your version of the library, but you are not
+// obligated to do so. If you do not wish to do so, delete this
+// exception statement from your version.
+
+using Npgsql;
 using SilverSim.ServiceInterfaces.Inventory;
 using SilverSim.Types;
 using SilverSim.Types.Asset;
@@ -148,10 +169,12 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 }
                 else
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT ID FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"InventoryType\" = @type", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT ID FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"InventoryType\" = @type AND " +
+                            "EXISTS (SELECT 1 FROM " + m_InventoryFolderTable + " AS B WHERE B.ParentFolderID = @rootparent AND B.FolderID = A.ParentFolderID)", connection))
                     {
                         cmd.Parameters.AddParameter("@ownerid", principalID);
                         cmd.Parameters.AddParameter("@type", type);
+                        cmd.Parameters.AddParameter("@rootparent", UUID.Zero);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
                             if (dbReader.Read())
@@ -189,10 +212,12 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 }
                 else
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"InventoryType\" = @type", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"InventoryType\" = @type AND " +
+                            "EXISTS (SELECT 1 FROM " + m_InventoryFolderTable + " AS B WHERE B.ParentFolderID = @rootparent AND B.FolderID = A.ParentFolderID)", connection))
                     {
                         cmd.Parameters.AddParameter("@ownerid", principalID);
                         cmd.Parameters.AddParameter("@type", type);
+                        cmd.Parameters.AddParameter("@rootparent", UUID.Zero);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
                             if (dbReader.Read())
@@ -213,42 +238,12 @@ namespace SilverSim.Database.PostgreSQL.Inventory
         {
             get
             {
-                using (var connection = new NpgsqlConnection(m_ConnectionString))
+                InventoryFolder folder;
+                if (Folder.TryGetValue(principalID, type, out folder))
                 {
-                    connection.Open();
-                    if (type == AssetType.RootFolder)
-                    {
-                        using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid", connection))
-                        {
-                            cmd.Parameters.AddParameter("@ownerid", principalID);
-                            cmd.Parameters.AddParameter("@parentfolderid", UUID.Zero);
-                            using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                            {
-                                if (dbReader.Read())
-                                {
-                                    return dbReader.ToFolder();
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"InventoryType\" = @type", connection))
-                        {
-                            cmd.Parameters.AddParameter("@ownerid", principalID);
-                            cmd.Parameters.AddParameter("@type", type);
-                            using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                            {
-                                if (dbReader.Read())
-                                {
-                                    return dbReader.ToFolder();
-                                }
-                            }
-                        }
-                    }
+                    throw new InventoryFolderTypeNotFoundException(type);
                 }
-
-                throw new InventoryFolderTypeNotFoundException(type);
+                return folder;
             }
         }
 
