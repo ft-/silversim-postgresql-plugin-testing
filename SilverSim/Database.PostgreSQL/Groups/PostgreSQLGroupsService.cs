@@ -170,7 +170,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM grouprolememberships \"WHERE PrincipalID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM grouprolememberships WHERE \"PrincipalID\" = @id", conn))
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                     }
