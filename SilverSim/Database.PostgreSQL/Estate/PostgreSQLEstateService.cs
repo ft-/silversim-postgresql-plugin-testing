@@ -30,6 +30,7 @@ using SilverSim.Types;
 using SilverSim.Types.Estate;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System;
 
 namespace SilverSim.Database.PostgreSQL.Estate
 {
@@ -243,6 +244,19 @@ namespace SilverSim.Database.PostgreSQL.Estate
             {
                 conn.Open();
                 conn.InsertInto("estates", dict);
+            }
+        }
+
+        public override bool Remove(uint estateID)
+        {
+            using (var conn = new NpgsqlConnection(m_ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("DELETE FROM estates WHERE \"ID\" = @id", conn))
+                {
+                    cmd.Parameters.AddParameter("@id", estateID);
+                    return cmd.ExecuteNonQuery() == 1;
+                }
             }
         }
 
