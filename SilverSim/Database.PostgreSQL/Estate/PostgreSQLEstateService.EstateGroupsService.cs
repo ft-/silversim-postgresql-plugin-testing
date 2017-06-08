@@ -77,7 +77,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             set
             {
                 string query = value ?
-                    "INSERT INTO estate_groups (EstateID, GroupID) VALUES (@estateid, @groupid)" :
+                    "INSERT INTO estate_groups (\"EstateID\", \"GroupID\") VALUES (@estateid, @groupid)" :
                     "DELETE FROM estate_groups WHERE \"EstateID\" = @estateid AND \"GroupID\" = @groupid";
 
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
