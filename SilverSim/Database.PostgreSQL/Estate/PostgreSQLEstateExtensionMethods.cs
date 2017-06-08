@@ -38,7 +38,8 @@ namespace SilverSim.Database.PostgreSQL.Estate
             AbuseEmail = (string)reader["AbuseEmail"],
             CovenantID = reader.GetUUID("CovenantID"),
             CovenantTimestamp = reader.GetDate("CovenantTimestamp"),
-            UseGlobalTime = (bool)reader["UseGlobalTime"]
+            UseGlobalTime = (bool)reader["UseGlobalTime"],
+            ParentEstateID = (uint)(int)reader["ParentEstateID"]
         };
     }
 }
