@@ -59,9 +59,10 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT \"UserID\" FROM estate_managers WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE '" + agent.ID.ToString() + "%'", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"UserID\" FROM estate_managers WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE @userid", conn))
                     {
                         cmd.Parameters.AddParameter("@estateid", estateID);
+                        cmd.Parameters.AddParameter("@userid", agent.ID.ToString() + "%");
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
@@ -81,7 +82,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             {
                 string query = value ?
                     "INSERT INTO estate_managers (\"EstateID\", \"UserID\") VALUES (@estateid, @userid)" :
-                    "DELETE FROM estate_managers WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE '" + agent.ID.ToString() + "%'";
+                    "DELETE FROM estate_managers WHERE \"EstateID\" = @estateid AND \"UserID\" LIKE @userid";
 
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
@@ -91,7 +92,11 @@ namespace SilverSim.Database.PostgreSQL.Estate
                         cmd.Parameters.AddParameter("@estateid", estateID);
                         if (value)
                         {
-                            cmd.Parameters.AddParameter("@userid", agent.ID);
+                            cmd.Parameters.AddParameter("@userid", agent);
+                        }
+                        else
+                        {
+                            cmd.Parameters.AddParameter("@userid", agent.ID.ToString() + "%");
                         }
                         if (cmd.ExecuteNonQuery() < 0)
                         {

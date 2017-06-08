@@ -33,7 +33,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT Owner FROM estates WHERE \"ID\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM estates WHERE \"ID\" = @id", conn))
                 {
                     cmd.Parameters.AddParameter("@id", estateID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -58,9 +58,9 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT \"ID\", \"Owner\" FROM estates WHERE \"Owner\" LIKE '" + owner.ID.ToString() + "%'", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"ID\", \"Owner\" FROM estates WHERE \"Owner\" LIKE @id", conn))
                     {
-                        cmd.Parameters.AddParameter("@id", owner.ID);
+                        cmd.Parameters.AddParameter("@id", owner.ID.ToString() + "%");
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
