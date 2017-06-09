@@ -388,7 +388,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
                 if (!m_AllowDuplicateRegionNames)
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT uuid FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" = @name LIMIT 1", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"uuid\" FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" = @name LIMIT 1", conn))
                     {
                         cmd.Parameters.AddParameter("@scopeid", regionInfo.ScopeID);
                         cmd.Parameters.AddParameter("@name", regionInfo.Name);
@@ -404,7 +404,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 }
 
                 /* we have to give checks for all intersection variants */
-                using (var cmd = new NpgsqlCommand("SELECT uuid FROM " + m_TableName + " WHERE (" +
+                using (var cmd = new NpgsqlCommand("SELECT \"uuid\" FROM " + m_TableName + " WHERE (" +
                             "(\"locX\" >= @minx AND \"locY\" >= @miny AND \"locX\" < @maxx AND \"locY\" < @maxy) OR " +
                             "(\"locX\" + \"sizeX\" > @minx AND \"locY\"+\"sizeY\" > @miny AND \"locX\" + \"sizeX\" < @maxx AND \"locY\" + \"sizeY\" < @maxy)" +
                             ") AND (NOT \"uuid\" = @regionid) AND " +
