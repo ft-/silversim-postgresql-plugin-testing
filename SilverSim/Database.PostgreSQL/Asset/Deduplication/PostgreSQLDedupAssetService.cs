@@ -341,8 +341,13 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
 
                         using (var cmd =
                             new NpgsqlCommand(
+                                m_EnableOnConflict ?
                                 "INSERT INTO assetrefs (\"id\", \"name\", \"assetType\", \"temporary\", \"create_time\", \"access_time\", \"asset_flags\", \"CreatorID\", \"hash\")" +
-                                "VALUES(@id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @CreatorID, @hash)",
+                                "VALUES(@id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @CreatorID, @hash) ON CONFLICT (id) UPDATE SET \"access_time\"=@access_time":
+                                "UPDATE assetrefs SET \"access_time\"=@access_time WHERE \"id\"=@id;" +
+                                "INSERT INTO assetrefs (\"id\", \"name\", \"assetType\", \"temporary\", \"create_time\", \"access_time\", \"asset_flags\", \"CreatorID\", \"hash\")" +
+                                "SELECT @id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @CreatorID, @hash WHERE NOT EXISTS (SELECT 1 FROM assetrefs WHERE \"id\" = @id)"
+                                ,
                                 conn))
                         {
                             string assetName = asset.Name;
