@@ -210,7 +210,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new PrimaryKeyInfo("RegionID", "PrimID", "InventoryID"),
             new TableRevision(6),
             new AddColumn<UUID>("NextOwnerAssetID") { IsNullAllowed = false, Default = UUID.Zero },
-
+            new TableRevision(7),
+            new AddColumn<int>("SalePrice") { IsNullAllowed = false, Default = 10 }
             #endregion
         };
     }
