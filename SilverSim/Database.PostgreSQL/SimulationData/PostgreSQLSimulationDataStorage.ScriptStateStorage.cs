@@ -53,7 +53,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             return false;
         }
 
-        /* setting value to null will delete the entry */
         byte[] ISimulationDataScriptStateStorageInterface.this[UUID regionID, UUID primID, UUID itemID]
         {
             get
