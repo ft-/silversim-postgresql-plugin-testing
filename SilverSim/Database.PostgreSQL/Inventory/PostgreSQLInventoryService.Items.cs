@@ -35,7 +35,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ID FROM " + m_InventoryItemTable + " WHERE \"ID\" = @itemid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryItemTable + " WHERE \"ID\" = @itemid", connection))
                 {
                     cmd.Parameters.AddParameter("@itemid", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -127,7 +127,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ID FROM " + m_InventoryItemTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @itemid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryItemTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @itemid", connection))
                 {
                     cmd.Parameters.AddParameter("@ownerid", principalID);
                     cmd.Parameters.AddParameter("@itemid", key);
@@ -198,7 +198,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 connection.Open();
                 var newVals = new Dictionary<string, object>
                 {
-                    ["AssetID"] = item.AssetID.ToString(),
+                    ["AssetID"] = item.AssetID,
                     ["Name"] = item.Name,
                     ["Description"] = item.Description,
                     ["BasePermissionsMask"] = item.Permissions.Base,
@@ -257,13 +257,26 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(string.Format("BEGIN; IF EXISTS (SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = '{0}' AND \"OwnerID\" = '{2}')" +
-                    "UPDATE " + m_InventoryItemTable + " SET \"ParentFolderID\" = '{0}' WHERE \"ID\" = '{1}'; COMMIT", toFolderID, id, principalID),
-                    connection))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid AND \"OwnerID\" = @ownerid", connection))
                 {
+                    cmd.Parameters.AddParameter("@folderid", toFolderID);
+                    cmd.Parameters.AddParameter("@ownerid", principalID);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                        {
+                            throw new InventoryItemNotStoredException(id);
+                        }
+                    }
+                }
+                using (var cmd = new NpgsqlCommand("UPDATE " + m_InventoryItemTable + " SET \"ParentFolderID\" = @folderid WHERE \"ID\" = @itemid AND \"OwnerID\" = @ownerid", connection))
+                {
+                    cmd.Parameters.AddParameter("@folderid", toFolderID);
+                    cmd.Parameters.AddParameter("@ownerid", principalID);
+                    cmd.Parameters.AddParameter("@itemid", id);
                     if (cmd.ExecuteNonQuery() < 1)
                     {
-                        throw new InventoryFolderNotStoredException(id);
+                        throw new InventoryItemNotFoundException(id);
                     }
                 }
             }
