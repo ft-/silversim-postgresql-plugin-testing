@@ -257,28 +257,31 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid AND \"OwnerID\" = @ownerid", connection))
+                connection.InsideTransaction(() =>
                 {
-                    cmd.Parameters.AddParameter("@folderid", toFolderID);
-                    cmd.Parameters.AddParameter("@ownerid", principalID);
-                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid AND \"OwnerID\" = @ownerid", connection))
                     {
-                        if (!reader.Read())
+                        cmd.Parameters.AddParameter("@folderid", toFolderID);
+                        cmd.Parameters.AddParameter("@ownerid", principalID);
+                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
-                            throw new InventoryItemNotStoredException(id);
+                            if (!reader.Read())
+                            {
+                                throw new InventoryItemNotStoredException(id);
+                            }
                         }
                     }
-                }
-                using (var cmd = new NpgsqlCommand("UPDATE " + m_InventoryItemTable + " SET \"ParentFolderID\" = @folderid WHERE \"ID\" = @itemid AND \"OwnerID\" = @ownerid", connection))
-                {
-                    cmd.Parameters.AddParameter("@folderid", toFolderID);
-                    cmd.Parameters.AddParameter("@ownerid", principalID);
-                    cmd.Parameters.AddParameter("@itemid", id);
-                    if (cmd.ExecuteNonQuery() < 1)
+                    using (var cmd = new NpgsqlCommand("UPDATE " + m_InventoryItemTable + " SET \"ParentFolderID\" = @folderid WHERE \"ID\" = @itemid AND \"OwnerID\" = @ownerid", connection))
                     {
-                        throw new InventoryItemNotFoundException(id);
+                        cmd.Parameters.AddParameter("@folderid", toFolderID);
+                        cmd.Parameters.AddParameter("@ownerid", principalID);
+                        cmd.Parameters.AddParameter("@itemid", id);
+                        if (cmd.ExecuteNonQuery() < 1)
+                        {
+                            throw new InventoryItemNotFoundException(id);
+                        }
                     }
-                }
+                });
             }
             IncrementVersion(principalID, item.ParentFolderID);
             IncrementVersion(principalID, toFolderID);
