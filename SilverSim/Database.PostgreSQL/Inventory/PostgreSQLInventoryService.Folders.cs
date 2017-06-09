@@ -369,8 +369,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                             }
                         }
                     }
-                    using (var cmd = new NpgsqlCommand(string.Format("UPDATE " + m_InventoryFolderTable + " SET ParentFolderID = @folderid WHERE \"ID\" = @id AND \"OwnerID\" = @ownerid", toFolderID, folderID),
-                        connection))
+                    using (var cmd = new NpgsqlCommand("UPDATE " + m_InventoryFolderTable + " SET \"ParentFolderID\" = @folderid WHERE \"ID\" = @id AND \"OwnerID\" = @ownerid", connection))
                     {
                         cmd.Parameters.AddParameter("@folderid", toFolderID);
                         cmd.Parameters.AddParameter("@ownerid", principalID);
