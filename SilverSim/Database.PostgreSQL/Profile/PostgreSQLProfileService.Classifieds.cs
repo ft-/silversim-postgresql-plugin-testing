@@ -74,7 +74,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
                                 Flags = (byte)(short)reader["classifiedflags"],
                                 GlobalPos = reader.GetVector3("posglobal"),
                                 Name = (string)reader["name"],
-                                ParcelID = reader.GetUUID("parceluuid"),
+                                ParcelID = reader.GetParcelID("parceluuid"),
                                 ParcelName = (string)reader["parcelname"],
                                 ParentEstate = (int)reader["parentestate"],
                                 Price = (int)reader["priceforlisting"],

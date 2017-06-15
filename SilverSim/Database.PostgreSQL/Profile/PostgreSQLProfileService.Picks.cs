@@ -93,7 +93,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
                             pick.Enabled = (bool)reader["enabled"];
                             pick.Name = (string)reader["name"];
                             pick.OriginalName = (string)reader["originalname"];
-                            pick.ParcelID = reader.GetUUID("parceluuid");
+                            pick.ParcelID = reader.GetParcelID("parceluuid");
                             pick.PickID = reader.GetUUID("pickuuid");
                             pick.SimName = (string)reader["simname"];
                             pick.SnapshotID = reader.GetUUID("snapshotuuid");

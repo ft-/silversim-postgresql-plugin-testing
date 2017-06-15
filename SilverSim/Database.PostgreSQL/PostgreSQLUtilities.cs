@@ -299,6 +299,12 @@ namespace SilverSim.Database.PostgreSQL
             {
                 sqlparam.AddWithValue(key, value.ToString());
             }
+            else if(t == typeof(ParcelID))
+            {
+                ParcelID parcelid = (ParcelID)value;
+                UUID id = new UUID(parcelid.GetBytes(), 0);
+                sqlparam.AddWithValue(key, (Guid)id);
+            }
             else if (t == typeof(AnArray))
             {
                 using (var stream = new MemoryStream())
@@ -571,7 +577,7 @@ namespace SilverSim.Database.PostgreSQL
         }
 #endregion
 
-#region Common INSERT INTO helper
+        #region Common INSERT INTO helper
         public static void InsertInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals)
         {
             var q = new List<string>();
@@ -661,9 +667,9 @@ namespace SilverSim.Database.PostgreSQL
                 }
             }
         }
-#endregion
+        #endregion
 
-#region Generate values
+        #region Generate values
         public static string GenerateFieldNames(Dictionary<string, object> vals, string suffix = "")
         {
             var q = new List<string>();
@@ -838,9 +844,9 @@ namespace SilverSim.Database.PostgreSQL
             }
             return string.Join(",", resvals);
         }
-#endregion
+        #endregion
 
-#region UPDATE SET helper
+        #region UPDATE SET helper
         private static List<string> UpdateSetFromVals(Dictionary<string, object> vals, NpgsqlCommandBuilder b)
         {
             var updates = new List<string>();
@@ -948,9 +954,9 @@ namespace SilverSim.Database.PostgreSQL
                 }
             }
         }
-#endregion
+        #endregion
 
-#region Data parsers
+        #region Data parsers
         public static EnvironmentController.WLVector4 GetWLVector4(this NpgsqlDataReader dbReader, string prefix) =>
             new EnvironmentController.WLVector4(
                 (double)dbReader[prefix + "Red"],
@@ -973,6 +979,12 @@ namespace SilverSim.Database.PostgreSQL
                 dbType = typeof(int);
             }
             return (T)Convert.ChangeType(Convert.ChangeType(v, dbType), enumType);
+        }
+
+        public static ParcelID GetParcelID(this NpgsqlDataReader dbReader, string prefix)
+        {
+            UUID id = dbReader.GetUUID(prefix);
+            return new ParcelID(id.GetBytes(), 0);
         }
 
         public static UUID GetUUID(this NpgsqlDataReader dbReader, string prefix)
@@ -1096,9 +1108,9 @@ namespace SilverSim.Database.PostgreSQL
 
         public static GridVector GetGridVector(this NpgsqlDataReader dbReader, string prefix) =>
             new GridVector((uint)(int)dbReader[prefix + "X"], (uint)(int)dbReader[prefix + "Y"]);
-#endregion
+        #endregion
 
-#region Migrations helper
+        #region Migrations helper
         public static uint GetTableRevision(this NpgsqlConnection connection, string name)
         {
             using(var cmd = new NpgsqlCommand("SELECT description FROM pg_description " +
@@ -1122,6 +1134,6 @@ namespace SilverSim.Database.PostgreSQL
             }
             return 0;
         }
-#endregion
+        #endregion
     }
 }

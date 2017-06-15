@@ -153,7 +153,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             {
                 typeSql = "VARCHAR(255)";
             }
-            else if (f == typeof(UUID))
+            else if (f == typeof(UUID) || f == typeof(ParcelID))
             {
                 typeSql = "uuid";
             }
