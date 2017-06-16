@@ -132,9 +132,13 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 MediaURL = (string)dbReader["MediaURL"],
 
                 AngularVelocity = dbReader.GetVector3("AngularVelocity"),
-                PointLight = new ObjectPart.PointLightParam()
+                PointLight = new ObjectPart.PointLightParam
                 {
-                    Serialization = dbReader.GetBytes("LightData")
+                    DbSerialization = dbReader.GetBytes("LightData")
+                },
+                Projection = new ObjectPart.ProjectionParam
+                {
+                    DbSerialization = dbReader.GetBytes("ProjectionData"),
                 },
                 Text = new ObjectPart.TextParam()
                 {
@@ -142,7 +146,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 },
                 Flexible = new ObjectPart.FlexibleParam()
                 {
-                    Serialization = dbReader.GetBytes("FlexibleData")
+                    DbSerialization = dbReader.GetBytes("FlexibleData")
                 },
                 Sound = new ObjectPart.SoundParam()
                 {

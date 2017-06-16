@@ -167,6 +167,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<bool>("IsRotateZEnabled") { IsNullAllowed = false, Default = true },
             new TableRevision(11),
             new AddColumn<PathfindingType>("PathfindingType") {IsNullAllowed = false, Default = PathfindingType.LegacyLinkset },
+            new TableRevision(12),
+            new AddColumn<byte[]>("ProjectionData"),
             #endregion
 
             #region Table primitems
