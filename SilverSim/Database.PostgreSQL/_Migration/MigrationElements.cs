@@ -406,6 +406,10 @@ namespace SilverSim.Database.PostgreSQL._Migration
                 {
                     def = ((Date)def).AsULong;
                 }
+                else if(typeof(ParcelID) == f)
+                {
+                    def = (Guid)new UUID(((ParcelID)def).GetBytes(), 0);
+                }
                 else if(f.IsEnum)
                 {
                     def = Convert.ChangeType(def, f.GetEnumUnderlyingType());
