@@ -46,8 +46,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM objects WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM objects WHERE \"RegionID\" = @regionid", connection))
                 {
+                    cmd.Parameters.AddParameter("@regionid", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
@@ -67,8 +68,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM prims WHERE \"RegionID\" = '" + key.ToString() + "'", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM prims WHERE \"RegionID\" = @regionid", connection))
                 {
+                    cmd.Parameters.AddParameter("@regionid", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
@@ -267,8 +269,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     UUID objgroupID = UUID.Zero;
                     m_Log.InfoFormat("Loading object groups for region ID {0}", regionID);
 
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM objects WHERE \"RegionID\" = '" + regionID.ToString() + "'", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM objects WHERE \"RegionID\" = @regionid", connection))
                     {
+                        cmd.Parameters.AddParameter("@regionid", regionID);
                         cmd.CommandTimeout = 3600;
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
@@ -292,8 +295,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
                     m_Log.InfoFormat("Loading prims for region ID {0}", regionID);
                     int primcount = 0;
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM prims WHERE \"RegionID\" = '" + regionID.ToString() + "'", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM prims WHERE \"RegionID\" = @regionid", connection))
                     {
+                        cmd.Parameters.AddParameter("@regionid", regionID);
                         cmd.CommandTimeout = 3600;
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
@@ -329,8 +333,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
                     int primitemcount = 0;
                     m_Log.InfoFormat("Loading prim inventories for region ID {0}", regionID);
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM primitems WHERE \"RegionID\" = '" + regionID.ToString() + "'", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM primitems WHERE \"RegionID\" = @regionid", connection))
                     {
+                        cmd.Parameters.AddParameter("@regionid", regionID);
                         cmd.CommandTimeout = 3600;
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {

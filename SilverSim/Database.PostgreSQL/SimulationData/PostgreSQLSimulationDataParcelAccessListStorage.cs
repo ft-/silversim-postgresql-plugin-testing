@@ -125,7 +125,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE ExpiresAt <= " + Date.GetUnixTime().ToString() + " AND ExpiresAt > 0", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"ExpiresAt\" <= " + Date.GetUnixTime().ToString() + " AND \"ExpiresAt\" > 0", connection))
                 {
                     cmd.ExecuteNonQuery();
                 }
