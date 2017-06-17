@@ -447,6 +447,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                     });
                 }
             }
+            EnqueueAsset(asset.ID);
         }
         #endregion
 
