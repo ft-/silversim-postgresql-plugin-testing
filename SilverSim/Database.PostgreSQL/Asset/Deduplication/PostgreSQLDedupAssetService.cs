@@ -38,12 +38,12 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
 {
     [Description("PostgreSQL Deduplication Asset Backend")]
     [PluginName("DedupAssets")]
-    public sealed class PostgreSQLDedupAssetService : AssetServiceInterface, IDBServiceInterface, IPlugin, IAssetMetadataServiceInterface, IAssetDataServiceInterface
+    public sealed partial class PostgreSQLDedupAssetService : AssetServiceInterface, IDBServiceInterface, IPlugin, IAssetMetadataServiceInterface, IAssetDataServiceInterface
     {
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL DEDUP ASSET SERVICE");
 
         private readonly string m_ConnectionString;
-        private readonly DefaultAssetReferencesService m_ReferencesService;
+        private readonly PostgreSQLAssetReferencesService m_ReferencesService;
         private readonly bool m_EnableOnConflict;
 
         #region Constructor
@@ -51,7 +51,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
         {
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
             m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
-            m_ReferencesService = new DefaultAssetReferencesService(this);
+            m_ReferencesService = new PostgreSQLAssetReferencesService(this);
         }
 
         public void Startup(ConfigurationLoader loader)
@@ -262,6 +262,60 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
         #endregion
 
         #region References interface
+        public sealed class PostgreSQLAssetReferencesService : AssetReferencesServiceInterface
+        {
+            private readonly PostgreSQLDedupAssetService m_AssetService;
+
+            internal PostgreSQLAssetReferencesService(PostgreSQLDedupAssetService assetService)
+            {
+                m_AssetService = assetService;
+            }
+
+            public override List<UUID> this[UUID key] => m_AssetService.GetAssetRefs(key);
+        }
+
+        internal List<UUID> GetAssetRefs(UUID key)
+        {
+            List<UUID> references = new List<UUID>();
+            using (var conn = new NpgsqlConnection(m_ConnectionString))
+            {
+                bool processed;
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("SELECT \"usesprocessed\" FROM assetrefs WHERE \"id\" = @id", conn))
+                {
+                    cmd.Parameters.AddParameter("@id", key);
+                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                    {
+                        processed = dbReader.Read() && (bool)dbReader["usesprocessed"];
+                    }
+                }
+
+                AssetData data;
+                if (processed)
+                {
+                    using (var cmd = new NpgsqlCommand("SELECT \"usesid\" FROM assetsinuse WHERE \"id\" = @id", conn))
+                    {
+                        cmd.Parameters.AddParameter("@id", key);
+                        using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                        {
+                            while (dbReader.Read())
+                            {
+                                references.Add(dbReader.GetUUID("usesid"));
+                            }
+                        }
+                    }
+                }
+                else if (TryGetValue(key, out data))
+                {
+                    references = data.References;
+                    references.Remove(UUID.Zero);
+                    references.Remove(data.ID);
+                }
+
+                return references;
+            }
+        }
+
         public override AssetReferencesServiceInterface References => m_ReferencesService;
         #endregion
 
@@ -448,6 +502,16 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
             new AddColumn<UUI>("CreatorID") { IsNullAllowed = false, Default = UUID.Zero },
             new AddColumn<byte[]>("hash") { IsFixed = true, IsNullAllowed = false, Cardinality = 20 },
             new PrimaryKeyInfo("id"),
+            new TableRevision(2),
+            new AddColumn<bool>("usesprocessed") { IsNullAllowed = false, Default = false },
+
+            new SqlTable("assetsinuse"),
+            new AddColumn<UUID>("id") { IsNullAllowed = false },
+            new AddColumn<UUID>("usesid") { IsNullAllowed = false },
+            new PrimaryKeyInfo("id", "usesid"),
+            new NamedKeyInfo("id", "id"),
+            new NamedKeyInfo("usesid", "usesid")
+
         };
         #endregion
 
