@@ -65,7 +65,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                 {
                     cmd.ExecuteNonQuery();
                 }
-                using (var cmd = new NpgsqlCommand("DELETE FROM assetdata WHERE NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetdata.\"hash\" = assetrefs\".hash\" AND assetdata.\"assetType\" = assetrefs.\"assetType\")", conn))
+                using (var cmd = new NpgsqlCommand("DELETE FROM assetdata WHERE NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetdata.\"hash\" = assetrefs.\"hash\" AND assetdata.\"assetType\" = assetrefs.\"assetType\")", conn))
                 {
                     cmd.ExecuteNonQuery();
                 }
@@ -94,7 +94,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                         cmd.ExecuteNonQuery();
                     }
                 }
-                using (var cmd = new NpgsqlCommand("UPDATE assetrefs SET \"usesprocessed\" = 1 WHERE \"id\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("UPDATE assetrefs SET \"usesprocessed\" = true WHERE \"id\" = @id", conn))
                 {
                     cmd.Parameters.AddParameter("@id", assetid);
                     cmd.ExecuteNonQuery();
@@ -108,7 +108,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT id FROM assetrefs WHERE \"usesprocessed\" = 0", conn))
+                using (var cmd = new NpgsqlCommand("SELECT id FROM assetrefs WHERE \"usesprocessed\" = false", conn))
                 {
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
