@@ -190,6 +190,11 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 IsRotateZEnabled = (bool)dbReader["IsRotateZEnabled"],
                 IsRotateXEnabled = (bool)dbReader["IsRotateXEnabled"],
                 IsRotateYEnabled = (bool)dbReader["IsRotateYEnabled"],
+                IsSandbox = (bool)dbReader["IsSandbox"],
+                IsBlockGrab = (bool)dbReader["IsBlockGrab"],
+                IsDieAtEdge = (bool)dbReader["IsDieAtEdge"],
+                IsReturnAtEdge = (bool)dbReader["IsReturnAtEdge"],
+                IsBlockGrabObject = (bool)dbReader["IsBlockGrabObject"]
             };
 
             using (var ms = new MemoryStream(dbReader.GetBytes("DynAttrs")))
