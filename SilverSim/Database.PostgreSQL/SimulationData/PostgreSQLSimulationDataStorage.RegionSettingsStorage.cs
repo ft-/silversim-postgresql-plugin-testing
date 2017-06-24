@@ -66,7 +66,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             BlockDwell = (bool)reader["BlockDwell"],
             ResetHomeOnTeleport = (bool)reader["ResetHomeOnTeleport"],
             AllowLandmark = (bool)reader["AllowLandmark"],
-            AllowDirectTeleport = (bool)reader["AllowDirectTeleport"]
+            AllowDirectTeleport = (bool)reader["AllowDirectTeleport"],
+            MaxBasePrims = (int)reader["MaxBasePrims"]
         };
 
         RegionSettings ISimulationDataRegionSettingsStorageInterface.this[UUID regionID]
@@ -123,7 +124,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         ["BlockDwell"] = value.BlockDwell,
                         ["ResetHomeOnTeleport"] = value.ResetHomeOnTeleport,
                         ["AllowLandmark"] = value.AllowLandmark,
-                        ["AllowDirectTeleport"] = value.AllowDirectTeleport
+                        ["AllowDirectTeleport"] = value.AllowDirectTeleport,
+                        ["MaxBasePrims"] = value.MaxBasePrims
                     };
                     conn.ReplaceInto("regionsettings", data, new string[] { "RegionID" }, m_EnableOnConflict);
                 }
