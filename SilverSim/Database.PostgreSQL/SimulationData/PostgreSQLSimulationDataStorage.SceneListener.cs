@@ -758,7 +758,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["IsBlockGrab"] = objpart.IsBlockGrab,
                     ["IsDieAtEdge"] = objpart.IsDieAtEdge,
                     ["IsReturnAtEdge"] = objpart.IsReturnAtEdge,
-                    ["IsBlockGrabObject"] = objpart.IsBlockGrabObject
+                    ["IsBlockGrabObject"] = objpart.IsBlockGrabObject,
+                    ["SandboxOrigin"] = objpart.SandboxOrigin
                 };
                 using (var ms = new MemoryStream())
                 {

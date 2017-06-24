@@ -194,7 +194,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 IsBlockGrab = (bool)dbReader["IsBlockGrab"],
                 IsDieAtEdge = (bool)dbReader["IsDieAtEdge"],
                 IsReturnAtEdge = (bool)dbReader["IsReturnAtEdge"],
-                IsBlockGrabObject = (bool)dbReader["IsBlockGrabObject"]
+                IsBlockGrabObject = (bool)dbReader["IsBlockGrabObject"],
+                SandboxOrigin = dbReader.GetVector3("SandboxOrigin")
             };
 
             using (var ms = new MemoryStream(dbReader.GetBytes("DynAttrs")))
