@@ -21,19 +21,20 @@
 
 using Npgsql;
 using SilverSim.Types.Account;
+using System;
 
 namespace SilverSim.Database.PostgreSQL.UserAccounts
 {
     public static class PostgreSQLUserAccountExtensionMethods
     {
-        public static UserAccount ToUserAccount(this NpgsqlDataReader reader)
+        public static UserAccount ToUserAccount(this NpgsqlDataReader reader, Uri homeURI)
         {
             var info = new UserAccount();
 
             info.Principal.ID = reader.GetUUID("ID");
             info.Principal.FirstName = (string)reader["FirstName"];
             info.Principal.LastName = (string)reader["LastName"];
-            info.Principal.HomeURI = null;
+            info.Principal.HomeURI = homeURI;
             info.Principal.IsAuthoritative = true;
             info.ScopeID = reader.GetUUID("ScopeID");
             info.Email = (string)reader["Email"];
