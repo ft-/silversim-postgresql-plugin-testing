@@ -106,9 +106,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
         private ObjectPart ObjectPartFromDbReader(NpgsqlDataReader dbReader)
         {
-            var objpart = new ObjectPart()
+            var objpart = new ObjectPart(dbReader.GetUUID("ID"))
             {
-                ID = dbReader.GetUUID("ID"),
                 LoadedLinkNumber = (int)dbReader["LinkNumber"],
                 Position = dbReader.GetVector3("Position"),
                 Rotation = dbReader.GetQuaternion("Rotation"),
@@ -212,7 +211,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
         private ObjectPartInventoryItem ObjectPartInventoryItemFromDbReader(NpgsqlDataReader dbReader)
         {
-            var item = new ObjectPartInventoryItem()
+            var item = new ObjectPartInventoryItem(dbReader.GetUUID("InventoryID"))
             {
                 AssetID = dbReader.GetUUID("AssetID"),
                 AssetType = dbReader.GetEnum<AssetType>("AssetType"),
@@ -222,7 +221,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 Flags = dbReader.GetEnum<InventoryFlags>("Flags"),
                 Group = dbReader.GetUGI("Group"),
                 IsGroupOwned = (bool)dbReader["GroupOwned"],
-                ID = dbReader.GetUUID("InventoryID"),
                 InventoryType = dbReader.GetEnum<InventoryType>("InventoryType"),
                 LastOwner = dbReader.GetUUI("LastOwner"),
                 Name = (string)dbReader["Name"],

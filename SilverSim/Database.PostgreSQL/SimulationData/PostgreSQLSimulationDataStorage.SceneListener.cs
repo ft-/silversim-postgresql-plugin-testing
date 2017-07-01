@@ -43,14 +43,12 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             private readonly RwLockedList<PostgreSQLSceneListener> m_SceneListenerThreads;
 
             public PostgreSQLSceneListener(string connectionString, UUID regionID, RwLockedList<PostgreSQLSceneListener> sceneListenerThreads, bool enableOnConflict)
+                : base(regionID)
             {
                 m_ConnectionString = connectionString;
-                RegionID = regionID;
                 m_SceneListenerThreads = sceneListenerThreads;
                 m_EnableOnConflict = enableOnConflict;
             }
-
-            public UUID RegionID { get; }
 
             public QueueStat GetStats()
             {
@@ -61,6 +59,102 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             private int m_ProcessedPrims;
 
             private readonly Dictionary<int, string> m_CachedUpdateObjectCmds = new Dictionary<int, string>();
+
+            public struct PrimKey : IEquatable<PrimKey>
+            {
+                public UUID PartID;
+                public UUID ItemID;
+
+                public PrimKey(ObjectInventoryUpdateInfo info)
+                {
+                    PartID = info.PartID;
+                    ItemID = info.ItemID;
+                }
+
+                public bool Equals(PrimKey other)
+                {
+                    return PartID.Equals(other.PartID) && ItemID.Equals(other.ItemID);
+                }
+
+                public override int GetHashCode()
+                {
+                    return PartID.GetHashCode() ^ ItemID.GetHashCode();
+                }
+            }
+
+            private readonly C5.TreeDictionary<PrimKey, bool> m_PrimItemDeletions = new C5.TreeDictionary<PrimKey, bool>();
+            private readonly C5.TreeDictionary<PrimKey, Dictionary<string, object>> m_PrimItemUpdates = new C5.TreeDictionary<PrimKey, Dictionary<string, object>>();
+
+            protected override void OnUpdate(ObjectInventoryUpdateInfo info)
+            {
+                if (info.IsRemoved)
+                {
+                    m_PrimItemUpdates.Remove(new PrimKey(info));
+                    m_PrimItemDeletions[new PrimKey(info)] = true;
+                }
+                else
+                {
+                    Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(info.PartID, info.Item);
+                    data["RegionID"] = m_RegionID;
+                    m_PrimItemUpdates[new PrimKey(info)] = data;
+                }
+            }
+
+            protected override bool HasPendingData =>
+                !m_PrimDeletions.IsEmpty || !m_PrimUpdates.IsEmpty ||
+                !m_PrimItemDeletions.IsEmpty || !m_PrimItemUpdates.IsEmpty ||
+                !m_GroupDeletions.IsEmpty || !m_GroupUpdates.IsEmpty;
+
+            private readonly C5.TreeDictionary<UUID, bool> m_PrimDeletions = new C5.TreeDictionary<UUID, bool>();
+            private readonly C5.TreeDictionary<UUID, Dictionary<string, object>> m_PrimUpdates = new C5.TreeDictionary<UUID, Dictionary<string, object>>();
+            private readonly C5.TreeDictionary<UUID, int> m_PrimSerials = new C5.TreeDictionary<UUID, int>();
+
+            private readonly C5.TreeDictionary<UUID, bool> m_GroupDeletions = new C5.TreeDictionary<UUID, bool>();
+            private readonly C5.TreeDictionary<UUID, Dictionary<string, object>> m_GroupUpdates = new C5.TreeDictionary<UUID, Dictionary<string, object>>();
+
+            protected override void OnUpdate(ObjectUpdateInfo info)
+            {
+                if (info.IsKilled)
+                {
+                    if (info.Part.ObjectGroup.RootPart == info.Part)
+                    {
+                        m_GroupUpdates.Remove(info.ID);
+                        m_GroupDeletions[info.ID] = true;
+                    }
+                    m_PrimUpdates.Remove(info.ID);
+                    m_PrimDeletions[info.ID] = true;
+                }
+                else
+                {
+                    bool havePrimSerial = m_PrimSerials.Contains(info.ID);
+                    if (havePrimSerial && m_PrimSerials[info.ID] == info.Part.SerialNumber)
+                    {
+                        /* ignore update */
+                    }
+                    else
+                    {
+                        if (!havePrimSerial)
+                        {
+                            foreach (ObjectPartInventoryItem item in info.Part.Inventory.Values)
+                            {
+                                ObjectInventoryUpdateInfo invinfo = item.UpdateInfo;
+                                Dictionary<string, object> itemdata = GenerateUpdateObjectPartInventoryItem(invinfo.PartID, invinfo.Item);
+                                itemdata["RegionID"] = m_RegionID;
+                                m_PrimItemUpdates[new PrimKey(invinfo)] = itemdata;
+                            }
+                        }
+                        if (info.Part.ObjectGroup.RootPart != info.Part)
+                        {
+                            m_GroupDeletions[info.ID] = true;
+                        }
+                        Dictionary<string, object> data = GenerateUpdateObjectPart(info.Part);
+                        data["RegionID"] = m_RegionID;
+                        m_PrimUpdates[info.ID] = data;
+                        ObjectGroup grp = info.Part.ObjectGroup;
+                        m_GroupUpdates[grp.ID] = GenerateUpdateObjectGroup(grp);
+                    }
+                }
+            }
 
             private string GenerateUpdateObjectCmd(NpgsqlConnection conn, List<string> vals, int index)
             {
@@ -278,362 +372,217 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 return cmd;
             }
 
-            protected override void StorageMainThread()
+            private void ProcessPrimItemDeletions(NpgsqlConnection conn)
             {
-                try
+                StringBuilder sb = new StringBuilder();
+
+                List<PrimKey> removedItems = new List<PrimKey>();
+
+                foreach (PrimKey k in m_PrimItemDeletions.Keys.ToArray())
                 {
-                    m_SceneListenerThreads.Add(this);
-                    Thread.CurrentThread.Name = "Storage Main Thread: " + RegionID.ToString();
-                    var primDeletionRequests = new List<string>();
-                    var primItemDeletionRequests = new List<string>();
-                    var objectDeletionRequests = new List<string>();
-                    int updateObjectsRequestCount = 0;
-                    int updatePrimsRequestCount = 0;
-                    int updatePrimItemsRequestCount = 0;
-                    var updateObjectsRequestData = new Dictionary<string, object>();
-                    var updatePrimsRequestData = new Dictionary<string, object>();
-                    var updatePrimItemsRequestData = new Dictionary<string, object>();
-
-                    var knownSerialNumbers = new C5.TreeDictionary<uint, int>();
-                    var knownInventorySerialNumbers = new C5.TreeDictionary<uint, int>();
-                    var knownInventories = new C5.TreeDictionary<uint, List<UUID>>();
-                    List<string> updatePrimFields = null;
-                    List<string> updatePrimItemFields = null;
-                    List<string> updateObjectFields = null;
-                    NpgsqlCommandBuilder cmdbuild = new NpgsqlCommandBuilder();
-
-                    while (!m_StopStorageThread || m_StorageMainRequestQueue.Count != 0)
+                    if (sb.Length != 0)
                     {
-                        ObjectUpdateInfo req;
-                        try
+                        sb.Append(" AND ");
+                    }
+                    else
+                    {
+                        sb.Append("DELETE FROM primitems WHERE ");
+                    }
+
+                    sb.AppendFormat("(\"RegionID\" = '{0}':uuid AND \"PrimID\" = '{1}':uuid AND \"InventoryID\" = '{2}':uuid)",
+                        m_RegionID, k.PartID, k.ItemID);
+                    removedItems.Add(k);
+                    if (removedItems.Count == 255)
+                    {
+                        using (var cmd = new NpgsqlCommand(sb.ToString(), conn))
                         {
-                            req = m_StorageMainRequestQueue.Dequeue(1000);
+                            cmd.ExecuteNonQuery();
                         }
-                        catch
+                        foreach (PrimKey r in removedItems)
                         {
-                            continue;
+                            m_PrimItemDeletions.Remove(r);
                         }
-
-                        int serialNumber = req.SerialNumber;
-                        int knownSerial;
-                        int knownInventorySerial;
-                        bool updatePrim = false;
-                        bool updateInventory = false;
-                        if (req.IsKilled)
-                        {
-                            /* has to be processed */
-                            string sceneID = req.Part.ObjectGroup.Scene.ID.ToString();
-                            string partID = req.Part.ID.ToString();
-                            primDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"ID\" = '{1}')", sceneID, partID));
-                            primItemDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"PrimID\" = '{1}')", sceneID, partID));
-                            knownSerialNumbers.Remove(req.LocalID);
-                            if (req.Part.LinkNumber == ObjectGroup.LINK_ROOT)
-                            {
-                                objectDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"ID\" = '{1}')", sceneID, partID));
-                            }
-                        }
-                        else if (knownSerialNumbers.Contains(req.LocalID))
-                        {
-                            knownSerial = knownSerialNumbers[req.LocalID];
-                            if (req.Part.ObjectGroup.IsAttached || req.Part.ObjectGroup.IsTemporary)
-                            {
-                                string sceneID = req.Part.ObjectGroup.Scene.ID.ToString();
-                                string partID = req.Part.ID.ToString();
-                                primDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"ID\" = '{1}')", sceneID, partID));
-                                primItemDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"PrimID\" = '{1}')", sceneID, partID));
-                                if (req.Part.LinkNumber == ObjectGroup.LINK_ROOT)
-                                {
-                                    objectDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"ID\" = '{1}')", sceneID, partID));
-                                }
-                            }
-                            else
-                            {
-                                if (knownSerial != serialNumber && !req.Part.ObjectGroup.IsAttached && !req.Part.ObjectGroup.IsTemporary)
-                                {
-                                    /* prim update */
-                                    updatePrim = true;
-                                    updateInventory = true;
-                                }
-
-                                if (knownInventorySerialNumbers.Contains(req.LocalID))
-                                {
-                                    knownInventorySerial = knownSerialNumbers[req.LocalID];
-                                    /* inventory update */
-                                    updateInventory = knownInventorySerial != req.Part.Inventory.InventorySerial;
-                                }
-                            }
-                        }
-                        else if (req.Part.ObjectGroup.IsAttached || req.Part.ObjectGroup.IsTemporary)
-                        {
-                            /* ignore it */
-                            continue;
-                        }
-                        else
-                        {
-                            updatePrim = true;
-                            updateInventory = true;
-                        }
-
-                        int newPrimInventorySerial = req.Part.Inventory.InventorySerial;
-
-                        int count = Interlocked.Increment(ref m_ProcessedPrims);
-                        if (count % 100 == 0)
-                        {
-                            m_Log.DebugFormat("Processed {0} prims", count);
-                        }
-
-                        if (updatePrim)
-                        {
-                            Dictionary<string, object> primData = GenerateUpdateObjectPart(req.Part);
-                            if (updatePrimFields == null)
-                            { 
-                                updatePrimFields = new List<string>(primData.Keys);
-                                updatePrimFields.Remove("ID");
-                            }
-                            foreach(KeyValuePair<string, object> kvp in primData)
-                            {
-                                updatePrimsRequestData.Add(kvp.Key + updatePrimsRequestCount.ToString(), kvp.Value);
-                            }
-                            ++updatePrimsRequestCount;
-                            ObjectGroup grp = req.Part.ObjectGroup;
-                            
-                            knownSerialNumbers[req.LocalID] = req.SerialNumber;
-
-                            Dictionary<string, object> objData = GenerateUpdateObjectGroup(grp);
-                            if(updateObjectFields == null)
-                            {
-                                updateObjectFields = new List<string>(objData.Keys);
-                                updateObjectFields.Remove("ID");
-                            }
-                            foreach(KeyValuePair<string, object> kvp in primData)
-                            {
-                                updateObjectsRequestData.Add(kvp.Key + updateObjectsRequestCount.ToString(), kvp.Value);
-                            }
-                        }
-
-                        if (updateInventory)
-                        {
-                            var items = new Dictionary<UUID, ObjectPartInventoryItem>();
-                            foreach (ObjectPartInventoryItem item in req.Part.Inventory.ValuesByKey1)
-                            {
-                                items.Add(item.ID, item);
-                            }
-
-                            if (knownInventories.Contains(req.Part.LocalID))
-                            {
-                                string sceneID = req.Part.ObjectGroup.Scene.ID.ToString();
-                                string partID = req.Part.ID.ToString();
-                                foreach (UUID itemID in knownInventories[req.Part.LocalID])
-                                {
-                                    if (!items.ContainsKey(itemID))
-                                    {
-                                        primItemDeletionRequests.Add(string.Format("(\"RegionID\" = '{0}' AND \"PrimID\" = '{1}' AND \"InventoryID\" = '{2}')",
-                                            sceneID, partID, itemID.ToString()));
-                                    }
-                                }
-
-                                foreach (KeyValuePair<UUID, ObjectPartInventoryItem> kvp in items)
-                                {
-                                    Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(req.Part.ID, kvp.Value);
-                                    if(updatePrimItemFields == null)
-                                    {
-                                        updatePrimItemFields = new List<string>(data.Keys);
-                                        updatePrimItemFields.Remove("PrimID");
-                                        updatePrimItemFields.Remove("InventoryID");
-                                    }
-                                    foreach(KeyValuePair<string, object> kvpInner in data)
-                                    {
-                                        updatePrimItemsRequestData.Add(kvpInner.Key + updatePrimItemsRequestCount.ToString(), kvp.Value);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                foreach (KeyValuePair<UUID, ObjectPartInventoryItem> kvp in items)
-                                {
-                                    Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(req.Part.ID, kvp.Value);
-                                    foreach (KeyValuePair<string, object> kvpInner in data)
-                                    {
-                                        updatePrimItemsRequestData.Add(kvpInner.Key + updatePrimItemsRequestCount.ToString(), kvp.Value);
-                                    }
-                                }
-                            }
-                            knownInventories[req.Part.LocalID] = new List<UUID>(items.Keys);
-                            knownInventorySerialNumbers[req.Part.LocalID] = newPrimInventorySerial;
-                        }
-
-                        bool emptyQueue = m_StorageMainRequestQueue.Count == 0;
-                        bool processUpdateObjects = updateObjectsRequestCount != 0;
-                        bool processUpdatePrims = updatePrimsRequestCount != 0;
-                        bool processUpdatePrimItems = updatePrimItemsRequestCount != 0;
-
-                        if (((emptyQueue || processUpdateObjects) && objectDeletionRequests.Count > 0) || objectDeletionRequests.Count > 256)
-                        {
-                            string elems = string.Join(" OR ", objectDeletionRequests);
-                            try
-                            {
-                                string command = "DELETE FROM objects WHERE " + elems;
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
-                                {
-                                    conn.Open();
-                                    using (var cmd = new NpgsqlCommand(command, conn))
-                                    {
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-                                objectDeletionRequests.Clear();
-                            }
-                            catch (Exception e)
-                            {
-                                m_Log.Error("Object deletion failed", e);
-                            }
-                        }
-
-                        if (((emptyQueue || processUpdatePrims) && primDeletionRequests.Count > 0) || primDeletionRequests.Count > 256)
-                        {
-                            string elems = string.Join(" OR ", primDeletionRequests);
-                            try
-                            {
-                                string command = "DELETE FROM prims WHERE " + elems;
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
-                                {
-                                    conn.Open();
-                                    using (var cmd = new NpgsqlCommand(command, conn))
-                                    {
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-                                primDeletionRequests.Clear();
-                            }
-                            catch (Exception e)
-                            {
-                                m_Log.Error("Prim deletion failed", e);
-                            }
-                        }
-
-                        if (((emptyQueue || processUpdatePrimItems) && primItemDeletionRequests.Count > 0) || primItemDeletionRequests.Count > 256)
-                        {
-                            string elems = string.Join(" OR ", primItemDeletionRequests);
-                            try
-                            {
-                                string command = "DELETE FROM primitems WHERE " + elems;
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
-                                {
-                                    conn.Open();
-                                    using (var cmd = new NpgsqlCommand(command, conn))
-                                    {
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-                                primItemDeletionRequests.Clear();
-                            }
-                            catch (Exception e)
-                            {
-                                m_Log.Error("Object deletion failed", e);
-                            }
-                        }
-
-                        if ((emptyQueue && updateObjectsRequestCount > 0) || updateObjectsRequestCount > 256)
-                        {
-                            try
-                            {
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
-                                {
-                                    conn.Open();
-                                    StringBuilder command = new StringBuilder();
-                                    for (int i = 0; i < updateObjectsRequestCount; ++i)
-                                    {
-                                        command.Append(GenerateUpdateObjectCmd(conn, updateObjectFields, i));
-                                    }
-                                    using (var cmd = new NpgsqlCommand(command.ToString(), conn))
-                                    {
-                                        cmd.Parameters.AddParameter("@v_RegionID", RegionID);
-                                        foreach(KeyValuePair<string, object> kvp in updateObjectsRequestData)
-                                        {
-                                            cmd.Parameters.AddParameter("@v_" + kvp.Key, kvp.Value);
-                                        }
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-
-                                updateObjectsRequestData.Clear();
-                                updateObjectsRequestCount = 0;
-                            }
-                            catch (Exception e)
-                            {
-                                m_Log.Error("Object update failed", e);
-                            }
-                        }
-
-                        if ((emptyQueue && updatePrimsRequestCount > 0) || updatePrimsRequestCount > 256)
-                        {
-                            try
-                            {
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
-                                {
-                                    conn.Open();
-                                    StringBuilder command = new StringBuilder();
-                                    for (int i = 0; i < updatePrimsRequestCount; ++i)
-                                    {
-                                        command.Append(GenerateUpdatePrimCmd(conn, updatePrimFields, i));
-                                    }
-                                    using (var cmd = new NpgsqlCommand(command.ToString(), conn))
-                                    {
-                                        cmd.Parameters.AddParameter("@v_RegionID", RegionID);
-                                        foreach (KeyValuePair<string, object> kvp in updateObjectsRequestData)
-                                        {
-                                            cmd.Parameters.AddParameter("@v_" + kvp.Key, kvp.Value);
-                                        }
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-
-                                updatePrimsRequestData.Clear();
-                                updatePrimsRequestCount = 0;
-                            }
-                            catch (Exception e)
-                            {
-                                m_Log.Error("Prim update failed", e);
-                            }
-                        }
-
-                        if ((emptyQueue && updatePrimItemsRequestCount > 0) || updatePrimItemsRequestCount > 256)
-                        {
-                            try
-                            {
-                                using (var conn = new NpgsqlConnection(m_ConnectionString))
-                                {
-                                    conn.Open();
-                                    StringBuilder command = new StringBuilder();
-                                    for (int i = 0; i < updateObjectsRequestCount; ++i)
-                                    {
-                                        command.Append(GenerateUpdatePrimItemCmd(conn, updatePrimItemFields, i));
-                                    }
-                                    using (var cmd = new NpgsqlCommand(command.ToString(), conn))
-                                    {
-                                        cmd.Parameters.AddParameter("@v_RegionID", RegionID);
-                                        foreach (KeyValuePair<string, object> kvp in updateObjectsRequestData)
-                                        {
-                                            cmd.Parameters.AddParameter("@v_" + kvp.Key, kvp.Value);
-                                        }
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }
-
-                                updatePrimItemsRequestData.Clear();
-                                updatePrimItemsRequestCount = 0;
-                            }
-                            catch (Exception e)
-                            {
-                                m_Log.Error("Prim inventory update failed", e);
-                            }
-                        }
+                        sb.Clear();
                     }
                 }
-                finally
+
+                if (removedItems.Count != 0)
                 {
-                    m_SceneListenerThreads.Remove(this);
+                    using (var cmd = new NpgsqlCommand(sb.ToString(), conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    foreach (PrimKey r in removedItems)
+                    {
+                        m_PrimItemDeletions.Remove(r);
+                    }
                 }
+            }
+
+            private void ProcessPrimDeletions(NpgsqlConnection conn)
+            {
+                StringBuilder sb = new StringBuilder();
+                StringBuilder sb2 = new StringBuilder();
+
+                List<UUID> removedItems = new List<UUID>();
+
+                foreach (UUID k in m_PrimDeletions.Keys.ToArray())
+                {
+                    if (sb.Length != 0)
+                    {
+                        sb.Append(" AND ");
+                        sb2.Append(" AND ");
+                    }
+                    else
+                    {
+                        sb.Append("DELETE FROM prims WHERE ");
+                        sb2.Append("DELETE FROM primitems WHERE ");
+                    }
+
+                    sb.AppendFormat("(\"RegionID\" = '{0}':uuid AND \"ID\" = '{1}':uuid)",
+                        m_RegionID, k);
+                    sb2.AppendFormat("(\"RegionID\" = '{0}':uuid AND \"PrimID\" = '{1}':uuid)",
+                        m_RegionID, k);
+                    removedItems.Add(k);
+                    if (removedItems.Count == 255)
+                    {
+                        using (var cmd = new NpgsqlCommand(sb.ToString(), conn))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        using (var cmd = new NpgsqlCommand(sb2.ToString(), conn))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        foreach (UUID r in removedItems)
+                        {
+                            m_PrimDeletions.Remove(r);
+                            Interlocked.Increment(ref m_ProcessedPrims);
+                        }
+                        sb.Clear();
+                        sb2.Clear();
+                    }
+                }
+
+                if (removedItems.Count != 0)
+                {
+                    using (var cmd = new NpgsqlCommand(sb.ToString(), conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    using (var cmd = new NpgsqlCommand(sb2.ToString(), conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    foreach (UUID r in removedItems)
+                    {
+                        m_PrimDeletions.Remove(r);
+                        Interlocked.Increment(ref m_ProcessedPrims);
+                    }
+                }
+            }
+
+            private void ProcessGroupDeletions(NpgsqlConnection conn)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                List<UUID> removedItems = new List<UUID>();
+
+                foreach (UUID k in m_GroupDeletions.Keys.ToArray())
+                {
+                    if (sb.Length != 0)
+                    {
+                        sb.Append(" AND ");
+                    }
+                    else
+                    {
+                        sb.Append("DELETE FROM objects WHERE ");
+                    }
+
+                    sb.AppendFormat("(\"RegionID\" = '{0}':uuid AND \"ID\" = '{1}':uuid)",
+                        m_RegionID, k);
+                    removedItems.Add(k);
+                    if (removedItems.Count == 255)
+                    {
+                        using (var cmd = new NpgsqlCommand(sb.ToString(), conn))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        foreach (UUID r in removedItems)
+                        {
+                            m_GroupDeletions.Remove(r);
+                        }
+                        sb.Clear();
+                    }
+                }
+
+                if (removedItems.Count != 0)
+                {
+                    using (var cmd = new NpgsqlCommand(sb.ToString(), conn))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    foreach (UUID r in removedItems)
+                    {
+                        m_GroupDeletions.Remove(r);
+                    }
+                }
+            }
+
+            private static readonly string[] m_PrimItemKeys = new string[] { "RegionID", "PrimID", "ID" };
+            private void ProcessPrimItemUpdates(NpgsqlConnection conn)
+            {
+                foreach (PrimKey k in m_PrimItemUpdates.Keys.ToArray())
+                {
+                    conn.ReplaceInto("primitems", m_PrimItemUpdates[k], m_PrimItemKeys, m_EnableOnConflict);
+                    m_PrimItemUpdates.Remove(k);
+                }
+            }
+
+            private static readonly string[] m_PrimKeys = new string[] { "RegionID", "ID" };
+            private void ProcessPrimUpdates(NpgsqlConnection conn)
+            {
+                foreach (UUID k in m_PrimUpdates.Keys.ToArray())
+                {
+                    conn.ReplaceInto("prims", m_PrimUpdates[k], m_PrimKeys, m_EnableOnConflict);
+                    m_PrimUpdates.Remove(k);
+                }
+            }
+
+            private static readonly string[] m_ObjectKeys = new string[] { "RegionID", "ID" };
+            private void ProcessGroupUpdates(NpgsqlConnection conn)
+            {
+                foreach (UUID k in m_GroupUpdates.Keys.ToArray())
+                {
+                    conn.ReplaceInto("objects", m_GroupUpdates[k], m_ObjectKeys, m_EnableOnConflict);
+                }
+            }
+
+            protected override void OnIdle()
+            {
+                StringBuilder sb = new StringBuilder();
+
+                using (var conn = new NpgsqlConnection(m_ConnectionString))
+                {
+                    conn.Open();
+
+                    ProcessPrimItemDeletions(conn);
+                    ProcessPrimDeletions(conn);
+                    ProcessGroupDeletions(conn);
+                    ProcessPrimUpdates(conn);
+                    ProcessGroupUpdates(conn);
+                    ProcessPrimItemUpdates(conn);
+                }
+            }
+
+            protected override void OnStart()
+            {
+                m_SceneListenerThreads.Add(this);
+            }
+
+            protected override void OnStop()
+            {
+                m_SceneListenerThreads.Remove(this);
             }
 
             private Dictionary<string, object> GenerateUpdateObjectPartInventoryItem(UUID primID, ObjectPartInventoryItem item)
