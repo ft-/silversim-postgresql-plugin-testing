@@ -328,6 +328,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 {
                     conn.ReplaceInto("prims", m_PrimUpdates[k], m_PrimKeys, m_EnableOnConflict);
                     m_PrimUpdates.Remove(k);
+                    Interlocked.Increment(ref m_ProcessedPrims);
                 }
             }
 
