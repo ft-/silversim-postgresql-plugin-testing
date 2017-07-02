@@ -457,7 +457,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             {
                 parts.Add(b.QuoteIdentifier(kvp.Key) + " " + kvp.Value);
             }
-            return string.Join(",", parts);
+            return string.Join(", ADD COLUMN ", parts);
         }
 
         public string Sql(string tableName) => string.Format("ALTER TABLE {0} ADD COLUMN {1}", new NpgsqlCommandBuilder().QuoteIdentifier(tableName), FieldSql());
