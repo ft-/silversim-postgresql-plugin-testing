@@ -457,10 +457,21 @@ namespace SilverSim.Database.PostgreSQL._Migration
             {
                 parts.Add(b.QuoteIdentifier(kvp.Key) + " " + kvp.Value);
             }
+            return string.Join(",", parts);
+        }
+
+        public string AlterFieldSql()
+        {
+            var parts = new List<string>();
+            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+            foreach (KeyValuePair<string, string> kvp in this.ColumnSql())
+            {
+                parts.Add(b.QuoteIdentifier(kvp.Key) + " " + kvp.Value);
+            }
             return string.Join(", ADD COLUMN ", parts);
         }
 
-        public string Sql(string tableName) => string.Format("ALTER TABLE {0} ADD COLUMN {1}", new NpgsqlCommandBuilder().QuoteIdentifier(tableName), FieldSql());
+        public string Sql(string tableName) => string.Format("ALTER TABLE {0} ADD COLUMN {1}", new NpgsqlCommandBuilder().QuoteIdentifier(tableName), AlterFieldSql());
     }
 
     public class DropColumn : IMigrationElement
