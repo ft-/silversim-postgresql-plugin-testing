@@ -405,7 +405,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["SalePermMask"] = item.SaleInfo.PermMask,
                     ["PermsGranter"] = grantinfo.PermsGranter.ToString(),
                     ["PermsMask"] = grantinfo.PermsMask,
-                    ["NextOwnerAssetID"] = item.NextOwnerAssetID
+                    ["NextOwnerAssetID"] = item.NextOwnerAssetID,
+                    ["ExperienceID"] = item.ExperienceID
                 };
             }
 
