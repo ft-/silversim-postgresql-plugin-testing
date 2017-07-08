@@ -29,6 +29,7 @@ using SilverSim.ServiceInterfaces.Statistics;
 using SilverSim.Types;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System;
 
 namespace SilverSim.Database.PostgreSQL.SimulationData
 {
@@ -74,6 +75,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         public override ISimulationDataTerrainStorageInterface Terrains => this;
 
         public override ISimulationDataRegionSettingsStorageInterface RegionSettings => this;
+
+        public override ISimulationDataRegionExperiencesStorageInterface RegionExperiences => this;
         #endregion
 
         #region IDBServiceInterface
