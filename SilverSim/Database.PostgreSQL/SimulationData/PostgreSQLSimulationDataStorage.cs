@@ -101,7 +101,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             "environmentcontroller",
             "regionsettings",
             "lightshare",
-            "spawnpoints"
+            "spawnpoints",
+            "regionexperiences",
+            "parcelexperiences"
         };
 
         public override void RemoveRegion(UUID regionID)
