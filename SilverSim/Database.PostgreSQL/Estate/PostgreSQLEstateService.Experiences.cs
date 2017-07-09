@@ -20,40 +20,35 @@
 // exception statement from your version.
 
 using Npgsql;
-using SilverSim.Scene.ServiceInterfaces.SimulationData;
-using SilverSim.Scene.Types.Scene;
+using SilverSim.ServiceInterfaces.Estate;
 using SilverSim.Types;
 using SilverSim.Types.Experience;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SilverSim.Database.PostgreSQL.SimulationData
+namespace SilverSim.Database.PostgreSQL.Estate
 {
-    public sealed partial class PostgreSQLSimulationDataStorage : ISimulationDataRegionExperiencesStorageInterface
+    public sealed partial class PostgreSQLEstateService : IEstateExperienceServiceInterface
     {
-        List<RegionExperienceInfo> IRegionExperienceList.this[UUID regionID]
+        List<EstateExperienceInfo> IEstateExperienceServiceInterface.this[uint estateID]
         {
             get
             {
-                List<RegionExperienceInfo> result = new List<RegionExperienceInfo>();
+                var result = new List<EstateExperienceInfo>();
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM regionexperiences WHERE \"RegionID\" = @regionid", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM estateexperiences WHERE \"EstateID\" = @estateid", conn))
                     {
-                        cmd.Parameters.AddParameter("@regionid", regionID);
+                        cmd.Parameters.AddParameter("@estateid", estateID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                result.Add(new RegionExperienceInfo
+                                result.Add(new EstateExperienceInfo
                                 {
+                                    EstateID = (uint)(int)reader["EstateID"],
                                     ExperienceID = reader.GetUUID("ExperienceID"),
-                                    RegionID = reader.GetUUID("RegionID"),
-                                    IsAllowed = (bool)reader["IsAllowed"],
+                                    IsAllowed = (bool)reader["IsAllowed"]
                                 });
                             }
                         }
@@ -63,12 +58,12 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             }
         }
 
-        RegionExperienceInfo IRegionExperienceList.this[UUID regionID, UUID experienceID]
+        EstateExperienceInfo IEstateExperienceServiceInterface.this[uint estateID, UUID experienceID]
         {
             get
             {
-                RegionExperienceInfo info;
-                if (!RegionExperiences.TryGetValue(regionID, experienceID, out info))
+                EstateExperienceInfo info;
+                if (!Experiences.TryGetValue(estateID, experienceID, out info))
                 {
                     throw new KeyNotFoundException();
                 }
@@ -76,66 +71,53 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             }
         }
 
-        bool IRegionExperienceList.Remove(UUID regionID, UUID experienceID)
+        bool IEstateExperienceServiceInterface.Remove(uint estateID, UUID experienceID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM regionexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid", conn))
+                using (var cmd = new NpgsqlCommand("DELETE FROM estateexperiences WHERE \"EstateID\" = @estateid AND \"ExperienceID\" = @experienceid", conn))
                 {
-                    cmd.Parameters.AddParameter("@regionid", regionID);
+                    cmd.Parameters.AddParameter("@estateid", estateID);
                     cmd.Parameters.AddParameter("@experienceid", experienceID);
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
         }
 
-        void ISimulationDataRegionExperiencesStorageInterface.RemoveRegion(UUID regionID)
-        {
-            using (var conn = new NpgsqlConnection(m_ConnectionString))
-            {
-                conn.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM regionexperiences WHERE \"RegionID\" = @regionid", conn))
-                {
-                    cmd.Parameters.AddParameter("@regionid", regionID);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        private static readonly string[] RegionExperiencesKey = new string[] { "RegionID", "ExperienceID" };
-        void IRegionExperienceList.Store(RegionExperienceInfo info)
+        private static readonly string[] StoreEstateExperiencesKey = new string[] { "EstateID", "ExperienceID" };
+        void IEstateExperienceServiceInterface.Store(EstateExperienceInfo info)
         {
             var vals = new Dictionary<string, object>
             {
-                ["RegionID"] = info.RegionID,
+                ["EstateID"] = info.EstateID,
                 ["ExperienceID"] = info.ExperienceID,
-                ["IsAllowed"] = info.IsAllowed,
+                ["IsAllowed"] = info.IsAllowed
             };
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.ReplaceInto("regionexperiences", vals, RegionExperiencesKey, m_EnableOnConflict);
+                conn.ReplaceInto("estateexperiences", vals, StoreEstateExperiencesKey, m_EnableOnConflict);
             }
         }
 
-        bool IRegionExperienceList.TryGetValue(UUID regionID, UUID experienceID, out RegionExperienceInfo info)
+        bool IEstateExperienceServiceInterface.TryGetValue(uint estateID, UUID experienceID, out EstateExperienceInfo info)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM regionexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM estateexperiences WHERE \"EstateID\" = @estateid AND \"ExperienceID\" = @experienceid", conn))
                 {
-                    cmd.Parameters.AddParameter("@regionid", regionID);
+                    cmd.Parameters.AddParameter("@estateid", estateID);
                     cmd.Parameters.AddParameter("@experienceid", experienceID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            info = new RegionExperienceInfo
+                            info = new EstateExperienceInfo
                             {
-                                ExperienceID = reader.GetUUID("ExperienceID"),
-                                RegionID = reader.GetUUID("RegionID"),
+                                EstateID = estateID,
+                                ExperienceID = experienceID,
                                 IsAllowed = (bool)reader["IsAllowed"]
                             };
                             return true;
@@ -143,7 +125,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     }
                 }
             }
-            info = default(RegionExperienceInfo);
+            info = default(EstateExperienceInfo);
             return false;
         }
     }

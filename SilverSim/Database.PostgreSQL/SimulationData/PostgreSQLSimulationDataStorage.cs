@@ -77,6 +77,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         public override ISimulationDataRegionSettingsStorageInterface RegionSettings => this;
 
         public override ISimulationDataRegionExperiencesStorageInterface RegionExperiences => this;
+
+        public override ISimulationDataRegionTrustedExperiencesStorageInterface TrustedExperiences => this;
         #endregion
 
         #region IDBServiceInterface
@@ -103,6 +105,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             "lightshare",
             "spawnpoints",
             "regionexperiences",
+            "regiontrustedexperiences",
             "parcelexperiences"
         };
 

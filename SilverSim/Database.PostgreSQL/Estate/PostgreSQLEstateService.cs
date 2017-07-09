@@ -30,7 +30,6 @@ using SilverSim.Types;
 using SilverSim.Types.Estate;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System;
 
 namespace SilverSim.Database.PostgreSQL.Estate
 {
@@ -136,7 +135,23 @@ namespace SilverSim.Database.PostgreSQL.Estate
             new NamedKeyInfo("Owner", "Owner"),
             new NamedKeyInfo("ID_Owner", "ID", "Owner"),
             new TableRevision(2),
-            new AddColumn<uint>("ParentEstateID") { IsNullAllowed = false, Default = (uint)1 }
+            new AddColumn<uint>("ParentEstateID") { IsNullAllowed = false, Default = (uint)1 },
+            #endregion
+
+            #region estateexperiences
+            new SqlTable("estateexperiences"),
+            new AddColumn<uint>("EstateID") { IsNullAllowed = false },
+            new AddColumn<UUID>("ExperienceID") { IsNullAllowed = false },
+            new AddColumn<bool>("IsAllowed") { IsNullAllowed = false, Default = false },
+            new AddColumn<bool>("IsTrusted") { IsNullAllowed = false, Default = false },
+            new TableRevision(2),
+            new DropColumn("IsTrusted"),
+            #endregion
+
+            #region estatetrustedexperiences
+            new SqlTable("estatetrustedexperiences"),
+            new AddColumn<uint>("EstateID") { IsNullAllowed = false },
+            new AddColumn<UUID>("ExperienceID") { IsNullAllowed = false },
             #endregion
         };
 
@@ -369,5 +384,9 @@ namespace SilverSim.Database.PostgreSQL.Estate
         public override IEstateGroupsServiceInterface EstateGroup => this;
 
         public override IEstateRegionMapServiceInterface RegionMap => this;
+
+        public override IEstateExperienceServiceInterface Experiences => this;
+
+        public override IEstateTrustedExperienceServiceInterface TrustedExperiences => this;
     }
 }
