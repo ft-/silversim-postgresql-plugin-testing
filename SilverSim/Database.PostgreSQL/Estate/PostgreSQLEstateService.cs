@@ -289,11 +289,30 @@ namespace SilverSim.Database.PostgreSQL.Estate
             }
         }
 
+        public static readonly string[] EstateRemoveTables =
+        {
+            "estate_regionmap",
+            "estate_managers",
+            "estate_groups",
+            "estate_users",
+            "estate_bans",
+            "estateexperiences",
+            "estatetrustedexperiences",
+        };
+
         public override bool Remove(uint estateID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
+                foreach (string table in EstateRemoveTables)
+                {
+                    using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"EstateID\" = @id", conn))
+                    {
+                        cmd.Parameters.AddParameter("@id", estateID);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 using (var cmd = new NpgsqlCommand("DELETE FROM estates WHERE \"ID\" = @id", conn))
                 {
                     cmd.Parameters.AddParameter("@id", estateID);
