@@ -126,6 +126,10 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
                 PhysicsShapeType = dbReader.GetEnum<PrimitivePhysicsShapeType>("PhysicsShapeType"),
                 PathfindingType = dbReader.GetEnum<PathfindingType>("PathfindingType"),
+                WalkableCoefficientA = (double)dbReader["WalkableCoefficientA"],
+                WalkableCoefficientB = (double)dbReader["WalkableCoefficientB"],
+                WalkableCoefficientC = (double)dbReader["WalkableCoefficientC"],
+                WalkableCoefficientD = (double)dbReader["WalkableCoefficientD"],
                 Material = dbReader.GetEnum<PrimitiveMaterial>("Material"),
                 Size = dbReader.GetVector3("Size"),
                 Slice = dbReader.GetVector3("Slice"),
