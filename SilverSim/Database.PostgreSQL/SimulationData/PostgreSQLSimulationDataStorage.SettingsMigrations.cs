@@ -163,6 +163,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<bool>("AllowLandmark") { IsNullAllowed = false, Default = false },
             new TableRevision(5),
             new AddColumn<int>("MaxBasePrims") { IsNullAllowed = false, Default = 45000 },
+            new TableRevision(6),
+            new AddColumn<byte[]>("WalkableCoefficientsData"),
             #endregion
 
             #region Table regionexperiences
