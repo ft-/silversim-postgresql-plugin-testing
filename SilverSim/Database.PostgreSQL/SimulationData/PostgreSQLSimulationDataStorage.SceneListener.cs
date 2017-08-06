@@ -171,7 +171,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(" AND ");
+                        sb.Append(" OR ");
                     }
                     else
                     {
@@ -219,8 +219,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(" AND ");
-                        sb2.Append(" AND ");
+                        sb.Append(" OR ");
+                        sb2.Append(" OR ");
                     }
                     else
                     {
@@ -281,7 +281,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(" AND ");
+                        sb.Append(" OR ");
                     }
                     else
                     {
