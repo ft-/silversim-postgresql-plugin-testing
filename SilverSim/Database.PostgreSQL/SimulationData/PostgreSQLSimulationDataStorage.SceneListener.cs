@@ -192,6 +192,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             m_PrimItemDeletions.Remove(r);
                         }
                         sb.Clear();
+                        removedItems.Clear();
                     }
                 }
 
@@ -250,6 +251,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         }
                         sb.Clear();
                         sb2.Clear();
+                        removedItems.Clear();
                     }
                 }
 
@@ -302,6 +304,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             m_GroupDeletions.Remove(r);
                         }
                         sb.Clear();
+                        removedItems.Clear();
                     }
                 }
 
