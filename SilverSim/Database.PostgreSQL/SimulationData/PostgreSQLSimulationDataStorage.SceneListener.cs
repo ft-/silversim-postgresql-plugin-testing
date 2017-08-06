@@ -394,7 +394,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["InventoryType"] = item.InventoryType,
                     ["LastOwner"] = item.LastOwner,
                     ["Owner"] = item.Owner,
-                    ["ParentFolderID"] = item.ParentFolderID,
                     ["BasePermissions"] = item.Permissions.Base,
                     ["CurrentPermissions"] = item.Permissions.Current,
                     ["EveryOnePermissions"] = item.Permissions.EveryOne,
