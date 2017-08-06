@@ -88,7 +88,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             }
 
             private readonly C5.TreeDictionary<PrimKey, bool> m_PrimItemDeletions = new C5.TreeDictionary<PrimKey, bool>();
-            private readonly C5.TreeDictionary<PrimKey, Dictionary<string, object>> m_PrimItemUpdates = new C5.TreeDictionary<PrimKey, Dictionary<string, object>>();
+            private readonly C5.TreeDictionary<PrimKey, ObjectInventoryUpdateInfo> m_PrimItemUpdates = new C5.TreeDictionary<PrimKey, ObjectInventoryUpdateInfo>();
 
             protected override void OnUpdate(ObjectInventoryUpdateInfo info)
             {
@@ -99,9 +99,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 }
                 else
                 {
-                    Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(info.PartID, info.Item);
-                    data["RegionID"] = m_RegionID;
-                    m_PrimItemUpdates[new PrimKey(info)] = data;
+                    m_PrimItemUpdates[new PrimKey(info)] = info;
                 }
             }
 
@@ -143,9 +141,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             foreach (ObjectPartInventoryItem item in info.Part.Inventory.Values)
                             {
                                 ObjectInventoryUpdateInfo invinfo = item.UpdateInfo;
-                                Dictionary<string, object> itemdata = GenerateUpdateObjectPartInventoryItem(invinfo.PartID, invinfo.Item);
-                                itemdata["RegionID"] = m_RegionID;
-                                m_PrimItemUpdates[new PrimKey(invinfo)] = itemdata;
+                                m_PrimItemUpdates[new PrimKey(invinfo)] = invinfo;
                             }
                         }
                         if (info.Part.ObjectGroup.RootPart != info.Part)
@@ -326,7 +322,13 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             {
                 foreach (PrimKey k in m_PrimItemUpdates.Keys.ToArray())
                 {
-                    conn.ReplaceInto("primitems", m_PrimItemUpdates[k], m_PrimItemKeys, m_EnableOnConflict);
+                    ObjectInventoryUpdateInfo update = m_PrimItemUpdates[k];
+                    if (!update.IsRemoved)
+                    {
+                        Dictionary<string, object> data = GenerateUpdateObjectPartInventoryItem(update.PartID, update.Item);
+                        data["RegionID"] = m_RegionID;
+                        conn.ReplaceInto("primitems", data, m_PrimItemKeys, m_EnableOnConflict);
+                    }
                     m_PrimItemUpdates.Remove(k);
                 }
             }
