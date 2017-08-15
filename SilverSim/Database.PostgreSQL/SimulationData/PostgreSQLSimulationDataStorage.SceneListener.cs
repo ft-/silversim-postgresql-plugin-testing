@@ -465,6 +465,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["MediaURL"] = objpart.MediaURL,
                     ["Creator"] = objpart.Creator,
                     ["CreationDate"] = objpart.CreationDate,
+                    ["RezDate"] = objpart.RezDate,
                     ["Flags"] = objpart.Flags,
                     ["AngularVelocity"] = objpart.AngularVelocity,
                     ["LightData"] = objpart.PointLight.DbSerialization,
