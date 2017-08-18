@@ -487,7 +487,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                     }
                 }
 
-                if (!deleteFolder)
+                if (deleteFolder)
                 {
                     using (var cmd = new NpgsqlCommand("DELETE FROM " + m_InventoryItemTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid", connection))
                     {
