@@ -102,7 +102,15 @@ namespace SilverSim.Database.PostgreSQL.Presence
 
         public override void Remove(UUID scopeID, UUID npcID)
         {
-            throw new NotImplementedException();
+            using (var conn = new NpgsqlConnection(m_ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("DELETE FROM npcpresence WHERE \"NpcID\" = @userid", conn))
+                {
+                    cmd.Parameters.AddParameter("@userid", npcID);
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         private static readonly IMigrationElement[] Migrations = new IMigrationElement[]
