@@ -462,6 +462,11 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                     cmd.Parameters.AddParameter("@id", id);
                     cmd.ExecuteNonQuery();
                 }
+                using (var cmd = new NpgsqlCommand("DELETE FROM assetsinuse WHERE \"id\"=@id AND NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetrefs.\"id\" = assetsinuse.\"id\")", conn))
+                {
+                    cmd.Parameters.AddParameter("@id", id);
+                    cmd.ExecuteNonQuery();
+                }
             }
         }
         #endregion
