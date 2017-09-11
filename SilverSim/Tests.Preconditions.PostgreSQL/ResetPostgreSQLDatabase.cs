@@ -93,7 +93,7 @@ namespace SilverSim.Tests.Preconditions.PostgreSQL
                 foreach (string table in tables)
                 {
                     m_Log.InfoFormat("Deleting table {0}", table);
-                    using (NpgsqlCommand cmd = new NpgsqlCommand(string.Format("DROP TABLE {0}", table), connection))
+                    using (var cmd = new NpgsqlCommand(string.Format("DROP TABLE {0}", table), connection))
                     {
                         cmd.ExecuteNonQuery();
                     }
