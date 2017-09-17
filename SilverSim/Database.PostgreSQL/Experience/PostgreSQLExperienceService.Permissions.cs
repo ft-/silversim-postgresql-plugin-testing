@@ -98,7 +98,6 @@ namespace SilverSim.Database.PostgreSQL.Experience
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
-            throw new NotImplementedException();
         }
 
         bool IExperiencePermissionsInterface.TryGetValue(UUID experienceID, UUI agent, out bool allowed)
