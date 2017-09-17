@@ -187,28 +187,6 @@ namespace SilverSim.Database.PostgreSQL
             }
         }
 
-        [Serializable]
-        public class PostgreSQLTransactionException : Exception
-        {
-            public PostgreSQLTransactionException()
-            {
-            }
-
-            public PostgreSQLTransactionException(string msg)
-                : base(msg)
-            {
-            }
-
-            protected PostgreSQLTransactionException(SerializationInfo info, StreamingContext context)
-                : base(info, context)
-            {
-            }
-
-            public PostgreSQLTransactionException(string msg, Exception inner)
-                : base(msg, inner)
-            {
-            }
-        }
         #endregion
 
         #region Transaction Helper
@@ -224,10 +202,10 @@ namespace SilverSim.Database.PostgreSQL
             {
                 del();
             }
-            catch(Exception e)
+            catch
             {
                 transaction.Rollback();
-                throw new PostgreSQLTransactionException("Transaction failed", e);
+                throw;
             }
             transaction.Commit();
         }
