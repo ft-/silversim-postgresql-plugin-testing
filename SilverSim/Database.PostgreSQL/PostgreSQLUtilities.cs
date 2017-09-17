@@ -352,7 +352,7 @@ namespace SilverSim.Database.PostgreSQL
         #endregion
 
         #region REPLACE INTO style helper
-        public static void ReplaceInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string[] keyfields, bool enableOnConflict)
+        public static void ReplaceInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string[] keyfields, bool enableOnConflict, bool skipTransaction = false)
         {
             bool useOnConflict = connection.HasOnConflict() && enableOnConflict;
             var q = new List<string>();
@@ -528,6 +528,17 @@ namespace SilverSim.Database.PostgreSQL
             }
 
             if (useOnConflict)
+            {
+                using (var command = new NpgsqlCommand(q1.ToString(), connection))
+                {
+                    AddParameters(command.Parameters, vals);
+                    if (command.ExecuteNonQuery() < 1)
+                    {
+                        throw new PostgreSQLInsertException();
+                    }
+                }
+            }
+            else if(skipTransaction)
             {
                 using (var command = new NpgsqlCommand(q1.ToString(), connection))
                 {

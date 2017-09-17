@@ -31,7 +31,6 @@ using SilverSim.Types;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using PostgreSQLInsertException = SilverSim.Database.PostgreSQL.PostgreSQLUtilities.PostgreSQLInsertException;
 
 namespace SilverSim.Database.PostgreSQL.Avatar
 {
@@ -173,7 +172,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                         {
                             vals["Name"] = itemKeys[i];
                             vals["Value"] = value[i];
-                            connection.ReplaceInto("avatars", vals, new string[] { "PrincipalID", "Name" }, m_EnableOnConflict);
+                            connection.ReplaceInto("avatars", vals, new string[] { "PrincipalID", "Name" }, m_EnableOnConflict, true);
                         }
                     });
                 }
