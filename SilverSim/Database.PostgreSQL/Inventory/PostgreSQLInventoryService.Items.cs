@@ -81,7 +81,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 InventoryItem item;
                 if (!Item.TryGetValue(key, out item))
                 {
-                    throw new KeyNotFoundException();
+                    throw new InventoryItemNotFoundException(key);
                 }
                 return item;
             }
@@ -102,7 +102,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                     var matchStrings = new List<string>();
                     foreach (UUID itemid in itemids)
                     {
-                        matchStrings.Add(string.Format("\"{0}\"", itemid.ToString()));
+                        matchStrings.Add(string.Format("'{0}'", itemid.ToString()));
                     }
                     string qStr = string.Join(",", matchStrings);
                     using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryItemTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" IN (" + qStr + ")", connection))
@@ -175,7 +175,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 InventoryItem item;
                 if (!Item.TryGetValue(principalID, key, out item))
                 {
-                    throw new KeyNotFoundException();
+                    throw new InventoryItemNotFoundException(key);
                 }
                 return item;
             }
@@ -216,7 +216,8 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                     ["NextOwnerPermissionsMask"] = item.Permissions.NextOwner,
                     ["GroupPermissionsMask"] = item.Permissions.Group,
                     ["SalePrice"] = item.SaleInfo.Price,
-                    ["SaleType"] = item.SaleInfo.Type
+                    ["SaleType"] = item.SaleInfo.Type,
+                    ["Flags"] = item.Flags
                 };
                 connection.UpdateSet(m_InventoryItemTable, newVals, string.Format("\"OwnerID\" = '{0}' AND \"ID\" = '{1}'", item.Owner.ID, item.ID));
             }

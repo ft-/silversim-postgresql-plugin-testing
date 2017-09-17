@@ -90,6 +90,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             ["Flags"] = item.Flags,
             ["OwnerID"] = item.Owner.ID,
             ["CreatorID"] = item.Creator.ID,
+            ["LastOwnerID"] = item.LastOwner.ID,
             ["CreationDate"] = item.CreationDate.DateTimeToUnixTime(),
             ["BasePermissionsMask"] = (uint)item.Permissions.Base,
             ["CurrentPermissionsMask"] = (uint)item.Permissions.Current,
