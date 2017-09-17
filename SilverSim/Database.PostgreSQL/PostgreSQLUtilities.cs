@@ -209,6 +209,26 @@ namespace SilverSim.Database.PostgreSQL
             }
             transaction.Commit();
         }
+
+        public static T InsideTransaction<T>(this NpgsqlConnection connection, Func<T> del) =>
+            InsideTransaction(connection, IsolationLevel.Serializable, del);
+
+        public static T InsideTransaction<T>(this NpgsqlConnection connection, IsolationLevel level, Func<T> del)
+        {
+            T result;
+            NpgsqlTransaction transaction = connection.BeginTransaction(level);
+            try
+            {
+                result = del();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+            transaction.Commit();
+            return result;
+        }
         #endregion
 
         #region Push parameters
