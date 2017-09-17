@@ -374,7 +374,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                     {
                         using (var cmd =
                             new NpgsqlCommand(
-                                m_EnableOnConflict ?
+                                conn.HasOnConflict() && m_EnableOnConflict ?
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\")" +
                                 "VALUES(@hash, @assetType, @data) ON CONFLICT(\"hash\", \"assetType\") DO NOTHING" :
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\") " +
@@ -395,7 +395,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
 
                         using (var cmd =
                             new NpgsqlCommand(
-                                m_EnableOnConflict ?
+                                conn.HasOnConflict() && m_EnableOnConflict ?
                                 "INSERT INTO assetrefs (\"id\", \"name\", \"assetType\", \"temporary\", \"create_time\", \"access_time\", \"asset_flags\", \"CreatorID\", \"hash\")" +
                                 "VALUES(@id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @CreatorID, @hash) ON CONFLICT (id) DO UPDATE SET \"access_time\"=@access_time":
                                 "UPDATE assetrefs SET \"access_time\"=@access_time WHERE \"id\"=@id;" +
