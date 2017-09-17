@@ -4,6 +4,5 @@
 	<license>PostgreSQL License</license>
 	<files>
 		<file name="bin/Npgsql.dll"/>
-		<file name="bin/Npgsql.xml"/>
 	</files>
 </package>
