@@ -304,6 +304,11 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             IncrementVersion(principalID, toFolderID);
         }
 
+        void IInventoryItemServiceInterface.Copy(UUID principalID, UUID id, UUID newFolder)
+        {
+            CopyItem(principalID, id, newFolder);
+        }
+
         private void IncrementVersion(UUID principalID, UUID folderID)
         {
             try
