@@ -170,7 +170,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "' AND Accessor LIKE \"" + accessor.ID.ToString() + "%\"", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "' AND Accessor LIKE '" + accessor.ID.ToString() + "%'", connection))
                 {
                     return cmd.ExecuteNonQuery() > 0;
                 }
