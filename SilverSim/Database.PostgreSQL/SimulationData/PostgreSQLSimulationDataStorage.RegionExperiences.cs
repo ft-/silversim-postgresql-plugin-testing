@@ -24,11 +24,7 @@ using SilverSim.Scene.ServiceInterfaces.SimulationData;
 using SilverSim.Scene.Types.Scene;
 using SilverSim.Types;
 using SilverSim.Types.Experience;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SilverSim.Database.PostgreSQL.SimulationData
 {
