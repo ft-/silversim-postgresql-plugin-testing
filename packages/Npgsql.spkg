@@ -3,6 +3,6 @@
 	<name>Npgsql</name>
 	<license>PostgreSQL License</license>
 	<files>
-		<file name="bin/Npgsql.dll"/>
+		<file name="bin/Npgsql.dll" is-version-src="true"/>
 	</files>
 </package>
