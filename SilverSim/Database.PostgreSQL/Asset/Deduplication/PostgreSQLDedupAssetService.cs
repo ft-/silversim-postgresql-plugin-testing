@@ -38,7 +38,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
 {
     [Description("PostgreSQL Deduplication Asset Backend")]
     [PluginName("DedupAssets")]
-    public sealed partial class PostgreSQLDedupAssetService : AssetServiceInterface, IDBServiceInterface, IPlugin, IAssetMetadataServiceInterface, IAssetDataServiceInterface
+    public sealed partial class PostgreSQLDedupAssetService : AssetServiceInterface, IDBServiceInterface, IPlugin, IAssetMetadataServiceInterface, IAssetDataServiceInterface, IAssetMigrationSourceInterface
     {
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL DEDUP ASSET SERVICE");
 
@@ -483,6 +483,28 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
                 conn.Open();
                 conn.MigrateTables(Migrations, m_Log);
             }
+        }
+
+        public List<UUID> GetAssetList(long start, long count)
+        {
+            var result = new List<UUID>();
+            using (var conn = new NpgsqlConnection(m_ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("SELECT \"id\" FROM assetrefs ORDER BY \"id\" LIMIT @start, @count", conn))
+                {
+                    cmd.Parameters.AddParameter("start", start);
+                    cmd.Parameters.AddParameter("count", count);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            result.Add(reader.GetUUID("id"));
+                        }
+                    }
+                }
+            }
+            return result;
         }
 
         private static readonly IMigrationElement[] Migrations = new IMigrationElement[]
