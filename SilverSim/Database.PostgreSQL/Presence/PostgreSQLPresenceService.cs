@@ -125,12 +125,15 @@ namespace SilverSim.Database.PostgreSQL.Presence
                         cmd.Parameters.AddParameter("@userID", userID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
-                            var pi = new PresenceInfo();
-                            pi.UserID.ID = reader.GetUUID("UserID");
-                            pi.RegionID = reader.GetUUID("RegionID");
-                            pi.SessionID = reader.GetUUID("SessionID");
-                            pi.SecureSessionID = reader.GetUUID("SecureSessionID");
-                            presences.Add(pi);
+                            while (reader.Read())
+                            {
+                                var pi = new PresenceInfo();
+                                pi.UserID.ID = reader.GetUUID("UserID");
+                                pi.RegionID = reader.GetUUID("RegionID");
+                                pi.SessionID = reader.GetUUID("SessionID");
+                                pi.SecureSessionID = reader.GetUUID("SecureSessionID");
+                                presences.Add(pi);
+                            }
                         }
                     }
                 }
@@ -150,12 +153,15 @@ namespace SilverSim.Database.PostgreSQL.Presence
                         cmd.Parameters.AddParameter("@sessionID", sessionID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
-                            var pi = new PresenceInfo();
-                            pi.UserID.ID = reader.GetUUID("UserID");
-                            pi.RegionID = reader.GetUUID("RegionID");
-                            pi.SessionID = reader.GetUUID("SessionID");
-                            pi.SecureSessionID = reader.GetUUID("SecureSessionID");
-                            return pi;
+                            if (reader.Read())
+                            {
+                                var pi = new PresenceInfo();
+                                pi.UserID.ID = reader.GetUUID("UserID");
+                                pi.RegionID = reader.GetUUID("RegionID");
+                                pi.SessionID = reader.GetUUID("SessionID");
+                                pi.SecureSessionID = reader.GetUUID("SecureSessionID");
+                                return pi;
+                            }
                         }
                     }
                 }

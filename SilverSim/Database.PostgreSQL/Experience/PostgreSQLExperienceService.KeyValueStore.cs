@@ -89,7 +89,6 @@ namespace SilverSim.Database.PostgreSQL.Experience
 
         bool IExperienceKeyValueInterface.Remove(UUID experienceID, string key)
         {
-            var result = new List<string>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
