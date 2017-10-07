@@ -34,20 +34,20 @@ using System.ComponentModel;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
+namespace SilverSim.Database.PostgreSQL.Asset
 {
-    [Description("PostgreSQL Deduplication Asset Backend")]
-    [PluginName("DedupAssets")]
-    public sealed partial class PostgreSQLDedupAssetService : AssetServiceInterface, IDBServiceInterface, IPlugin, IAssetMetadataServiceInterface, IAssetDataServiceInterface, IAssetMigrationSourceInterface
+    [Description("PostgreSQL Asset Backend")]
+    [PluginName("Assets")]
+    public sealed partial class PostgreSQLAssetService : AssetServiceInterface, IDBServiceInterface, IPlugin, IAssetMetadataServiceInterface, IAssetDataServiceInterface, IAssetMigrationSourceInterface
     {
-        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL DEDUP ASSET SERVICE");
+        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL ASSET SERVICE");
 
         private readonly string m_ConnectionString;
         private readonly PostgreSQLAssetReferencesService m_ReferencesService;
         private readonly bool m_EnableOnConflict;
 
         #region Constructor
-        public PostgreSQLDedupAssetService(ConfigurationLoader loader, IConfig ownSection)
+        public PostgreSQLAssetService(ConfigurationLoader loader, IConfig ownSection)
         {
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
             m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
@@ -61,8 +61,8 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
         #endregion
 
         public override bool IsSameServer(AssetServiceInterface other) =>
-            other.GetType() == typeof(PostgreSQLDedupAssetService) &&
-                (m_ConnectionString == ((PostgreSQLDedupAssetService)other).m_ConnectionString);
+            other.GetType() == typeof(PostgreSQLAssetService) &&
+                (m_ConnectionString == ((PostgreSQLAssetService)other).m_ConnectionString);
 
         #region Exists methods
         public override bool Exists(UUID key)
@@ -258,9 +258,9 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
         #region References interface
         public sealed class PostgreSQLAssetReferencesService : AssetReferencesServiceInterface
         {
-            private readonly PostgreSQLDedupAssetService m_AssetService;
+            private readonly PostgreSQLAssetService m_AssetService;
 
-            internal PostgreSQLAssetReferencesService(PostgreSQLDedupAssetService assetService)
+            internal PostgreSQLAssetReferencesService(PostgreSQLAssetService assetService)
             {
                 m_AssetService = assetService;
             }
@@ -270,7 +270,7 @@ namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
 
         internal List<UUID> GetAssetRefs(UUID key)
         {
-            List<UUID> references = new List<UUID>();
+            var references = new List<UUID>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 bool processed;

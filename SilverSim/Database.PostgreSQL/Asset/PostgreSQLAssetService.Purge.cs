@@ -28,9 +28,9 @@ using SilverSim.Types.Asset;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace SilverSim.Database.PostgreSQL.Asset.Deduplication
+namespace SilverSim.Database.PostgreSQL.Asset
 {
-    public sealed partial class PostgreSQLDedupAssetService : IAssetPurgeServiceInterface, IQueueStatsAccess
+    public sealed partial class PostgreSQLAssetService : IAssetPurgeServiceInterface, IQueueStatsAccess
     {
         public void MarkAssetAsUsed(List<UUID> assetIDs)
         {
