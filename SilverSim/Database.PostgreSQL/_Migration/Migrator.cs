@@ -54,7 +54,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             uint tableRevision,
             ILog log)
         {
-            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+            var b = new NpgsqlCommandBuilder();
             log.InfoFormat("Creating table '{0}' at revision {1}", table.Name, tableRevision);
             var fieldSqls = new List<string>();
             foreach(IColumnInfo field in fields.Values)
@@ -76,9 +76,10 @@ namespace SilverSim.Database.PostgreSQL._Migration
 
         public static void MigrateTables(this NpgsqlConnection conn, IMigrationElement[] processTable, ILog log)
         {
-            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+            var b = new NpgsqlCommandBuilder();
             var tableFields = new Dictionary<string, IColumnInfo>();
             PrimaryKeyInfo primaryKey = null;
+            var tableKeys = new Dictionary<string, NamedKeyInfo>();
             SqlTable table = null;
             uint processingTableRevision = 0;
             uint currentAtRevision = 0;
@@ -184,13 +185,48 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     {
                         var columnInfo = (IChangeColumn)migration;
                         IColumnInfo oldColumn;
-                        if(!tableFields.TryGetValue(columnInfo.Name, out oldColumn))
+                        if (columnInfo.OldName?.Length != 0)
+                        {
+                            if (!tableFields.TryGetValue(columnInfo.OldName, out oldColumn))
+                            {
+                                throw new ArgumentException("Change column for " + columnInfo.Name + " has no preceeding AddColumn for " + columnInfo.OldName);
+                            }
+                        }
+                        else if (!tableFields.TryGetValue(columnInfo.Name, out oldColumn))
                         {
                             throw new ArgumentException("Change column for " + columnInfo.Name + " has no preceeding AddColumn");
                         }
                         if(insideTransaction != null)
                         {
                             ExecuteStatement(conn, columnInfo.Sql(table.Name, oldColumn.FieldType), log);
+                        }
+                        if (columnInfo.OldName?.Length != 0)
+                        {
+                            tableFields.Remove(columnInfo.OldName);
+                            if (primaryKey != null)
+                            {
+                                string[] fields = primaryKey.FieldNames;
+                                int n = fields.Length;
+                                for (int i = 0; i < n; ++i)
+                                {
+                                    if (fields[i] == columnInfo.OldName)
+                                    {
+                                        fields[i] = columnInfo.Name;
+                                    }
+                                }
+                            }
+                            foreach (NamedKeyInfo keyinfo in tableKeys.Values)
+                            {
+                                string[] fields = keyinfo.FieldNames;
+                                int n = fields.Length;
+                                for (int i = 0; i < n; ++i)
+                                {
+                                    if (fields[i] == columnInfo.OldName)
+                                    {
+                                        fields[i] = columnInfo.Name;
+                                    }
+                                }
+                            }
                         }
                         tableFields[columnInfo.Name] = columnInfo;
                     }
