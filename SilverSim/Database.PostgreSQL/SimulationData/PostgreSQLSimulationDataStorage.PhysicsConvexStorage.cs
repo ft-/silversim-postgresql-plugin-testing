@@ -74,7 +74,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         ["PhysicsShape"] = physicsShape,
                         ["ConvexData"] = value.SerializedData
                     };
-                    conn.ReplaceInto("sculptmeshphysics", param, new string[] { "MeshID", "PhysicsShape" }, m_EnableOnConflict);
+                    conn.ReplaceInto("meshphysics", param, new string[] { "MeshID", "PhysicsShape" }, m_EnableOnConflict);
                 }
             }
         }
