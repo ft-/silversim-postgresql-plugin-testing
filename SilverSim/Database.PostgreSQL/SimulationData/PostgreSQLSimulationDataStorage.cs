@@ -48,6 +48,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
             m_WhiteListStorage = new PostgreSQLSimulationDataParcelAccessListStorage(m_ConnectionString, "parcelaccesswhitelist", m_EnableOnConflict);
             m_BlackListStorage = new PostgreSQLSimulationDataParcelAccessListStorage(m_ConnectionString, "parcelaccessblacklist", m_EnableOnConflict);
+            m_LandpassListStorage = new PostgreSQLSimulationDataParcelAccessListStorage(m_ConnectionString, "parcellandpasslist", m_EnableOnConflict);
         }
 
         public void Startup(ConfigurationLoader loader)
@@ -106,7 +107,10 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             "spawnpoints",
             "regionexperiences",
             "regiontrustedexperiences",
-            "parcelexperiences"
+            "parcelexperiences",
+            "parcelaccesswhitelist",
+            "parcelaccessblacklist",
+            "parcellandpasslist"
         };
 
         public override void RemoveRegion(UUID regionID)
