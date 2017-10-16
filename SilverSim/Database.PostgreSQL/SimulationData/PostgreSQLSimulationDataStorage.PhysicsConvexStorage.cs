@@ -42,6 +42,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new PrimaryKeyInfo(new string[] {"MeshID" }),
             new TableRevision(2),
             new AddColumn<PrimitivePhysicsShapeType>("PhysicsShape") { IsNullAllowed = false, Default = PrimitivePhysicsShapeType.Convex },
+            new TableRevision(3),
+            new PrimaryKeyInfo(new string[] {"MeshID" , "PhysicsShape" }),
             #endregion
 
             #region Table primphysics
@@ -110,7 +112,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ConvexData FROM meshphysics WHERE \"MeshID\"=@id AND \"PhysicsShape\"=@stype", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"ConvexData\" FROM meshphysics WHERE \"MeshID\"=@id AND \"PhysicsShape\"=@stype", conn))
                 {
                     cmd.Parameters.AddParameter("@id", meshid);
                     cmd.Parameters.AddParameter("@stype", physicsShape);
@@ -137,7 +139,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT ConvexData FROM primphysics WHERE \"ShapeKey\"=@id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"ConvexData\" FROM primphysics WHERE \"ShapeKey\"=@id", conn))
                 {
                     cmd.Parameters.AddParameter("@id", primShape.Serialization);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
