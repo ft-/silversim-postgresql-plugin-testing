@@ -156,21 +156,33 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.InsideTransaction(() =>
+                conn.InsideTransaction((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM groupinvites WHERE \"PrincipalID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM groupinvites WHERE \"PrincipalID\" = @id", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM groupmemberships WHERE \"PrincipalID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM groupmemberships WHERE \"PrincipalID\" = @id", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM activegroup WHERE \"PrincipalID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM activegroup WHERE \"PrincipalID\" = @id", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM grouprolememberships WHERE \"PrincipalID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM grouprolememberships WHERE \"PrincipalID\" = @id", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                     }

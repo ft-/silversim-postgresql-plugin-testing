@@ -234,9 +234,12 @@ namespace SilverSim.Database.PostgreSQL.Experience
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                return conn.InsideTransaction<bool>(() =>
+                return conn.InsideTransaction<bool>((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @experienceid", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @experienceid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@experienceid", id);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -255,14 +258,20 @@ namespace SilverSim.Database.PostgreSQL.Experience
 
                     foreach (string table in m_RemoveFromTables)
                     {
-                        using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"ExperienceID\" = @experienceid", conn))
+                        using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"ExperienceID\" = @experienceid", conn)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             cmd.Parameters.AddParameter("@experienceid", id);
                             cmd.ExecuteNonQuery();
                         }
                     }
 
-                    using (var cmd = new NpgsqlCommand("DELETE FROM experiences WHERE \"ID\" = @experienceid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM experiences WHERE \"ID\" = @experienceid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@experienceid", id);
                         return cmd.ExecuteNonQuery() > 0;
@@ -326,10 +335,13 @@ namespace SilverSim.Database.PostgreSQL.Experience
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.InsideTransaction(() =>
+                conn.InsideTransaction((transaction) =>
                 {
                     bool isallowed = false;
-                    using (var cmd = new NpgsqlCommand("SELECT \"Admin\" FROM experienceadmins WHERE \"ExperienceID\" = @experienceid AND \"Admin\" LIKE @admin", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"Admin\" FROM experienceadmins WHERE \"ExperienceID\" = @experienceid AND \"Admin\" LIKE @admin", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@experienceid", info.ID);
                         cmd.Parameters.AddParameter("@admin", requestingAgent.ID.ToString() + "%");
@@ -346,7 +358,10 @@ namespace SilverSim.Database.PostgreSQL.Experience
                     }
                     if (!isallowed)
                     {
-                        using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @id", conn))
+                        using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @id", conn)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             cmd.Parameters.AddParameter("@id", info.ID);
                             using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -362,7 +377,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                     {
                         throw new InvalidOperationException("requesting agent is not allowed to edit experience");
                     }
-                    conn.UpdateSet("experiences", vals, "ID = \"" + info.ID.ToString() + "\"");
+                    conn.UpdateSet("experiences", vals, "ID = \"" + info.ID.ToString() + "\"", transaction);
                 });
             }
         }

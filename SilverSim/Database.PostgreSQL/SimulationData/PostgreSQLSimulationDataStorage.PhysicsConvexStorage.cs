@@ -225,13 +225,19 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.InsideTransaction(() =>
+                conn.InsideTransaction((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM primphysics WHERE 1", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM primphysics WHERE 1", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM meshphysics WHERE 1", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM meshphysics WHERE 1", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.ExecuteNonQuery();
                     }

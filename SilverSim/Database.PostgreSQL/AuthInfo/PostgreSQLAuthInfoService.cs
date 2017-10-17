@@ -98,14 +98,20 @@ namespace SilverSim.Database.PostgreSQL.AuthInfo
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.InsideTransaction(() =>
+                connection.InsideTransaction((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM auth WHERE \"UserID\" = @id", connection))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM auth WHERE \"UserID\" = @id", connection)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM tokens WHERE \"UserID\" = @id", connection))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM tokens WHERE \"UserID\" = @id", connection)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", accountID);
                         cmd.ExecuteNonQuery();

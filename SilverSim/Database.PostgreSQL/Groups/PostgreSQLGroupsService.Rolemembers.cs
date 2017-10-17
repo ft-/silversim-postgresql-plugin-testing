@@ -256,9 +256,12 @@ namespace SilverSim.Database.PostgreSQL.Groups
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    conn.InsideTransaction(() =>
+                    conn.InsideTransaction((transaction) =>
                     {
-                        using (var cmd = new NpgsqlCommand("UPDATE groupmemberships SET \"SelectedRoleID\"=@zeroid WHERE \"SelectedRoleID\" = @roleid AND \"GroupID\" = @groupid AND \"PrincipalID\" = @principalid", conn))
+                        using (var cmd = new NpgsqlCommand("UPDATE groupmemberships SET \"SelectedRoleID\"=@zeroid WHERE \"SelectedRoleID\" = @roleid AND \"GroupID\" = @groupid AND \"PrincipalID\" = @principalid", conn)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             cmd.Parameters.AddParameter("@zeroid", UUID.Zero);
                             cmd.Parameters.AddParameter("@principalid", principal.ID);
@@ -269,7 +272,10 @@ namespace SilverSim.Database.PostgreSQL.Groups
 
                         foreach (string table in tablenames)
                         {
-                            using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"GroupID\" = @groupid AND \"RoleID\" = @roleid AND \"PrincipalID\" = @principalid", conn))
+                            using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"GroupID\" = @groupid AND \"RoleID\" = @roleid AND \"PrincipalID\" = @principalid", conn)
+                            {
+                                Transaction = transaction
+                            })
                             {
                                 cmd.Parameters.AddParameter("@principalid", principal.ID);
                                 cmd.Parameters.AddParameter("@groupid", group.ID);

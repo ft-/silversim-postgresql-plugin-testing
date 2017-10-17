@@ -173,11 +173,14 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             return false;
         }
 
-        public bool IsParentFolderIdValid(NpgsqlConnection conn, UUID principalID, UUID parentFolderID, UUID expectedFolderID)
+        public bool IsParentFolderIdValid(NpgsqlConnection conn, UUID principalID, UUID parentFolderID, UUID expectedFolderID, NpgsqlTransaction transaction = null)
         {
             if (parentFolderID == UUID.Zero)
             {
-                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid", conn)
+                {
+                    Transaction = transaction
+                })
                 {
                     cmd.Parameters.AddParameter("@ownerid", principalID);
                     cmd.Parameters.AddParameter("@parentfolderid", UUID.Zero);
@@ -252,14 +255,20 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.InsideTransaction(() =>
+                connection.InsideTransaction((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_InventoryItemTable + " WHERE \"OwnerID\" = @ownerid", connection))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_InventoryItemTable + " WHERE \"OwnerID\" = @ownerid", connection)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@ownerid", userAccount);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid", connection))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid", connection)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@ownerid", userAccount);
                         cmd.ExecuteNonQuery();

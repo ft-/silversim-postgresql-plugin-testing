@@ -93,10 +93,13 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.InsideTransaction(() =>
+                connection.InsideTransaction((transaction) =>
                 {
                     bool haveEntry = false;
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM regiondefaults WHERE \"uuid\" = @id", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM regiondefaults WHERE \"uuid\" = @id", connection)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@id", regionId);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -107,7 +110,10 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
                     if (haveEntry)
                     {
-                        using (var cmd = new NpgsqlCommand("UPDATE regiondefaults SET \"flags\" = (\"flags\" & @remove) | @add WHERE \"uuid\" = @id", connection))
+                        using (var cmd = new NpgsqlCommand("UPDATE regiondefaults SET \"flags\" = (\"flags\" & @remove) | @add WHERE \"uuid\" = @id", connection)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             cmd.Parameters.AddParameter("@remove", ~removeFlags);
                             cmd.Parameters.AddParameter("@add", addFlags);
@@ -127,7 +133,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                             ["uuid"] = regionId,
                             ["flags"] = addFlags
                         };
-                        connection.InsertInto("regiondefaults", vals);
+                        connection.InsertInto("regiondefaults", vals, transaction);
                     }
                 });
             }

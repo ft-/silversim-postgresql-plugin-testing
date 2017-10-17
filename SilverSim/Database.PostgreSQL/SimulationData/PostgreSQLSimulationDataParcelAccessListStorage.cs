@@ -41,43 +41,56 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             m_EnableOnConflict = enableOnConflict;
         }
 
+        public bool TryGetValue(UUID regionID, UUID parcelID, UUI accessor, out ParcelAccessEntry e)
+        {
+            var result = new List<ParcelAccessEntry>();
+
+            using (var connection = new NpgsqlConnection(m_ConnectionString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"ExpiresAt\" <= " + Date.GetUnixTime().ToString() + " AND \"ExpiresAt\" <> 0", connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
+                /* we use a specific implementation to reduce the result set here */
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "' AND \"Accessor\" LIKE '" + accessor.ID.ToString() + "%'", connection))
+                {
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        var entry = new ParcelAccessEntry()
+                        {
+                            ParcelID = reader.GetUUID("ParcelID"),
+                            Accessor = reader.GetUUI("Accessor")
+                        };
+                        ulong val = (ulong)(long)reader["ExpiresAt"];
+                        if (val != 0)
+                        {
+                            entry.ExpiresAt = Date.UnixTimeToDateTime(val);
+                        }
+                        result.Add(entry);
+                    }
+                }
+            }
+
+            /* the prefiltered set reduces the amount of checks we have to do here */
+            IEnumerable<ParcelAccessEntry> en = from entry in result where entry.Accessor.EqualsGrid(accessor) && (entry.ExpiresAt == null || entry.ExpiresAt.AsULong > Date.Now.AsULong) select entry;
+            IEnumerator<ParcelAccessEntry> enumerator = en.GetEnumerator();
+            if(!enumerator.MoveNext())
+            {
+                e = null;
+                return false;
+            }
+            e = enumerator.Current;
+            return true;
+        }
+
         public bool this[UUID regionID, UUID parcelID, UUI accessor]
         {
             get
             {
-                var result = new List<ParcelAccessEntry>();
-
-                using (var connection = new NpgsqlConnection(m_ConnectionString))
-                {
-                    connection.Open();
-                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"ExpiresAt\" <= " + Date.GetUnixTime().ToString() + " AND \"ExpiresAt\" <> 0", connection))
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    /* we use a specific implementation to reduce the result set here */
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "' AND \"Accessor\" LIKE '" + accessor.ID.ToString() + "%'", connection))
-                    {
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            var entry = new ParcelAccessEntry()
-                            {
-                                ParcelID = reader.GetUUID("ParcelID"),
-                                Accessor = reader.GetUUI("Accessor")
-                            };
-                            ulong val = (ulong)(long)reader["ExpiresAt"];
-                            if (val != 0)
-                            {
-                                entry.ExpiresAt = Date.UnixTimeToDateTime(val);
-                            }
-                            result.Add(entry);
-                        }
-                    }
-                }
-
-                /* the prefiltered set reduces the amount of checks we have to do here */
-                IEnumerable<ParcelAccessEntry> en = from entry in result where entry.Accessor.EqualsGrid(accessor) select entry;
-                return en.GetEnumerator().MoveNext();
+                ParcelAccessEntry e;
+                return TryGetValue(regionID, parcelID, accessor, out e);
             }
         }
 

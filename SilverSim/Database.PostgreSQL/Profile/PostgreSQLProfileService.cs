@@ -57,34 +57,52 @@ namespace SilverSim.Database.PostgreSQL.Profile
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.InsideTransaction(() =>
+                conn.InsideTransaction((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM classifieds where \"creatoruuid\" = @uuid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM classifieds where \"creatoruuid\" = @uuid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@uuid", userAccount);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM userpicks where \"creatoruuid\" = @uuid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM userpicks where \"creatoruuid\" = @uuid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@uuid", userAccount);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM usernotes where \"useruuid\" = @uuid OR \"targetuuid\" = @uuid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM usernotes where \"useruuid\" = @uuid OR \"targetuuid\" = @uuid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@uuid", userAccount);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM usersettings where \"useruuid\" = @uuid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM usersettings where \"useruuid\" = @uuid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@uuid", userAccount);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("DELETE FROM userprofile where \"useruuid\" = @uuid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM userprofile where \"useruuid\" = @uuid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@uuid", userAccount);
                         cmd.ExecuteNonQuery();
                     }
-                    using (var cmd = new NpgsqlCommand("UPDATE userprofile set \"profilePartner\" = '00000000-0000-0000-0000-000000000000' where \"profilePartner\" = @uuid", conn))
+                    using (var cmd = new NpgsqlCommand("UPDATE userprofile set \"profilePartner\" = '00000000-0000-0000-0000-000000000000' where \"profilePartner\" = @uuid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@uuid", userAccount);
                         cmd.ExecuteNonQuery();

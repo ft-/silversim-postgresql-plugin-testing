@@ -190,17 +190,17 @@ namespace SilverSim.Database.PostgreSQL
         #endregion
 
         #region Transaction Helper
-        public static void InsideTransaction(this NpgsqlConnection connection, Action del)
+        public static void InsideTransaction(this NpgsqlConnection connection, Action<NpgsqlTransaction> del)
         {
             InsideTransaction(connection, IsolationLevel.Serializable, del);
         }
 
-        public static void InsideTransaction(this NpgsqlConnection connection, IsolationLevel level, Action del)
+        public static void InsideTransaction(this NpgsqlConnection connection, IsolationLevel level, Action<NpgsqlTransaction> del)
         {
             NpgsqlTransaction transaction = connection.BeginTransaction(level);
             try
             {
-                del();
+                del(transaction);
             }
             catch
             {
@@ -210,16 +210,16 @@ namespace SilverSim.Database.PostgreSQL
             transaction.Commit();
         }
 
-        public static T InsideTransaction<T>(this NpgsqlConnection connection, Func<T> del) =>
+        public static T InsideTransaction<T>(this NpgsqlConnection connection, Func<NpgsqlTransaction, T> del) =>
             InsideTransaction(connection, IsolationLevel.Serializable, del);
 
-        public static T InsideTransaction<T>(this NpgsqlConnection connection, IsolationLevel level, Func<T> del)
+        public static T InsideTransaction<T>(this NpgsqlConnection connection, IsolationLevel level, Func<NpgsqlTransaction, T> del)
         {
             T result;
             NpgsqlTransaction transaction = connection.BeginTransaction(level);
             try
             {
-                result = del();
+                result = del(transaction);
             }
             catch
             {
@@ -372,7 +372,7 @@ namespace SilverSim.Database.PostgreSQL
         #endregion
 
         #region REPLACE INTO style helper
-        public static void ReplaceInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string[] keyfields, bool enableOnConflict, bool skipTransaction = false)
+        public static void ReplaceInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string[] keyfields, bool enableOnConflict, NpgsqlTransaction transaction = null)
         {
             bool useOnConflict = connection.HasOnConflict() && enableOnConflict;
             var q = new List<string>();
@@ -558,9 +558,12 @@ namespace SilverSim.Database.PostgreSQL
                     }
                 }
             }
-            else if(skipTransaction)
+            else if(transaction != null)
             {
-                using (var command = new NpgsqlCommand(q1.ToString(), connection))
+                using (var command = new NpgsqlCommand(q1.ToString(), connection)
+                {
+                    Transaction = transaction
+                })
                 {
                     AddParameters(command.Parameters, vals);
                     if (command.ExecuteNonQuery() < 1)
@@ -571,9 +574,12 @@ namespace SilverSim.Database.PostgreSQL
             }
             else
             {
-                connection.InsideTransaction(() =>
+                connection.InsideTransaction((transactionin) =>
                 {
-                    using (var command = new NpgsqlCommand(q1.ToString(), connection))
+                    using (var command = new NpgsqlCommand(q1.ToString(), connection)
+                    {
+                        Transaction = transactionin
+                    })
                     {
                         AddParameters(command.Parameters, vals);
                         if (command.ExecuteNonQuery() < 1)
@@ -587,7 +593,7 @@ namespace SilverSim.Database.PostgreSQL
 #endregion
 
         #region Common INSERT INTO helper
-        public static void InsertInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals)
+        public static void InsertInto(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, NpgsqlTransaction transaction = null)
         {
             var q = new List<string>();
             foreach (KeyValuePair<string, object> kvp in vals)
@@ -667,7 +673,10 @@ namespace SilverSim.Database.PostgreSQL
             }
             q1.Append(q2);
             q1.Append(")");
-            using (var command = new NpgsqlCommand(q1.ToString(), connection))
+            using (var command = new NpgsqlCommand(q1.ToString(), connection)
+            {
+                Transaction = transaction
+            })
             {
                 AddParameters(command.Parameters, vals);
                 if (command.ExecuteNonQuery() < 1)
@@ -916,14 +925,17 @@ namespace SilverSim.Database.PostgreSQL
             return updates;
         }
 
-        public static void UpdateSet(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string where)
+        public static void UpdateSet(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, string where, NpgsqlTransaction transaction = null)
         {
-            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+            var b = new NpgsqlCommandBuilder();
             string q1 = "UPDATE " + tablename + " SET ";
 
             q1 += string.Join(",", UpdateSetFromVals(vals, b));
 
-            using (var command = new NpgsqlCommand(q1 + " WHERE " + where, connection))
+            using (var command = new NpgsqlCommand(q1 + " WHERE " + where, connection)
+            {
+                Transaction = transaction
+            })
             {
                 AddParameters(command.Parameters, vals);
                 if (command.ExecuteNonQuery() < 1)
@@ -933,9 +945,9 @@ namespace SilverSim.Database.PostgreSQL
             }
         }
 
-        public static void UpdateSet(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, Dictionary<string, object> where)
+        public static void UpdateSet(this NpgsqlConnection connection, string tablename, Dictionary<string, object> vals, Dictionary<string, object> where, NpgsqlTransaction transaction = null)
         {
-            NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
+            var b = new NpgsqlCommandBuilder();
             string q1 = "UPDATE " + tablename + " SET ";
 
             q1 += string.Join(",", UpdateSetFromVals(vals, b));
@@ -950,10 +962,13 @@ namespace SilverSim.Database.PostgreSQL
                 wherestr.AppendFormat("{0} = @w_{1}", b.QuoteIdentifier(w.Key), w.Key);
             }
 
-            using (var command = new NpgsqlCommand(q1 + " WHERE " + wherestr, connection))
+            using (var command = new NpgsqlCommand(q1 + " WHERE " + wherestr, connection)
+            {
+                Transaction = transaction
+            })
             {
                 AddParameters(command.Parameters, vals);
-                foreach(KeyValuePair<string, object> w in where)
+                foreach (KeyValuePair<string, object> w in where)
                 {
                     command.Parameters.AddParameter("@w_" + w.Key, w.Value);
                 }

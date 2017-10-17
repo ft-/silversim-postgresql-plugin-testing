@@ -176,7 +176,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.InsideTransaction(() =>
+                connection.InsideTransaction((transaction) =>
                 {
                     var vals = new Dictionary<string, object>();
                     vals.Add("UserID", fi.User.ID);
@@ -184,13 +184,13 @@ namespace SilverSim.Database.PostgreSQL.Friends
                     vals.Add("Secret", fi.Secret);
                     vals.Add("RightsToFriend", fi.FriendGivenFlags);
 
-                    connection.ReplaceInto("friends", vals, new string[] { "UserID", "FriendID" }, m_EnableOnConflict);
+                    connection.ReplaceInto("friends", vals, new string[] { "UserID", "FriendID" }, m_EnableOnConflict, transaction);
 
                     vals.Add("UserID", fi.Friend.ID);
                     vals.Add("FriendID", fi.User.ID);
                     vals.Add("Secret", fi.Secret);
                     vals.Add("RightsToFriend", fi.UserGivenFlags);
-                    connection.ReplaceInto("friends", vals, new string[] { "UserID", "FriendID" }, m_EnableOnConflict);
+                    connection.ReplaceInto("friends", vals, new string[] { "UserID", "FriendID" }, m_EnableOnConflict, transaction);
                 });
             }
         }

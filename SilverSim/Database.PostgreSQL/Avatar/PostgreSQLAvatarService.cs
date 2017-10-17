@@ -91,9 +91,12 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     }
                     else
                     {
-                        connection.InsideTransaction(() =>
+                        connection.InsideTransaction((transaction) =>
                         {
-                            using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid", connection))
+                            using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid", connection)
+                            {
+                                Transaction = transaction
+                            })
                             {
                                 cmd.Parameters.AddParameter("@principalid", avatarID);
                                 cmd.ExecuteNonQuery();
@@ -124,11 +127,14 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                 {
                     connection.Open();
 
-                    connection.InsideTransaction(() =>
+                    connection.InsideTransaction((transaction) =>
                     {
                         foreach (string key in itemKeys)
                         {
-                            using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
+                            using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection)
+                            {
+                                Transaction = transaction
+                            })
                             {
                                 cmd.Parameters.AddParameter("@principalid", avatarID);
                                 cmd.Parameters.AddParameter("@name", key);
@@ -166,13 +172,13 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     {
                         ["PrincipalID"] = avatarID
                     };
-                    connection.InsideTransaction(() =>
+                    connection.InsideTransaction((transaction) =>
                     {
                         for (int i = 0; i < itemKeys.Count; ++i)
                         {
                             vals["Name"] = itemKeys[i];
                             vals["Value"] = value[i];
-                            connection.ReplaceInto("avatars", vals, new string[] { "PrincipalID", "Name" }, m_EnableOnConflict, true);
+                            connection.ReplaceInto("avatars", vals, new string[] { "PrincipalID", "Name" }, m_EnableOnConflict, transaction);
                         }
                     });
                 }
@@ -235,11 +241,14 @@ namespace SilverSim.Database.PostgreSQL.Avatar
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.InsideTransaction(() =>
+                connection.InsideTransaction((transaction) =>
                 {
                     foreach (string name in nameList)
                     {
-                        using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
+                        using (var cmd = new NpgsqlCommand("DELETE FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             cmd.Parameters.AddParameter("@principalid", avatarID);
                             cmd.Parameters.AddParameter("@name", name);

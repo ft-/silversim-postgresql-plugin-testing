@@ -134,16 +134,22 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.InsideTransaction(() =>
+                conn.InsideTransaction((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("DELETE FROM activegroup WHERE \"ActiveGroupID\" = @groupid", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM activegroup WHERE \"ActiveGroupID\" = @groupid", conn)
+                    {
+                        Transaction = transaction
+                    })
                     {
                         cmd.Parameters.AddParameter("@groupid", group.ID);
                         cmd.ExecuteNonQuery();
                     }
                     foreach (string table in tablenames)
                     {
-                        using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"GroupID\" = @groupid", conn))
+                        using (var cmd = new NpgsqlCommand("DELETE FROM " + table + " WHERE \"GroupID\" = @groupid", conn)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             cmd.Parameters.AddParameter("@groupid", group.ID);
                             cmd.ExecuteNonQuery();
@@ -166,7 +172,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
                     {
                         while (reader.Read())
                         {
-                            DirGroupInfo info = new DirGroupInfo();
+                            var info = new DirGroupInfo();
                             info.ID.ID = reader.GetUUID("GroupID");
                             info.ID.GroupName = (string)reader["Name"];
                             string uri = (string)reader["Location"];

@@ -364,16 +364,18 @@ namespace SilverSim.Database.PostgreSQL.Asset
                 {
                     conn.Open();
 
-                    conn.InsideTransaction(() =>
+                    conn.InsideTransaction((transaction) =>
                     {
-                        using (var cmd =
-                            new NpgsqlCommand(
+                        using (var cmd = new NpgsqlCommand(
                                 conn.HasOnConflict() && m_EnableOnConflict ?
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\")" +
                                 "VALUES(@hash, @assetType, @data) ON CONFLICT(\"hash\", \"assetType\") DO NOTHING" :
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\") " +
                                 "SELECT @hash, @assetType, @data WHERE NOT EXISTS (SELECT 1 FROM assetdata WHERE \"hash\"=@hash AND \"assetType\"=@assetType)",
-                                conn))
+                                conn)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             using (cmd)
                             {
@@ -387,16 +389,18 @@ namespace SilverSim.Database.PostgreSQL.Asset
                             }
                         }
 
-                        using (var cmd =
-                            new NpgsqlCommand(
+                        using (var cmd = new NpgsqlCommand(
                                 conn.HasOnConflict() && m_EnableOnConflict ?
                                 "INSERT INTO assetrefs (\"id\", \"name\", \"assetType\", \"temporary\", \"create_time\", \"access_time\", \"asset_flags\", \"hash\")" +
-                                "VALUES(@id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @hash) ON CONFLICT (id) DO UPDATE SET \"access_time\"=@access_time":
+                                "VALUES(@id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @hash) ON CONFLICT (id) DO UPDATE SET \"access_time\"=@access_time" :
                                 "UPDATE assetrefs SET \"access_time\"=@access_time WHERE \"id\"=@id;" +
                                 "INSERT INTO assetrefs (\"id\", \"name\", \"assetType\", \"temporary\", \"create_time\", \"access_time\", \"asset_flags\", \"hash\")" +
                                 "SELECT @id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @hash WHERE NOT EXISTS (SELECT 1 FROM assetrefs WHERE \"id\" = @id)"
                                 ,
-                                conn))
+                                conn)
+                        {
+                            Transaction = transaction
+                        })
                         {
                             string assetName = asset.Name;
                             if (asset.Name.Length > MAX_ASSET_NAME)
