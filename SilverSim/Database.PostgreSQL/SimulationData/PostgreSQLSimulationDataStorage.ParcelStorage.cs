@@ -119,8 +119,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         private static readonly string[] ParcelTables = new string[]
         {
             "parcelexperiences",
-            "regionexperiences",
-            "regiontrustedexperiences",
             "parcelaccesswhitelist",
             "parcelaccessblacklist",
             "parcellandpasslist"
