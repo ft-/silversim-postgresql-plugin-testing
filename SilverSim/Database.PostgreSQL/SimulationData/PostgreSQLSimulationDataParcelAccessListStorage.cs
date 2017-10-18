@@ -58,17 +58,21 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 {
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
-                        var entry = new ParcelAccessEntry()
+                        while (reader.Read())
                         {
-                            ParcelID = reader.GetUUID("ParcelID"),
-                            Accessor = reader.GetUUI("Accessor")
-                        };
-                        ulong val = (ulong)(long)reader["ExpiresAt"];
-                        if (val != 0)
-                        {
-                            entry.ExpiresAt = Date.UnixTimeToDateTime(val);
+                            var entry = new ParcelAccessEntry()
+                            {
+                                RegionID = regionID,
+                                ParcelID = reader.GetUUID("ParcelID"),
+                                Accessor = reader.GetUUI("Accessor")
+                            };
+                            var val = (ulong)(long)reader["ExpiresAt"];
+                            if (val != 0)
+                            {
+                                entry.ExpiresAt = Date.UnixTimeToDateTime(val);
+                            }
+                            result.Add(entry);
                         }
-                        result.Add(entry);
                     }
                 }
             }
@@ -183,7 +187,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "' AND Accessor LIKE '" + accessor.ID.ToString() + "%'", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"RegionID\" = '" + regionID.ToString() + "' AND \"ParcelID\" = '" + parcelID.ToString() + "' AND \"Accessor\" LIKE '" + accessor.ID.ToString() + "%'", connection))
                 {
                     return cmd.ExecuteNonQuery() > 0;
                 }
