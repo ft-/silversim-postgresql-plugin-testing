@@ -481,8 +481,17 @@ namespace SilverSim.Database.PostgreSQL
                 q1.Append(insertIntoFields);
                 q1.Append(") ON CONFLICT (");
                 q1.Append(conflictParams);
-                q1.Append(") DO UPDATE SET ");
-                q1.Append(updateParams);
+                q1.Append(") ");
+
+                if (updateParams.Length != 0)
+                {
+                    q1.Append("DO UPDATE SET ");
+                    q1.Append(updateParams);
+                }
+                else
+                {
+                    q1.Append("DO NOTHING");
+                }
             }
             else
             {
@@ -527,14 +536,19 @@ namespace SilverSim.Database.PostgreSQL
                         updateParams.Append(p);
                     }
                 }
-                q1.Append("UPDATE ");
-                q1.Append(quotedTableName);
-                q1.Append(" SET ");
-                q1.Append(updateParams);
-                q1.Append(" WHERE ");
-                q1.Append(whereParams);
 
-                q1.Append("; INSERT INTO ");
+                if (updateParams.Length != 0)
+                {
+                    q1.Append("UPDATE ");
+                    q1.Append(quotedTableName);
+                    q1.Append(" SET ");
+                    q1.Append(updateParams);
+                    q1.Append(" WHERE ");
+                    q1.Append(whereParams);
+                    q1.Append(";");
+                }
+
+                q1.Append("INSERT INTO ");
                 q1.Append(quotedTableName);
                 q1.Append(" (");
                 q1.Append(insertIntoFields);

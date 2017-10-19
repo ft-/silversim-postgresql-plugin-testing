@@ -127,7 +127,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 {
                     ["RegionID"] = entry.RegionID,
                     ["ParcelID"] = entry.ParcelID,
-                    ["ExperienceID"] = entry.ExperienceID
+                    ["ExperienceID"] = entry.ExperienceID,
+                    ["IsAllowed"] = entry.IsAllowed
                 };
                 connection.ReplaceInto("parcelexperiences", data, ParcelExperienceKeys, m_EnableOnConflict);
             }
@@ -139,7 +140,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             {
                 connection.Open();
                 /* we use a specific implementation to reduce the result set here */
-                using (var cmd = new NpgsqlCommand("SELECT \"ExperienceID\" FROM parcelexperiences WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid AND \"ExperienceID\" LIKE @experienceid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"IsAllowed\" FROM parcelexperiences WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid AND \"ExperienceID\" = @experienceid", connection))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@parcelid", parcelID);
@@ -150,9 +151,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         {
                             entry = new ParcelExperienceEntry
                             {
-                                RegionID = reader.GetUUID("RegionID"),
-                                ParcelID = reader.GetUUID("ParcelID"),
-                                ExperienceID = reader.GetUUID("ExperienceID"),
+                                RegionID = regionID,
+                                ParcelID = parcelID,
+                                ExperienceID = experienceID,
                                 IsAllowed = (bool)reader["IsAllowed"]
                             };
                             return true;

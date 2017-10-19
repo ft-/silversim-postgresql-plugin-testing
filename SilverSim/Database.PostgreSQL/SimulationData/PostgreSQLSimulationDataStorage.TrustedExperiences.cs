@@ -79,7 +79,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     conn.Open();
                     if (value)
                     {
-                        Dictionary<string, object> vals = new Dictionary<string, object>();
+                        var vals = new Dictionary<string, object>();
                         vals.Add("RegionID", regionID);
                         vals.Add("ExperienceID", experienceID);
                         conn.ReplaceInto("regiontrustedexperiences", vals, ReplaceTrustedExperienceKeys, m_EnableOnConflict);

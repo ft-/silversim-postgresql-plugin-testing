@@ -34,7 +34,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         {
             get
             {
-                List<RegionExperienceInfo> result = new List<RegionExperienceInfo>();
+                var result = new List<RegionExperienceInfo>();
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
