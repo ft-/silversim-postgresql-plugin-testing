@@ -35,7 +35,14 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<uint>("PatchID") { IsNullAllowed = false },
             new AddColumn<byte[]>("TerrainData"),
             new PrimaryKeyInfo("RegionID", "PatchID"),
+            #endregion
 
+            #region Table defaultterrains
+            new SqlTable("defaultterrains"),
+            new AddColumn<UUID>("RegionID") { IsNullAllowed = false, Default = UUID.Zero },
+            new AddColumn<uint>("PatchID") { IsNullAllowed = false },
+            new AddColumn<byte[]>("TerrainData"),
+            new PrimaryKeyInfo("RegionID", "PatchID"),
             #endregion
 
             #region Table environmentsettings
