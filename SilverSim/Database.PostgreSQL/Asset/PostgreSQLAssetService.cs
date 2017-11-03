@@ -178,7 +178,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                         {
                             return false;
                         }
-                        asset = new AssetData()
+                        asset = new AssetData
                         {
                             ID = dbReader.GetUUID("id"),
                             Data = dbReader.GetBytes("data"),
@@ -235,7 +235,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                     {
                         if (dbReader.Read())
                         {
-                            metadata = new AssetMetadata()
+                            metadata = new AssetMetadata
                             {
                                 ID = dbReader.GetUUID("id"),
                                 Type = dbReader.GetEnum<AssetType>("assetType"),

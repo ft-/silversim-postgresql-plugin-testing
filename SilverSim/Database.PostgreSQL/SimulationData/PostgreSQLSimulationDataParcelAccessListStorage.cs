@@ -61,7 +61,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     {
                         while (reader.Read())
                         {
-                            var entry = new ParcelAccessEntry()
+                            var entry = new ParcelAccessEntry
                             {
                                 RegionID = regionID,
                                 ParcelID = reader.GetUUID("ParcelID"),
@@ -118,7 +118,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         {
                             while (reader.Read())
                             {
-                                var entry = new ParcelAccessEntry()
+                                var entry = new ParcelAccessEntry
                                 {
                                     RegionID = reader.GetUUID("RegionID"),
                                     ParcelID = reader.GetUUID("ParcelID"),

@@ -134,7 +134,7 @@ namespace SilverSim.Database.PostgreSQL.AuthInfo
                         {
                             if (reader.Read())
                             {
-                                return new UserAuthInfo()
+                                return new UserAuthInfo
                                 {
                                     ID = reader.GetUUID("UserID"),
                                     PasswordHash = (string)reader["PasswordHash"],
@@ -166,7 +166,7 @@ namespace SilverSim.Database.PostgreSQL.AuthInfo
         public override void SetPassword(UUID principalId, string password)
         {
             /* we use UserAuthInfo to calculate a new password */
-            var ai = new UserAuthInfo()
+            var ai = new UserAuthInfo
             {
                 Password = password
             };

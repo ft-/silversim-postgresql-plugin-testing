@@ -213,7 +213,7 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
             }
         }
 
-        private static UUI ToUUI(NpgsqlDataReader dbreader) => new UUI()
+        private static UUI ToUUI(NpgsqlDataReader dbreader) => new UUI
         {
             ID = dbreader.GetUUID("AvatarID"),
             HomeURI = dbreader.GetUri("HomeURI"),

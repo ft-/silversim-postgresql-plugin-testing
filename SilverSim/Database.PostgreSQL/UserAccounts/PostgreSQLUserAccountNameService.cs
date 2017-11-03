@@ -128,7 +128,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return list;
         }
 
-        private UUI GetUUIFromReader(NpgsqlDataReader reader) => new UUI()
+        private UUI GetUUIFromReader(NpgsqlDataReader reader) => new UUI
         {
             FirstName = (string)reader["FirstName"],
             LastName = (string)reader["LastName"],

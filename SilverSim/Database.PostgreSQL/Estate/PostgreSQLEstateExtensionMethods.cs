@@ -26,7 +26,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
 {
     public static class PostgreSQLEstateExtensionMethods
     {
-        public static EstateInfo ToEstateInfo(this NpgsqlDataReader reader) => new EstateInfo()
+        public static EstateInfo ToEstateInfo(this NpgsqlDataReader reader) => new EstateInfo
         {
             ID = (uint)(int)reader["ID"],
             Name = (string)reader["Name"],

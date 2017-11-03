@@ -29,7 +29,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
 {
     public sealed partial class PostgreSQLGroupsService : GroupsServiceInterface.IGroupMembershipsInterface
     {
-        private GroupMembership MembershipFromReader(NpgsqlDataReader reader, UUI requestingAgent) => new GroupMembership()
+        private GroupMembership MembershipFromReader(NpgsqlDataReader reader, UUI requestingAgent) => new GroupMembership
         {
             IsAcceptNotices = (bool)reader["AcceptNotices"],
             Contribution = (int)reader["Contribution"],

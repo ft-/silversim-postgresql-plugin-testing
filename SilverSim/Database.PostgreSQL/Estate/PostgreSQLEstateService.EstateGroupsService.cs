@@ -43,7 +43,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                         {
                             while (reader.Read())
                             {
-                                var ugi = new UGI()
+                                var ugi = new UGI
                                 {
                                     ID = reader.GetUUID("GroupID")
                                 };

@@ -36,7 +36,7 @@ namespace SilverSim.Database.PostgreSQL.TravelingData
 {
     internal static class PostgreSQLTravelingDataExtensionMethods
     {
-        public static TravelingDataInfo ToTravelingData(this NpgsqlDataReader reader) => new TravelingDataInfo()
+        public static TravelingDataInfo ToTravelingData(this NpgsqlDataReader reader) => new TravelingDataInfo
         {
             SessionID = reader.GetUUID("SessionID"),
             UserID = reader.GetUUID("UserID"),

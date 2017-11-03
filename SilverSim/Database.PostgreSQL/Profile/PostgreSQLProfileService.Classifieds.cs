@@ -63,7 +63,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
                     {
                         if (reader.Read())
                         {
-                            classified = new ProfileClassified()
+                            classified = new ProfileClassified
                             {
                                 ClassifiedID = reader.GetUUID("classifieduuid"),
                                 Category = (int)reader["category"],

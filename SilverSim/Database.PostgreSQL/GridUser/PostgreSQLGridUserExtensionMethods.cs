@@ -27,7 +27,7 @@ namespace SilverSim.Database.PostgreSQL.GridUser
 {
     public static class PostgreSQLGridUserExtensionMethods
     {
-        public static GridUserInfo ToGridUser(this NpgsqlDataReader reader) => new GridUserInfo()
+        public static GridUserInfo ToGridUser(this NpgsqlDataReader reader) => new GridUserInfo
         {
             User = new UUI(reader.GetUUID("ID")),
             HomeRegionID = reader.GetUUID("HomeRegionID"),

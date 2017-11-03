@@ -29,7 +29,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 {
     public sealed partial class PostgreSQLSimulationDataStorage : ISimulationDataRegionSettingsStorageInterface
     {
-        private RegionSettings ToRegionSettings(NpgsqlDataReader reader) => new RegionSettings()
+        private RegionSettings ToRegionSettings(NpgsqlDataReader reader) => new RegionSettings
         {
             BlockTerraform = (bool)reader["BlockTerraform"],
             BlockFly = (bool)reader["BlockFly"],
