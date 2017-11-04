@@ -72,7 +72,10 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 public int CompareTo(PrimKey other)
                 {
                     int i = PartID.CompareTo(other.PartID);
-                    if (i == 0) i = ItemID.CompareTo(other.ItemID);
+                    if (i == 0)
+                    {
+                        i = ItemID.CompareTo(other.ItemID);
+                    }
                     return i;
                 }
 
@@ -337,8 +340,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
             protected override void OnIdle()
             {
-                StringBuilder sb = new StringBuilder();
-
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();

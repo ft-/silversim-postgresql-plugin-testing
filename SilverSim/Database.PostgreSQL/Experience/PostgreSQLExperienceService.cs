@@ -60,7 +60,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
     {
         private readonly string m_ConnectionString;
         private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL EXPERIENCE");
-        private bool m_EnableOnConflict;
+        private readonly bool m_EnableOnConflict;
 
         public PostgreSQLExperienceService(IConfig ownSection)
         {
