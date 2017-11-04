@@ -286,7 +286,6 @@ namespace SilverSim.Database.PostgreSQL._Migration
             {
                 ExecuteStatement(conn, string.Format("COMMENT ON TABLE {0} IS '{1}';", b.QuoteIdentifier(table.Name), processingTableRevision), log);
                 insideTransaction.Commit();
-                insideTransaction = null;
                 if (currentAtRevision != 0)
                 {
                     currentAtRevision = processingTableRevision;
