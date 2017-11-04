@@ -137,7 +137,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                 {
                     ids = "'" + string.Join("','", updaterequired) + "'";
                     sql = $"UPDATE assetrefs SET \"access_time\" = @access WHERE \"id\" IN ({ids})";
-                    using (var cmd = new NpgsqlCommand("UPDATE assetrefs SET \"access_time\" = @access WHERE \"id\" = @id", dbcon))
+                    using (var cmd = new NpgsqlCommand(sql, dbcon))
                     {
                         cmd.Parameters.AddParameter("@access", Date.GetUnixTime());
                         cmd.ExecuteNonQuery();
