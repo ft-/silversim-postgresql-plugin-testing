@@ -41,8 +41,8 @@ namespace SilverSim.Database.PostgreSQL.Friends
         public static FriendInfo ToFriendInfo(this NpgsqlDataReader reader)
         {
             var fi = new FriendInfo();
-            fi.User.ID = reader.GetUUID("User");
-            fi.Friend.ID = reader.GetUUID("Friend");
+            fi.User.ID = reader.GetUUID("UserID");
+            fi.Friend.ID = reader.GetUUID("FriendID");
             fi.Secret = (string)reader["Secret"];
             fi.FriendGivenFlags = reader.GetEnum<FriendRightFlags>("RightsToFriend");
             fi.UserGivenFlags = reader.GetEnum<FriendRightFlags>("RightsToUser");
