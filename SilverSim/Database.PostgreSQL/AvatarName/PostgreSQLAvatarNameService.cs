@@ -60,7 +60,7 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE FirstName = @firstName AND LastName = @lastName", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE \"FirstName\" = @firstName AND \"LastName\" = @lastName", connection))
                 {
                     cmd.Parameters.AddParameter("@firstName", firstName);
                     cmd.Parameters.AddParameter("@lastName", lastName);
@@ -97,7 +97,7 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE AvatarID = @avatarid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM avatarnames WHERE \"AvatarID\" = @avatarid", connection))
                 {
                     cmd.Parameters.AddParameter("@avatarid", key);
                     using (NpgsqlDataReader dbreader = cmd.ExecuteReader())
@@ -143,7 +143,7 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                 {
                     connection.Open();
 
-                    connection.ReplaceInto("avatarnames", data, new string[] { "AvatarID" }, m_EnableOnConflict);
+                    connection.ReplaceInto("avatarnames", data, new string[] { "AvatarID", "HomeURI" }, m_EnableOnConflict);
                 }
             }
         }
