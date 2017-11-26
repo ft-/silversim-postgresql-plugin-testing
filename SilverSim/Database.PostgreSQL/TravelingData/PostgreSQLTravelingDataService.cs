@@ -240,12 +240,12 @@ namespace SilverSim.Database.PostgreSQL.TravelingData
         {
             var insertVals = new Dictionary<string, object>
             {
-                ["SessionID"] = data.SessionID.ToString(),
-                ["UserID"] = data.UserID.ToString(),
+                ["SessionID"] = data.SessionID,
+                ["UserID"] = data.UserID,
                 ["GridExternalName"] = data.GridExternalName,
                 ["ServiceToken"] = data.ServiceToken,
                 ["ClientIPAddress"] = data.ClientIPAddress,
-                ["Timestamp"] = Date.Now
+                ["Timestamp"] = data.Timestamp
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
