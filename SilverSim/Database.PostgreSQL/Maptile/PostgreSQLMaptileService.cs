@@ -123,7 +123,7 @@ namespace SilverSim.Database.PostgreSQL.Maptile
                     ["LocX"] = data.Location.X,
                     ["LocY"] = data.Location.Y,
                     ["ScopeID"] = data.ScopeID,
-                    ["LastUpdate"] = Date.Now,
+                    ["LastUpdate"] = data.LastUpdate,
                     ["ContentType"] = data.ContentType,
                     ["ZoomLevel"] = data.ZoomLevel,
                     ["Data"] = data.Data
@@ -155,7 +155,7 @@ namespace SilverSim.Database.PostgreSQL.Maptile
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"LocX\", \"LocY\", \"LastUpdate\" FROM maptiles WHERE \"ScopeID\" = @scopeid AND \"ZoomLevel\" = @zoomlevel AND \"locX\" >= @locxlow AND \"locY\" >= @locylow AND locX <= @locxhigh AND locY <= @locyhigh", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"LocX\", \"LocY\", \"LastUpdate\" FROM maptiles WHERE \"ScopeID\" = @scopeid AND \"ZoomLevel\" = @zoomlevel AND \"LocX\" >= @locxlow AND \"LocY\" >= @locylow AND \"LocX\" <= @locxhigh AND \"LocY\" <= @locyhigh", connection))
                 {
                     cmd.Parameters.AddParameter("@scopeid", scopeid);
                     cmd.Parameters.AddParameter("@zoomlevel", zoomlevel);

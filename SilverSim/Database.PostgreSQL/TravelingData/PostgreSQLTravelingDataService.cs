@@ -250,7 +250,7 @@ namespace SilverSim.Database.PostgreSQL.TravelingData
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                connection.ReplaceInto("travelingdata", insertVals, new string[] { "SessionID", "UserID" }, m_EnableOnConflict);
+                connection.ReplaceInto("travelingdata", insertVals, new string[] { "SessionID" }, m_EnableOnConflict);
             }
         }
 
