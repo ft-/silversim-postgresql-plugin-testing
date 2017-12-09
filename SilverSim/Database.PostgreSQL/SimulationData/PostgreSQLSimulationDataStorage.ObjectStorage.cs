@@ -112,6 +112,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 Position = dbReader.GetVector3("Position"),
                 Rotation = dbReader.GetQuaternion("Rotation"),
                 SitText = (string)dbReader["SitText"],
+                SitAnimation = (string)dbReader["SitAnimation"],
                 TouchText = (string)dbReader["TouchText"],
                 Name = (string)dbReader["Name"],
                 Description = (string)dbReader["Description"],
