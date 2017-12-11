@@ -202,7 +202,10 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 IsReturnAtEdge = (bool)dbReader["IsReturnAtEdge"],
                 IsBlockGrabObject = (bool)dbReader["IsBlockGrabObject"],
                 SandboxOrigin = dbReader.GetVector3("SandboxOrigin"),
-                ExtendedMesh = new ObjectPart.ExtendedMeshParams { DbSerialization = dbReader.GetBytes("ExtendedMeshData") }
+                ExtendedMesh = new ObjectPart.ExtendedMeshParams { DbSerialization = dbReader.GetBytes("ExtendedMeshData") },
+                IsSitTargetActive = (bool)dbReader["IsSitTargetActive"],
+                IsScriptedSitOnly = (bool)dbReader["IsScriptedSitOnly"],
+                AllowUnsit = (bool)dbReader["AllowUnsit"]
             };
 
             using (var ms = new MemoryStream(dbReader.GetBytes("DynAttrs")))
