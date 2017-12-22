@@ -302,7 +302,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 }
             }
 
-            private static readonly string[] m_PrimItemKeys = new string[] { "RegionID", "PrimID", "ID" };
+            private static readonly string[] m_PrimItemKeys = new string[] { "RegionID", "PrimID", "InventoryID" };
             private void ProcessPrimItemUpdates(NpgsqlConnection conn)
             {
                 foreach (PrimKey k in m_PrimItemUpdates.Keys.ToArray())
