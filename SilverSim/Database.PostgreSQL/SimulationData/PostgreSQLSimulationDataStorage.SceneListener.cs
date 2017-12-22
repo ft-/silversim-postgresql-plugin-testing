@@ -177,7 +177,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         sb.Append("DELETE FROM primitems WHERE ");
                     }
 
-                    sb.AppendFormat("(\"RegionID\" = '{0}':uuid AND \"PrimID\" = '{1}':uuid AND \"InventoryID\" = '{2}':uuid)",
+                    sb.AppendFormat("(\"RegionID\" = '{0}' AND \"PrimID\" = '{1}' AND \"InventoryID\" = '{2}')",
                         m_RegionID, k.PartID, k.ItemID);
                     removedItems.Add(k);
                     if (removedItems.Count == 255)
@@ -217,12 +217,12 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     removedItems.Add(k);
                     if (removedItems.Count == 255)
                     {
-                        string c1 = string.Format("DELETE FROM prims WHERE \"RegionID\" = '{0}':uuid AND (\"ID\"='{1}':uuid)",
+                        string c1 = string.Format("DELETE FROM prims WHERE \"RegionID\" = '{0}' AND (\"ID\"='{1}')",
                             m_RegionID,
-                            string.Join("':uuid OR ID='", removedItems));
-                        string c2 = string.Format("DELETE FROM primitems WHERE \"RegionID\" = '{0}':uuid AND (\"PrimID\"='{1}':uuid)",
+                            string.Join("' OR \"ID\"='", removedItems));
+                        string c2 = string.Format("DELETE FROM primitems WHERE \"RegionID\" = '{0}' AND (\"PrimID\"='{1}')",
                             m_RegionID,
-                            string.Join("':uuid OR PrimID='", removedItems));
+                            string.Join("' OR \"PrimID\"='", removedItems));
                         using (var cmd = new NpgsqlCommand(c1, conn))
                         {
                             cmd.ExecuteNonQuery();
@@ -242,12 +242,12 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
                 if (removedItems.Count != 0)
                 {
-                    string c1 = string.Format("DELETE FROM prims WHERE \"RegionID\" = '{0}':uuid AND (\"ID\"='{1}':uuid)",
+                    string c1 = string.Format("DELETE FROM prims WHERE \"RegionID\" = '{0}' AND (\"ID\"='{1}')",
                         m_RegionID,
-                        string.Join("':uuid OR \"ID\"='", removedItems));
-                    string c2 = string.Format("DELETE FROM primitems WHERE \"RegionID\" = '{0}':uuid AND (\"PrimID\"='{1}':uuid)",
+                        string.Join("' OR \"ID\"='", removedItems));
+                    string c2 = string.Format("DELETE FROM primitems WHERE \"RegionID\" = '{0}' AND (\"PrimID\"='{1}')",
                         m_RegionID,
-                        string.Join("':uuid OR \"PrimID\"='", removedItems));
+                        string.Join("' OR \"PrimID\"='", removedItems));
                     using (var cmd = new NpgsqlCommand(c1, conn))
                     {
                         cmd.ExecuteNonQuery();
@@ -273,8 +273,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     removedItems.Add(k);
                     if (removedItems.Count == 255)
                     {
-                        string c = string.Format("DELETE FROM objects WHERE \"RegionID\"='{0}':uuid AND (\"ID\"='{1}':uuid)", m_RegionID,
-                            string.Join("':uuid OR \"ID\"='", removedItems));
+                        string c = string.Format("DELETE FROM objects WHERE \"RegionID\"='{0}' AND (\"ID\"='{1}')", m_RegionID,
+                            string.Join("' OR \"ID\"='", removedItems));
                         using (var cmd = new NpgsqlCommand(c, conn))
                         {
                             cmd.ExecuteNonQuery();
@@ -289,8 +289,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 
                 if (removedItems.Count != 0)
                 {
-                    string c = string.Format("DELETE FROM objects WHERE \"RegionID\"='{0}':uuid AND (\"ID\"='{1}':uuid)", m_RegionID,
-                        string.Join("':uuid OR \"ID\"='", removedItems));
+                    string c = string.Format("DELETE FROM objects WHERE \"RegionID\"='{0}' AND (\"ID\"='{1}')", m_RegionID,
+                        string.Join("' OR \"ID\"='", removedItems));
                     using (var cmd = new NpgsqlCommand(c, conn))
                     {
                         cmd.ExecuteNonQuery();
