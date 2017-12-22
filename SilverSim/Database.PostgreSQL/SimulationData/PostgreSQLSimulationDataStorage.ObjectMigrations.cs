@@ -78,6 +78,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new DropColumn("IsRotateZEnabled"),
             new TableRevision(9),
             new AddColumn<UUID>("RezzingObjectID") {IsNullAllowed = false, Default = UUID.Zero },
+            new TableRevision(10),
+            new PrimaryKeyInfo("RegionID", "ID"),
             #endregion
 
             #region Table prims
@@ -198,8 +200,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<bool>("IsUnSitTargetActive") { IsNullAllowed = false, Default = false },
             new AddColumn<Vector3>("UnSitTargetOffset") { IsNullAllowed = false, Default = Vector3.Zero },
             new AddColumn<Quaternion>("UnSitTargetOrientation") { IsNullAllowed = false, Default = Quaternion.Identity },
-            new TableRevision(22),
-            new PrimaryKeyInfo("RegionID", "ID"),
             #endregion
 
             #region Table primitems
