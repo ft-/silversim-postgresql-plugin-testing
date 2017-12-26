@@ -393,7 +393,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["PermsGranter"] = grantinfo.PermsGranter.ToString(),
                     ["PermsMask"] = grantinfo.PermsMask,
                     ["NextOwnerAssetID"] = item.NextOwnerAssetID,
-                    ["ExperienceID"] = item.ExperienceID
+                    ["ExperienceID"] = item.ExperienceID,
+                    ["CollisionFilterData"] = item.CollisionFilter.DbSerialization
                 };
             }
 
@@ -500,7 +501,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["AllowUnsit"] = objpart.AllowUnsit,
                     ["IsUnSitTargetActive"] = objpart.IsUnSitTargetActive,
                     ["UnSitTargetOffset"] = objpart.UnSitTargetOffset,
-                    ["UnSitTargetOrientation"] = objpart.UnSitTargetOrientation
+                    ["UnSitTargetOrientation"] = objpart.UnSitTargetOrientation,
                 };
                 using (var ms = new MemoryStream())
                 {

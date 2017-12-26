@@ -250,7 +250,9 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new TableRevision(8),
             new AddColumn<UUID>("ExperienceID") { IsNullAllowed = false, Default = UUID.Zero },
             new TableRevision(9),
-            new DropColumn("ParentFolderID")
+            new DropColumn("ParentFolderID"),
+            new TableRevision(10),
+            new AddColumn<byte[]>("CollisionFilterData") { Cardinality = 255 },
             #endregion
         };
     }
