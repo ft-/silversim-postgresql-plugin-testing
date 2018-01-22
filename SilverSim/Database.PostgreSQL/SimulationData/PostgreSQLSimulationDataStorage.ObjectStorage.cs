@@ -209,7 +209,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 AllowUnsit = (bool)dbReader["AllowUnsit"],
                 IsUnSitTargetActive = (bool)dbReader["IsUnSitTargetActive"],
                 UnSitTargetOffset = dbReader.GetVector3("UnSitTargetOffset"),
-                UnSitTargetOrientation = dbReader.GetQuaternion("UnSitTargetOrientation")
+                UnSitTargetOrientation = dbReader.GetQuaternion("UnSitTargetOrientation"),
+                LocalizationSerialization = dbReader.GetBytes("LocalizationData")
             };
 
             using (var ms = new MemoryStream(dbReader.GetBytes("DynAttrs")))

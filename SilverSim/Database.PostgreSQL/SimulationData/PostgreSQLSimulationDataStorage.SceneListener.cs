@@ -502,6 +502,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["IsUnSitTargetActive"] = objpart.IsUnSitTargetActive,
                     ["UnSitTargetOffset"] = objpart.UnSitTargetOffset,
                     ["UnSitTargetOrientation"] = objpart.UnSitTargetOrientation,
+                    ["LocalizationData"] = objpart.LocalizationSerialization
                 };
                 using (var ms = new MemoryStream())
                 {

@@ -202,6 +202,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<Quaternion>("UnSitTargetOrientation") { IsNullAllowed = false, Default = Quaternion.Identity },
             new TableRevision(22),
             new PrimaryKeyInfo("RegionID", "ID"),
+            new TableRevision(23),
+            new AddColumn<byte[]>("LocalizationData") { IsLong = true },
             #endregion
 
             #region Table primitems
