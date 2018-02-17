@@ -31,9 +31,6 @@ using SilverSim.Types.Account;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SilverSim.Database.PostgreSQL.UserAccounts
 {

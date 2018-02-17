@@ -20,8 +20,8 @@
 // exception statement from your version.
 
 using log4net;
-using Npgsql;
 using Nini.Config;
+using Npgsql;
 using SilverSim.Main.Common;
 using SilverSim.ServiceInterfaces.Database;
 using System.Collections.Generic;

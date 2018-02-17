@@ -22,7 +22,6 @@
 using Npgsql;
 using SilverSim.ServiceInterfaces.Experience;
 using SilverSim.Types;
-using System;
 using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Experience

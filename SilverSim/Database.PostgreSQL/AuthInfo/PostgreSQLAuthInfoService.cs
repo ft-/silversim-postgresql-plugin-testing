@@ -29,12 +29,8 @@ using SilverSim.ServiceInterfaces.AuthInfo;
 using SilverSim.ServiceInterfaces.Database;
 using SilverSim.Types;
 using SilverSim.Types.AuthInfo;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SilverSim.Database.PostgreSQL.AuthInfo
 {

@@ -20,20 +20,20 @@
 // exception statement from your version.
 
 using log4net;
-using Npgsql;
 using Nini.Config;
+using Npgsql;
 using SilverSim.Main.Common;
 using SilverSim.Scene.Types.SceneEnvironment;
 using SilverSim.Types;
 using SilverSim.Types.StructuredData.Llsd;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Data;
-using System.Linq;
 
 namespace SilverSim.Database.PostgreSQL
 {
