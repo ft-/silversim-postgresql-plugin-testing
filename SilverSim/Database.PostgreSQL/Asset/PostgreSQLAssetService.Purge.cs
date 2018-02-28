@@ -108,7 +108,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT id FROM assetrefs WHERE \"usesprocessed\" = false", conn))
+                using (var cmd = new NpgsqlCommand("SELECT id FROM assetrefs WHERE \"usesprocessed\" = false LIMIT 1000", conn))
                 {
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
