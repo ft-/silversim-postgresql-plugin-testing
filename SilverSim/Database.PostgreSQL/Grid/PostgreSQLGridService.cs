@@ -377,6 +377,11 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
         public override void RegisterRegion(RegionInfo regionInfo)
         {
+            RegisterRegion(regionInfo, false);
+        }
+
+        public override void RegisterRegion(RegionInfo regionInfo, bool keepOnlineUnmodified)
+        {
             foreach (RegionDefaultFlagsServiceInterface service in m_RegionDefaultServices)
             {
                 regionInfo.Flags |= service.GetRegionDefaultFlags(regionInfo.ID);
@@ -398,6 +403,24 @@ namespace SilverSim.Database.PostgreSQL.Grid
                                 dbReader.GetUUID("uuid") != regionInfo.ID)
                             {
                                 throw new GridRegionUpdateFailedException("Duplicate region name");
+                            }
+                        }
+                    }
+                }
+
+                if (keepOnlineUnmodified)
+                {
+                    using (var cmd = new NpgsqlCommand("SELECT \"flags\" FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"uuid\" = @id LIMIT 1", conn))
+                    {
+                        cmd.Parameters.AddParameter("@scopeid", regionInfo.ScopeID);
+                        cmd.Parameters.AddParameter("@id", regionInfo.ID);
+                        using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                        {
+                            if (dbReader.Read())
+                            {
+                                RegionFlags flags = dbReader.GetEnum<RegionFlags>("flags");
+                                regionInfo.Flags &= ~RegionFlags.RegionOnline;
+                                regionInfo.Flags |= (flags & RegionFlags.RegionOnline);
                             }
                         }
                     }
