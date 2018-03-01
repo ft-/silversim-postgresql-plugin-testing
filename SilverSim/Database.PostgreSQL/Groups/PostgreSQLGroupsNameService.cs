@@ -73,7 +73,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM groupnames WHERE \"GroupID\" = @groupid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM groupnames WHERE \"GroupID\" = @groupid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@groupid", groupID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())

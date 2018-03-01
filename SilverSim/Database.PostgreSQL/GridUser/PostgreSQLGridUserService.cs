@@ -95,7 +95,7 @@ namespace SilverSim.Database.PostgreSQL.GridUser
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM griduser WHERE \"ID\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM griduser WHERE \"ID\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", userID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -119,7 +119,7 @@ namespace SilverSim.Database.PostgreSQL.GridUser
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM griduser WHERE \"ID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM griduser WHERE \"ID\" = @id LIMIT 1", conn))
                     {
                         cmd.Parameters.AddParameter("@id", userID);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())

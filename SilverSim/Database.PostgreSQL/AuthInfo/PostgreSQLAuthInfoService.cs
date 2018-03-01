@@ -123,7 +123,7 @@ namespace SilverSim.Database.PostgreSQL.AuthInfo
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM auth WHERE \"UserID\" = @id", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM auth WHERE \"UserID\" = @id LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@id", accountid);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())

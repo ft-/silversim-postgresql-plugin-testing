@@ -36,7 +36,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@folderid", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -59,7 +59,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@folderid", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -93,7 +93,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@ownerid", principalID);
                     cmd.Parameters.AddParameter("@folderid", key);
@@ -117,7 +117,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@ownerid", principalID);
                     cmd.Parameters.AddParameter("@folderid", key);
@@ -154,7 +154,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 connection.Open();
                 if (type == AssetType.RootFolder)
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@ownerid", principalID);
                         cmd.Parameters.AddParameter("@parentfolderid", UUID.Zero);
@@ -170,7 +170,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 else
                 {
                     using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " AS A WHERE \"OwnerID\" = @ownerid AND \"DefaultType\" = @type AND " +
-                            "EXISTS (SELECT 1 FROM " + m_InventoryFolderTable + " AS B WHERE B.\"ParentFolderID\" = @rootparent AND B.\"ID\" = A.\"ParentFolderID\")", connection))
+                            "EXISTS (SELECT 1 FROM " + m_InventoryFolderTable + " AS B WHERE B.\"ParentFolderID\" = @rootparent AND B.\"ID\" = A.\"ParentFolderID\" LIMIT 1) LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@ownerid", principalID);
                         cmd.Parameters.AddParameter("@type", type);
@@ -196,7 +196,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 connection.Open();
                 if (type == AssetType.RootFolder)
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@ownerid", principalID);
                         cmd.Parameters.AddParameter("@parentfolderid", UUID.Zero);
@@ -213,7 +213,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                 else
                 {
                     using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_InventoryFolderTable + " AS A WHERE \"OwnerID\" = @ownerid AND \"DefaultType\" = @type AND " +
-                            "EXISTS (SELECT 1 FROM " + m_InventoryFolderTable + " AS B WHERE B.\"ParentFolderID\" = @rootparent AND B.\"ID\" = A.\"ParentFolderID\")", connection))
+                            "EXISTS (SELECT 1 FROM " + m_InventoryFolderTable + " AS B WHERE B.\"ParentFolderID\" = @rootparent AND B.\"ID\" = A.\"ParentFolderID\" LIMIT 1) LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@ownerid", principalID);
                         cmd.Parameters.AddParameter("@type", type);
@@ -377,7 +377,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
                         throw new InvalidParentFolderIdException(string.Format("Invalid parent folder {0} for folder {1}", toFolderID, folderID));
                     }
 
-                    using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid AND \"OwnerID\" = @ownerid", connection)
+                    using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"ID\" = @folderid AND \"OwnerID\" = @ownerid LIMIT 1", connection)
                     {
                         Transaction = transaction
                     })

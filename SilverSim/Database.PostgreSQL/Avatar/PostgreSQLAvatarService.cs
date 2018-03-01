@@ -131,7 +131,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
                     {
                         foreach (string key in itemKeys)
                         {
-                            using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection)
+                            using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name LIMIT 1", connection)
                             {
                                 Transaction = transaction
                             })
@@ -190,7 +190,7 @@ namespace SilverSim.Database.PostgreSQL.Avatar
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM avatars WHERE \"PrincipalID\" = @principalid AND \"Name\" = @name LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@principalid", avatarID);
                     cmd.Parameters.AddParameter("@name", itemKey);

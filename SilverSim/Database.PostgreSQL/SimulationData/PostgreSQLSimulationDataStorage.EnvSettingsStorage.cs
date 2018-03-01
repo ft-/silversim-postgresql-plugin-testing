@@ -35,7 +35,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"EnvironmentSettings\" FROM environmentsettings WHERE \"RegionID\" = @regionid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"EnvironmentSettings\" FROM environmentsettings WHERE \"RegionID\" = @regionid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

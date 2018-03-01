@@ -140,7 +140,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             {
                 connection.Open();
                 /* we use a specific implementation to reduce the result set here */
-                using (var cmd = new NpgsqlCommand("SELECT \"IsAllowed\" FROM parcelexperiences WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid AND \"ExperienceID\" = @experienceid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"IsAllowed\" FROM parcelexperiences WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid AND \"ExperienceID\" = @experienceid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@parcelid", parcelID);

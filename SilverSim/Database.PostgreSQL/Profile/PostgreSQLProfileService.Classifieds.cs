@@ -56,7 +56,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM classifieds WHERE \"classifieduuid\" = @uuid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM classifieds WHERE \"classifieduuid\" = @uuid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@uuid", id);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -95,7 +95,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"classifieduuid\" FROM classifieds WHERE \"classifieduuid\" = @uuid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"classifieduuid\" FROM classifieds WHERE \"classifieduuid\" = @uuid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@uuid", id);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

@@ -33,7 +33,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"useruuid\" FROM usernotes WHERE \"useruuid\" = @user AND \"targetuuid\" = @target", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"useruuid\" FROM usernotes WHERE \"useruuid\" = @user AND \"targetuuid\" = @target LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@user", user.ID);
                     cmd.Parameters.AddParameter("@target", target.ID);
@@ -55,7 +55,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"notes\" FROM usernotes WHERE \"useruuid\" = @user AND \"targetuuid\" = @target", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"notes\" FROM usernotes WHERE \"useruuid\" = @user AND \"targetuuid\" = @target LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@user", user.ID);
                     cmd.Parameters.AddParameter("@target", target.ID);

@@ -57,7 +57,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"EstateID\" FROM estate_regionmap WHERE \"RegionID\" = @regionid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"EstateID\" FROM estate_regionmap WHERE \"RegionID\" = @regionid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

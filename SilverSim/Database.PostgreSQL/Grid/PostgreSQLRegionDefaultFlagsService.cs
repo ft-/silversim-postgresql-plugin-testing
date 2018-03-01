@@ -73,7 +73,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"flags\" FROM regiondefaults WHERE \"uuid\" = @id", connection))
+                using (var cmd = new NpgsqlCommand("SELECT \"flags\" FROM regiondefaults WHERE \"uuid\" = @id LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionId);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -96,7 +96,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 connection.InsideTransaction((transaction) =>
                 {
                     bool haveEntry = false;
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM regiondefaults WHERE \"uuid\" = @id", connection)
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM regiondefaults WHERE \"uuid\" = @id LIMIT 1", connection)
                     {
                         Transaction = transaction
                     })

@@ -34,7 +34,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM lightshare WHERE \"RegionID\" = @regionid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM lightshare WHERE \"RegionID\" = @regionid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

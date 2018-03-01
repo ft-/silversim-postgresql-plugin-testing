@@ -40,7 +40,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM parcels WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM parcels WHERE \"RegionID\" = @regionid AND \"ParcelID\" = @parcelid LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@regionid", regionID);
                         cmd.Parameters.AddParameter("@parcelid", parcelID);

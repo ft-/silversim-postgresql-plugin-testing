@@ -124,7 +124,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
                 {
                     connection.Open();
 
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE parametername = @parametername", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE parametername = @parametername LIMIT 1", connection))
                     {
                         cmd.Parameters.AddParameter("@parametername", parametername);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -173,7 +173,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE regionid = @regionid AND parametername = @parametername LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@parametername", parameter);
@@ -206,7 +206,7 @@ namespace SilverSim.Database.PostgreSQL.ServerParam
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE regionid = @regionid AND parametername = @parametername", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM serverparams WHERE regionid = @regionid AND parametername = @parametername LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@parametername", parameter);

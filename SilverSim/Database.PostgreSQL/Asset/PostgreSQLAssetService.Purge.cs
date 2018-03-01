@@ -55,17 +55,17 @@ namespace SilverSim.Database.PostgreSQL.Asset
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM assetrefs WHERE \"usesprocessed\" = true AND \"access_time\" < @access_time AND NOT EXISTS (SELECT NULL FROM assetsinuse WHERE \"usesid\" = assetrefs.\"id\")", conn))
+                using (var cmd = new NpgsqlCommand("DELETE FROM assetrefs WHERE \"usesprocessed\" = true AND \"access_time\" < @access_time AND NOT EXISTS (SELECT NULL FROM assetsinuse WHERE \"usesid\" = assetrefs.\"id\" LIMIT 1)", conn))
                 {
                     ulong now = Date.GetUnixTime() - 2 * 24 * 3600;
                     cmd.Parameters.AddParameter("@access_time", now);
                     purged = cmd.ExecuteNonQuery();
                 }
-                using (var cmd = new NpgsqlCommand("DELETE FROM assetsinuse WHERE NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetsinuse.\"id\" = assetrefs.\"id\")", conn))
+                using (var cmd = new NpgsqlCommand("DELETE FROM assetsinuse WHERE NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetsinuse.\"id\" = assetrefs.\"id\" LIMIT 1)", conn))
                 {
                     cmd.ExecuteNonQuery();
                 }
-                using (var cmd = new NpgsqlCommand("DELETE FROM assetdata WHERE NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetdata.\"hash\" = assetrefs.\"hash\" AND assetdata.\"assetType\" = assetrefs.\"assetType\")", conn))
+                using (var cmd = new NpgsqlCommand("DELETE FROM assetdata WHERE NOT EXISTS (SELECT NULL FROM assetrefs WHERE assetdata.\"hash\" = assetrefs.\"hash\" AND assetdata.\"assetType\" = assetrefs.\"assetType\" LIMIT 1)", conn))
                 {
                     cmd.ExecuteNonQuery();
                 }

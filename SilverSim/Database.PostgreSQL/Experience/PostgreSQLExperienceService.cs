@@ -186,7 +186,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Group\", \"ID\" FROM experiences WHERE \"Group\" LIKE @group", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Group\", \"ID\" FROM experiences WHERE \"Group\" LIKE @group LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@group", group.ID.ToString() + "%");
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -236,7 +236,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                 conn.Open();
                 return conn.InsideTransaction<bool>((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @experienceid", conn)
+                    using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @experienceid LIMIT 1", conn)
                     {
                         Transaction = transaction
                     })
@@ -303,7 +303,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM experiences WHERE \"ID\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM experiences WHERE \"ID\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", experienceID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -358,7 +358,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                     }
                     if (!isallowed)
                     {
-                        using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @id", conn)
+                        using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM experiences WHERE \"ID\" = @id LIMIT 1", conn)
                         {
                             Transaction = transaction
                         })

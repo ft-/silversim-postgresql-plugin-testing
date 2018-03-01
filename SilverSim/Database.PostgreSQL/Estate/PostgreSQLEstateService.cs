@@ -160,7 +160,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM estates WHERE \"ID\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM estates WHERE \"ID\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", estateID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -182,7 +182,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM estates WHERE \"Name\" = @name", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM estates WHERE \"Name\" = @name LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@name", estateName);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -204,7 +204,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM estates WHERE \"ID\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM estates WHERE \"ID\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", estateID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -225,7 +225,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM estates WHERE \"Name\" = @name", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM estates WHERE \"Name\" = @name LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@name", estateName);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -328,7 +328,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM estates WHERE \"ID\" = @id", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM estates WHERE \"ID\" = @id LIMIT 1", conn))
                     {
                         cmd.Parameters.AddParameter("@id", estateID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())

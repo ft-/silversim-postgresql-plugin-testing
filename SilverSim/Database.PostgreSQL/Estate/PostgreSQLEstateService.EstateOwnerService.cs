@@ -33,7 +33,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM estates WHERE \"ID\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Owner\" FROM estates WHERE \"ID\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", estateID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

@@ -120,7 +120,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM regionexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM regionexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@experienceid", experienceID);

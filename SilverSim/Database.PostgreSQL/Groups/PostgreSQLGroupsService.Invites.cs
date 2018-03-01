@@ -122,7 +122,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"InviteID\" from groupinvites WHERE \"InviteID\" = @inviteid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"InviteID\" from groupinvites WHERE \"InviteID\" = @inviteid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@inviteid", groupInviteID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -175,7 +175,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * from groupinvites WHERE \"InviteID\" = @inviteid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * from groupinvites WHERE \"InviteID\" = @inviteid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@inviteid", groupInviteID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

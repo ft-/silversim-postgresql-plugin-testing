@@ -118,7 +118,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT r.\"GroupID\" FROM grouproles AS r WHERE r.\"GroupID\" = @groupid AND r.\"RoleID\" = @roleid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT r.\"GroupID\" FROM grouproles AS r WHERE r.\"GroupID\" = @groupid AND r.\"RoleID\" = @roleid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@groupid", group.ID);
                     cmd.Parameters.AddParameter("@roleid", roleID);
@@ -171,7 +171,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT r.*, " + RCountQuery + " FROM grouproles AS r WHERE r.\"GroupID\" = @groupid AND r.\"RoleID\" = @roleid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT r.*, " + RCountQuery + " FROM grouproles AS r WHERE r.\"GroupID\" = @groupid AND r.\"RoleID\" = @roleid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@groupid", group.ID);
                     cmd.Parameters.AddParameter("@roleid", roleID);

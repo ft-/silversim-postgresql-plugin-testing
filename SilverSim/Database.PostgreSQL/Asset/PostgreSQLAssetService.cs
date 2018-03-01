@@ -71,7 +71,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT id, access_time FROM assetrefs WHERE \"id\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT id, access_time FROM assetrefs WHERE \"id\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -169,7 +169,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM assetrefs INNER JOIN assetdata ON assetrefs.\"hash\" = assetdata.\"hash\" AND assetrefs.\"assetType\" = assetdata.\"assetType\" WHERE \"id\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM assetrefs INNER JOIN assetdata ON assetrefs.\"hash\" = assetdata.\"hash\" AND assetrefs.\"assetType\" = assetdata.\"assetType\" WHERE \"id\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -228,7 +228,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM assetrefs WHERE \"id\"=@id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM assetrefs WHERE \"id\"=@id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -275,7 +275,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             {
                 bool processed;
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"usesprocessed\" FROM assetrefs WHERE \"id\" = @id", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"usesprocessed\" FROM assetrefs WHERE \"id\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -371,7 +371,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\")" +
                                 "VALUES(@hash, @assetType, @data) ON CONFLICT(\"hash\", \"assetType\") DO NOTHING" :
                                 "INSERT INTO assetdata (\"hash\", \"assetType\", \"data\") " +
-                                "SELECT @hash, @assetType, @data WHERE NOT EXISTS (SELECT 1 FROM assetdata WHERE \"hash\"=@hash AND \"assetType\"=@assetType)",
+                                "SELECT @hash, @assetType, @data WHERE NOT EXISTS (SELECT 1 FROM assetdata WHERE \"hash\"=@hash AND \"assetType\"=@assetType LIMIT 1)",
                                 conn)
                         {
                             Transaction = transaction
@@ -395,7 +395,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                                 "VALUES(@id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @hash) ON CONFLICT (id) DO UPDATE SET \"access_time\"=@access_time" :
                                 "UPDATE assetrefs SET \"access_time\"=@access_time WHERE \"id\"=@id;" +
                                 "INSERT INTO assetrefs (\"id\", \"name\", \"assetType\", \"temporary\", \"create_time\", \"access_time\", \"asset_flags\", \"hash\")" +
-                                "SELECT @id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @hash WHERE NOT EXISTS (SELECT 1 FROM assetrefs WHERE \"id\" = @id)"
+                                "SELECT @id, @name, @assetType, @temporary, @create_time, @access_time, @asset_flags, @hash WHERE NOT EXISTS (SELECT 1 FROM assetrefs WHERE \"id\" = @id LIMIT 1)"
                                 ,
                                 conn)
                         {

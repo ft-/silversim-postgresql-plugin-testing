@@ -123,7 +123,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                 conn.Open();
                 return conn.InsideTransaction<bool>((transaction) =>
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM experiencekeyvalues WHERE \"ExperienceID\" = @experienceid AND \"Key\" = @key", conn)
+                    using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM experiencekeyvalues WHERE \"ExperienceID\" = @experienceid AND \"Key\" = @key LIMIT 1", conn)
                     {
                         Transaction = transaction
                     })
@@ -160,7 +160,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM experiencekeyvalues WHERE \"ExperienceID\" = @experienceid AND \"Key\" = @key", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Value\" FROM experiencekeyvalues WHERE \"ExperienceID\" = @experienceid AND \"Key\" = @key LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@experienceid", experienceID);
                     cmd.Parameters.AddParameter("@key", key);

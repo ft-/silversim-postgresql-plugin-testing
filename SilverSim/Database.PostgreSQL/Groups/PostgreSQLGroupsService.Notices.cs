@@ -111,7 +111,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM groupnotices WHERE \"NoticeID\" = @noticeid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM groupnotices WHERE \"NoticeID\" = @noticeid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@noticeid", groupNoticeID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -136,7 +136,7 @@ namespace SilverSim.Database.PostgreSQL.Groups
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"NoticeID\" FROM groupnotices WHERE \"NoticeID\" = @noticeid", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"NoticeID\" FROM groupnotices WHERE \"NoticeID\" = @noticeid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@noticeid", groupNoticeID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())

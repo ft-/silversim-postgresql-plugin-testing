@@ -123,7 +123,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -147,7 +147,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -177,7 +177,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y AND \"ScopeID\" = @scopeid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@x", gridX);
                     cmd.Parameters.AddParameter("@y", gridY);
@@ -202,7 +202,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y AND \"ScopeID\" = @scopeid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@x", gridX);
                     cmd.Parameters.AddParameter("@y", gridY);
@@ -233,7 +233,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@name", regionName);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -257,7 +257,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@name", regionName);
                     cmd.Parameters.AddParameter("@scopeid", scopeID);
@@ -287,7 +287,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -310,7 +310,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@id", regionID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())

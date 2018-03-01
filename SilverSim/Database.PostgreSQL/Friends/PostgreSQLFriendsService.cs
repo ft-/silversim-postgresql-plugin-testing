@@ -234,7 +234,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(m_InnerJoinSelectFull + "WHERE A.\"UserID\" = @userid AND A.\"FriendID\" = @friendid", connection))
+                using (var cmd = new NpgsqlCommand(m_InnerJoinSelectFull + "WHERE A.\"UserID\" = @userid AND A.\"FriendID\" = @friendid LIMIT 1", connection))
                 {
                     cmd.Parameters.AddParameter("@userid", user.ID);
                     cmd.Parameters.AddParameter("@friendid", friend.ID);

@@ -156,7 +156,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
 
         private bool TryGetParentFolderId(NpgsqlConnection connection, UUID principalID, UUID folderID, out UUID parentFolderID)
         {
-            using (var cmd = new NpgsqlCommand("SELECT \"ParentFolderID\" FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid", connection))
+            using (var cmd = new NpgsqlCommand("SELECT \"ParentFolderID\" FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ID\" = @folderid LIMIT 1", connection))
             {
                 cmd.Parameters.AddParameter("@ownerid", principalID);
                 cmd.Parameters.AddParameter("@folderid", folderID);
@@ -177,7 +177,7 @@ namespace SilverSim.Database.PostgreSQL.Inventory
         {
             if (parentFolderID == UUID.Zero)
             {
-                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid", conn)
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM " + m_InventoryFolderTable + " WHERE \"OwnerID\" = @ownerid AND \"ParentFolderID\" = @parentfolderid LIMIT 1", conn)
                 {
                     Transaction = transaction
                 })
