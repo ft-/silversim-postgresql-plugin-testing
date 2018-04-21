@@ -524,7 +524,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             new AddColumn<Date>("create_time") { IsNullAllowed = false },
             new AddColumn<Date>("access_time") { IsNullAllowed = false },
             new AddColumn<AssetFlags>("asset_flags") { IsNullAllowed = false },
-            new AddColumn<UUI>("CreatorID") { IsNullAllowed = false, Default = UUID.Zero },
+            new AddColumn<UGUI>("CreatorID") { IsNullAllowed = false, Default = UUID.Zero },
             new AddColumn<byte[]>("hash") { IsFixed = true, IsNullAllowed = false, Cardinality = 20 },
             new PrimaryKeyInfo("id"),
             new TableRevision(2),

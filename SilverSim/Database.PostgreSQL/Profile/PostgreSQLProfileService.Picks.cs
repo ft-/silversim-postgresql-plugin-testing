@@ -30,7 +30,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
 {
     public sealed partial class PostgreSQLProfileService : ProfileServiceInterface.IPicksInterface
     {
-        Dictionary<UUID, string> IPicksInterface.GetPicks(UUI user)
+        Dictionary<UUID, string> IPicksInterface.GetPicks(UGUI user)
         {
             var res = new Dictionary<UUID, string>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
@@ -51,7 +51,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             }
         }
 
-        bool IPicksInterface.ContainsKey(UUI user, UUID id)
+        bool IPicksInterface.ContainsKey(UGUI user, UUID id)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -72,7 +72,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             return false;
         }
 
-        bool IPicksInterface.TryGetValue(UUI user, UUID id, out ProfilePick pick)
+        bool IPicksInterface.TryGetValue(UGUI user, UUID id, out ProfilePick pick)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -108,7 +108,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             return false;
         }
 
-        ProfilePick IPicksInterface.this[UUI user, UUID id]
+        ProfilePick IPicksInterface.this[UGUI user, UUID id]
         {
             get
             {

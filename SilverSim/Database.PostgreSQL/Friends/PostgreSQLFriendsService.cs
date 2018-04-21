@@ -71,7 +71,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
 
         public void ResolveUUI(FriendInfo fi)
         {
-            UUI uui;
+            UGUI uui;
             if (!fi.Friend.IsAuthoritative &&
                 m_AvatarNameService.TryGetValue(fi.Friend, out uui))
             {
@@ -84,7 +84,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             }
         }
 
-        public override List<FriendInfo> this[UUI user]
+        public override List<FriendInfo> this[UGUI user]
         {
             get
             {
@@ -111,7 +111,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             }
         }
 
-        public override FriendInfo this[UUI user, UUI friend]
+        public override FriendInfo this[UGUI user, UGUI friend]
         {
             get
             {
@@ -229,7 +229,7 @@ namespace SilverSim.Database.PostgreSQL.Friends
             }
         }
 
-        public override bool TryGetValue(UUI user, UUI friend, out FriendInfo fInfo)
+        public override bool TryGetValue(UGUI user, UGUI friend, out FriendInfo fInfo)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {

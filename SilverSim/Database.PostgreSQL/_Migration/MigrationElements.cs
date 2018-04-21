@@ -149,7 +149,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     "text" :
                     (colInfo.IsFixed ? "CHAR" : "VARCHAR") + "(" + colInfo.Cardinality.ToString() + ")";
             }
-            else if (f == typeof(UUI) || f == typeof(UGI))
+            else if (f == typeof(UGUI) || f == typeof(UGUIWithName) || f == typeof(UGI))
             {
                 typeSql = "VARCHAR(255)";
             }
@@ -390,7 +390,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
             {
                 if(colInfo.Default.GetType() != colInfo.FieldType &&
                     !(colInfo.Default.GetType() == typeof(UUID) &&
-                    colInfo.FieldType == typeof(UUI)) &&
+                    colInfo.FieldType == typeof(UGUI)) &&
+                    !(colInfo.Default.GetType() == typeof(UUID) &&
+                    colInfo.FieldType == typeof(UGUIWithName)) &&
                     !(colInfo.Default.GetType() == typeof(UUID) &&
                     colInfo.FieldType == typeof(UGI)))
                 {

@@ -29,7 +29,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
 {
     public sealed partial class PostgreSQLProfileService : ProfileServiceInterface.IUserPreferencesInterface
     {
-        bool IUserPreferencesInterface.ContainsKey(UUI user)
+        bool IUserPreferencesInterface.ContainsKey(UGUI user)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -45,7 +45,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             }
         }
 
-        bool IUserPreferencesInterface.TryGetValue(UUI user, out ProfilePreferences prefs)
+        bool IUserPreferencesInterface.TryGetValue(UGUI user, out ProfilePreferences prefs)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -80,7 +80,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             }
         }
 
-        ProfilePreferences IUserPreferencesInterface.this[UUI user]
+        ProfilePreferences IUserPreferencesInterface.this[UGUI user]
         {
             get
             {

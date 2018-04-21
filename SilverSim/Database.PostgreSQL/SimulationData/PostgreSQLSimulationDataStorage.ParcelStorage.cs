@@ -55,7 +55,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             {
                                 Area = (int)dbReader["Area"],
                                 AuctionID = (uint)(int)dbReader["AuctionID"],
-                                AuthBuyer = dbReader.GetUUI("AuthBuyer"),
+                                AuthBuyer = dbReader.GetUGUI("AuthBuyer"),
                                 Category = dbReader.GetEnum<ParcelCategory>("Category"),
                                 ClaimDate = dbReader.GetDate("ClaimDate"),
                                 ClaimPrice = (int)dbReader["ClaimPrice"],
@@ -70,7 +70,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                                 Name = (string)dbReader["Name"],
                                 LocalID = (int)dbReader["LocalID"],
                                 MediaID = dbReader.GetUUID("MediaID"),
-                                Owner = dbReader.GetUUI("Owner"),
+                                Owner = dbReader.GetUGUI("Owner"),
                                 SnapshotID = dbReader.GetUUID("SnapshotID"),
                                 SalePrice = (int)dbReader["SalePrice"],
                                 OtherCleanTime = (int)dbReader["OtherCleanTime"],

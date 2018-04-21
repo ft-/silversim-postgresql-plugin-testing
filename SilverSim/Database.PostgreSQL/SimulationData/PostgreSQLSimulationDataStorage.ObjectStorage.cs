@@ -89,8 +89,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         private ObjectGroup ObjectGroupFromDbReader(NpgsqlDataReader dbReader) => new ObjectGroup
         {
             IsTempOnRez = (bool)dbReader["IsTempOnRez"],
-            Owner = dbReader.GetUUI("Owner"),
-            LastOwner = dbReader.GetUUI("LastOwner"),
+            Owner = dbReader.GetUGUI("Owner"),
+            LastOwner = dbReader.GetUGUI("LastOwner"),
             Group = dbReader.GetUGI("Group"),
             SaleType = dbReader.GetEnum<InventoryItem.SaleInfoData.SaleType>("SaleType"),
             SalePrice = (int)dbReader["SalePrice"],
@@ -119,7 +119,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 Description = (string)dbReader["Description"],
                 SitTargetOffset = dbReader.GetVector3("SitTargetOffset"),
                 SitTargetOrientation = dbReader.GetQuaternion("SitTargetOrientation"),
-                Creator = dbReader.GetUUI("Creator"),
+                Creator = dbReader.GetUGUI("Creator"),
                 CreationDate = dbReader.GetDate("CreationDate"),
                 RezDate = dbReader.GetDate("RezDate"),
                 Flags = dbReader.GetEnum<PrimitiveFlags>("Flags"),
@@ -231,15 +231,15 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 AssetID = dbReader.GetUUID("AssetID"),
                 AssetType = dbReader.GetEnum<AssetType>("AssetType"),
                 CreationDate = dbReader.GetDate("CreationDate"),
-                Creator = dbReader.GetUUI("Creator"),
+                Creator = dbReader.GetUGUI("Creator"),
                 Description = (string)dbReader["Description"],
                 Flags = dbReader.GetEnum<InventoryFlags>("Flags"),
                 Group = dbReader.GetUGI("Group"),
                 IsGroupOwned = (bool)dbReader["GroupOwned"],
                 InventoryType = dbReader.GetEnum<InventoryType>("InventoryType"),
-                LastOwner = dbReader.GetUUI("LastOwner"),
+                LastOwner = dbReader.GetUGUI("LastOwner"),
                 Name = (string)dbReader["Name"],
-                Owner = dbReader.GetUUI("Owner"),
+                Owner = dbReader.GetUGUI("Owner"),
                 ParentFolderID = dbReader.GetUUID("PrimID"),
                 NextOwnerAssetID = dbReader.GetUUID("NextOwnerAssetID"),
                 ExperienceID = dbReader.GetUUID("ExperienceID"),
@@ -261,7 +261,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             {
                 try
                 {
-                    grantinfo.PermsGranter = dbReader.GetUUI("PermsGranter");
+                    grantinfo.PermsGranter = dbReader.GetUGUI("PermsGranter");
                 }
                 catch
                 {

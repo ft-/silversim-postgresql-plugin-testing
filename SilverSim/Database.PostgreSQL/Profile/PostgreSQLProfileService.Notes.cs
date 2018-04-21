@@ -28,7 +28,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
 {
     public sealed partial class PostgreSQLProfileService : ProfileServiceInterface.INotesInterface
     {
-        bool INotesInterface.ContainsKey(UUI user, UUI target)
+        bool INotesInterface.ContainsKey(UGUI user, UGUI target)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -50,7 +50,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             return false;
         }
 
-        bool INotesInterface.TryGetValue(UUI user, UUI target, out string notes)
+        bool INotesInterface.TryGetValue(UGUI user, UGUI target, out string notes)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -74,7 +74,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             return false;
         }
 
-        string INotesInterface.this[UUI user, UUI target]
+        string INotesInterface.this[UGUI user, UGUI target]
         {
             get
             {

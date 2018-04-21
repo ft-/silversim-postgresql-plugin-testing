@@ -28,7 +28,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
 {
     public sealed partial class PostgreSQLExperienceService : ExperienceServiceInterface.IExperiencePermissionsInterface
     {
-        Dictionary<UUID, bool> IExperiencePermissionsInterface.this[UUI agent]
+        Dictionary<UUID, bool> IExperiencePermissionsInterface.this[UGUI agent]
         {
             get
             {
@@ -43,7 +43,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         {
                             while (reader.Read())
                             {
-                                UUI ret = reader.GetUUI("User");
+                                UGUI ret = reader.GetUGUI("User");
                                 if (ret.EqualsGrid(agent))
                                 {
                                     result.Add(reader.GetUUID("ExperienceID"), (bool)reader["IsAllowed"]);
@@ -57,7 +57,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             }
         }
 
-        bool IExperiencePermissionsInterface.this[UUID experienceID, UUI agent]
+        bool IExperiencePermissionsInterface.this[UUID experienceID, UGUI agent]
         {
             get
             {
@@ -85,7 +85,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             }
         }
 
-        bool IExperiencePermissionsInterface.Remove(UUID experienceID, UUI agent)
+        bool IExperiencePermissionsInterface.Remove(UUID experienceID, UGUI agent)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -99,7 +99,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             }
         }
 
-        bool IExperiencePermissionsInterface.TryGetValue(UUID experienceID, UUI agent, out bool allowed)
+        bool IExperiencePermissionsInterface.TryGetValue(UUID experienceID, UGUI agent, out bool allowed)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -112,7 +112,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                     {
                         while (reader.Read())
                         {
-                            UUI ret = reader.GetUUI("User");
+                            UGUI ret = reader.GetUGUI("User");
                             if (ret.EqualsGrid(agent))
                             {
                                 allowed = (bool)reader["IsAllowed"];

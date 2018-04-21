@@ -30,7 +30,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
         {
             ID = (uint)(int)reader["ID"],
             Name = (string)reader["Name"],
-            Owner = reader.GetUUI("Owner"),
+            Owner = reader.GetUGUI("Owner"),
             Flags = reader.GetEnum<RegionOptionFlags>("Flags"),
             PricePerMeter = (int)reader["PricePerMeter"],
             BillableFactor = (double)reader["BillableFactor"],
