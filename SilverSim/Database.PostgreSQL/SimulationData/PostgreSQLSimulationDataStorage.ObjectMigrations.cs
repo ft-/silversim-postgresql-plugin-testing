@@ -204,6 +204,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new PrimaryKeyInfo("RegionID", "ID"),
             new TableRevision(23),
             new AddColumn<byte[]>("LocalizationData") { IsLong = true },
+            new TableRevision(24),
+            new AddColumn<byte[]>("VehicleData"),
             #endregion
 
             #region Table primitems
