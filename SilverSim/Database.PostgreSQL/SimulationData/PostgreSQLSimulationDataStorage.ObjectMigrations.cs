@@ -21,6 +21,7 @@
 
 using SilverSim.Database.PostgreSQL._Migration;
 using SilverSim.Scene.Types.Object;
+using SilverSim.Scene.Types.Pathfinding;
 using SilverSim.Types;
 using SilverSim.Types.Agent;
 using SilverSim.Types.Asset;
@@ -206,6 +207,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<byte[]>("LocalizationData") { IsLong = true },
             new TableRevision(24),
             new AddColumn<byte[]>("VehicleData"),
+            new TableRevision(25),
+            new AddColumn<CharacterType>("PathfindingCharacterType") { IsNullAllowed = false, Default = CharacterType.None },
             #endregion
 
             #region Table primitems
