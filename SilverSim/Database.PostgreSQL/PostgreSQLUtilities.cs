@@ -565,6 +565,7 @@ namespace SilverSim.Database.PostgreSQL
             {
                 using (var command = new NpgsqlCommand(q1.ToString(), connection))
                 {
+                    command.Transaction = transaction;
                     AddParameters(command.Parameters, vals);
                     if (command.ExecuteNonQuery() < 1)
                     {
