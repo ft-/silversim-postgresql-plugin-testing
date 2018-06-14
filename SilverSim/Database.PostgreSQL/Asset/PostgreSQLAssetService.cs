@@ -212,7 +212,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT id, octet_length(data) AS dataLength, assetType, name, create_time, access_time, asset_flags, temporary FROM assetrefs INNER JOIN assetdata ON assetrefs.\"hash\" = assetdata.\"hash\" AND assetrefs.\"assetType\" = assetdata.\"assetType\" WHERE \"id\" = @id LIMIT 1", conn))
+                using (var cmd = new NpgsqlCommand("SELECT id, octet_length(data) AS \"dataLength\", assetrefs.\"assetType\", name, create_time, access_time, asset_flags, temporary FROM assetrefs INNER JOIN assetdata ON assetrefs.\"hash\" = assetdata.\"hash\" AND assetrefs.\"assetType\" = assetdata.\"assetType\" WHERE \"id\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", key);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
@@ -231,7 +231,7 @@ namespace SilverSim.Database.PostgreSQL.Asset
                             Flags = dbReader.GetEnum<AssetFlags>("asset_flags"),
                             Temporary = (bool)dbReader["temporary"]
                         };
-                        length = (int)(long)dbReader["dataLength"];
+                        length = (int)dbReader["dataLength"];
                     }
                 }
                 if (DateTime.UtcNow - metadata.AccessTime > TimeSpan.FromHours(1))
