@@ -26,7 +26,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Experience
 {
-    public sealed partial class PostgreSQLExperienceService : ExperienceServiceInterface.IExperienceAdminInterface
+    public sealed partial class PostgreSQLExperienceService : IExperienceAdminInterface
     {
         List<UUID> IExperienceAdminInterface.this[UGUI agent]
         {

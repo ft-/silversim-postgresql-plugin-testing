@@ -26,7 +26,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Experience
 {
-    public sealed partial class PostgreSQLExperienceService : ExperienceServiceInterface.IExperienceKeyValueInterface
+    public sealed partial class PostgreSQLExperienceService : IExperienceKeyValueInterface
     {
         void IExperienceKeyValueInterface.Add(UUID experienceID, string key, string value)
         {
