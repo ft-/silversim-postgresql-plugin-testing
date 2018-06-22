@@ -26,7 +26,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Profile
 {
-    public sealed partial class PostgreSQLProfileService : ProfileServiceInterface.INotesInterface
+    public sealed partial class PostgreSQLProfileService : INotesInterface
     {
         bool INotesInterface.ContainsKey(UGUI user, UGUI target)
         {

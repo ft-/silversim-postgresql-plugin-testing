@@ -26,7 +26,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Groups
 {
-    public sealed partial class PostgreSQLGroupsService : GroupsServiceInterface.IGroupSelectInterface
+    public sealed partial class PostgreSQLGroupsService : IGroupSelectInterface
     {
         UGI IGroupSelectInterface.this[UGUI requestingAgent, UGUI principalID]
         {

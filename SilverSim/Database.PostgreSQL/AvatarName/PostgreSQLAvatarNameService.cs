@@ -78,19 +78,6 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
             }
         }
 
-        public override UGUIWithName this[string firstName, string lastName]
-        {
-            get
-            {
-                UGUIWithName uui;
-                if (!TryGetValue(firstName, lastName, out uui))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return uui;
-            }
-        }
-
         public override bool TryGetValue(UUID key, out UGUIWithName uui)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -111,19 +98,6 @@ namespace SilverSim.Database.PostgreSQL.AvatarName
                         return true;
                     }
                 }
-            }
-        }
-
-        public override UGUIWithName this[UUID key]
-        {
-            get
-            {
-                UGUIWithName uui;
-                if (!TryGetValue(key, out uui))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return uui;
             }
         }
         #endregion

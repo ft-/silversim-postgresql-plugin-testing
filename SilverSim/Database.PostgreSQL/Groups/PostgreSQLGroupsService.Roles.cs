@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Groups
 {
-    public sealed partial class PostgreSQLGroupsService : GroupsServiceInterface.IGroupRolesInterface
+    public sealed partial class PostgreSQLGroupsService : IGroupRolesInterface
     {
         List<GroupRole> IGroupRolesInterface.this[UGUI requestingAgent, UGI group]
         {
@@ -79,19 +79,6 @@ namespace SilverSim.Database.PostgreSQL.Groups
                     }
                 }
                 return roles;
-            }
-        }
-
-        GroupRole IGroupRolesInterface.this[UGUI requestingAgent, UGI group, UUID roleID]
-        {
-            get
-            {
-                GroupRole role;
-                if (!Roles.TryGetValue(requestingAgent, group, roleID, out role))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return role;
             }
         }
 

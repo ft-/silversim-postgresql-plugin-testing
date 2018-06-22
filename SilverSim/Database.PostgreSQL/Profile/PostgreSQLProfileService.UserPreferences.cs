@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Profile
 {
-    public sealed partial class PostgreSQLProfileService : ProfileServiceInterface.IUserPreferencesInterface
+    public sealed partial class PostgreSQLProfileService : IUserPreferencesInterface
     {
         bool IUserPreferencesInterface.ContainsKey(UGUI user)
         {

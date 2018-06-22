@@ -105,19 +105,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
         }
 
         #region Accessors
-        public override RegionInfo this[UUID scopeID, UUID regionID]
-        {
-            get
-            {
-                RegionInfo rInfo;
-                if (!TryGetValue(scopeID, regionID, out rInfo))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return rInfo;
-            }
-        }
-
         public override bool TryGetValue(UUID scopeID, UUID regionID, out RegionInfo rInfo)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -156,19 +143,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
                         return dbReader.Read();
                     }
                 }
-            }
-        }
-
-        public override RegionInfo this[UUID scopeID, uint gridX, uint gridY]
-        {
-            get
-            {
-                RegionInfo rInfo;
-                if (!TryGetValue(scopeID, gridX, gridY, out rInfo))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return rInfo;
             }
         }
 
@@ -215,19 +189,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
             }
         }
 
-        public override RegionInfo this[UUID scopeID, string regionName]
-        {
-            get
-            {
-                RegionInfo rInfo;
-                if (!TryGetValue(scopeID, regionName, out rInfo))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return rInfo;
-            }
-        }
-
         public override bool TryGetValue(UUID scopeID, string regionName, out RegionInfo rInfo)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -266,19 +227,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
                         return dbReader.Read();
                     }
                 }
-            }
-        }
-
-        public override RegionInfo this[UUID regionID]
-        {
-            get
-            {
-                RegionInfo rInfo;
-                if (!TryGetValue(regionID, out rInfo))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return rInfo;
             }
         }
 

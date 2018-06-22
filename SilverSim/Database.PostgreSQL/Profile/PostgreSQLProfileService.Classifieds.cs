@@ -28,7 +28,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Profile
 {
-    public sealed partial class PostgreSQLProfileService : ProfileServiceInterface.IClassifiedsInterface
+    public sealed partial class PostgreSQLProfileService : IClassifiedsInterface
     {
         Dictionary<UUID, string> IClassifiedsInterface.GetClassifieds(UGUI user)
         {
@@ -108,19 +108,6 @@ namespace SilverSim.Database.PostgreSQL.Profile
                 }
             }
             return false;
-        }
-
-        ProfileClassified IClassifiedsInterface.this[UGUI user, UUID id]
-        {
-            get
-            {
-                ProfileClassified classified;
-                if (!Classifieds.TryGetValue(user, id, out classified))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return classified;
-            }
         }
 
         void IClassifiedsInterface.Update(ProfileClassified c)

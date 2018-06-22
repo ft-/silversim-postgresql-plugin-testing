@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Groups
 {
-    public sealed partial class PostgreSQLGroupsService : GroupsServiceInterface.IGroupMembersInterface
+    public sealed partial class PostgreSQLGroupsService : IGroupMembersInterface
     {
         List<GroupMember> IGroupMembersInterface.this[UGUI requestingAgent, UGUI principal]
         {
@@ -80,19 +80,6 @@ namespace SilverSim.Database.PostgreSQL.Groups
                     }
                 }
                 return members;
-            }
-        }
-
-        GroupMember IGroupMembersInterface.this[UGUI requestingAgent, UGI group, UGUI principal]
-        {
-            get
-            {
-                GroupMember gmem;
-                if (!Members.TryGetValue(requestingAgent, group, principal, out gmem))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return gmem;
             }
         }
 

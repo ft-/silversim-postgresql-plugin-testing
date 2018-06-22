@@ -28,47 +28,8 @@ using System.Collections.Generic;
 
 namespace SilverSim.Database.PostgreSQL.Groups
 {
-    public sealed partial class PostgreSQLGroupsService : GroupsServiceInterface.IGroupsInterface
+    public sealed partial class PostgreSQLGroupsService : IGroupsInterface
     {
-        GroupInfo IGroupsInterface.this[UGUI requestingAgent, UGI group]
-        {
-            get
-            {
-                GroupInfo groupInfo;
-                if (!Groups.TryGetValue(requestingAgent, group, out groupInfo))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return groupInfo;
-            }
-        }
-
-        GroupInfo IGroupsInterface.this[UGUI requestingAgent, string groupName]
-        {
-            get
-            {
-                GroupInfo groupInfo;
-                if (!Groups.TryGetValue(requestingAgent, groupName, out groupInfo))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return groupInfo;
-            }
-        }
-
-        UGI IGroupsInterface.this[UGUI requestingAgent, UUID groupID]
-        {
-            get
-            {
-                UGI ugi;
-                if (!Groups.TryGetValue(requestingAgent, groupID, out ugi))
-                {
-                    throw new KeyNotFoundException();
-                }
-                return ugi;
-            }
-        }
-
         bool IGroupsInterface.ContainsKey(UGUI requestingAgent, string groupName)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
