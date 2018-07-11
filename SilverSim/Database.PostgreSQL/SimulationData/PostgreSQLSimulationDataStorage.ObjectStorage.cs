@@ -90,7 +90,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         #region helpers
         private ObjectGroup ObjectGroupFromDbReader(NpgsqlDataReader dbReader) => new ObjectGroup
         {
-            IsTempOnRez = (bool)dbReader["IsTempOnRez"],
+            IsTemporary = (bool)dbReader["IsTemporary"],
             Owner = dbReader.GetUGUI("Owner"),
             LastOwner = dbReader.GetUGUI("LastOwner"),
             Group = dbReader.GetUGI("Group"),
@@ -295,6 +295,13 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 connection.Open();
                 UUID objgroupID = UUID.Zero;
                 m_Log.InfoFormat("Loading object groups for region ID {0}", regionID);
+
+                using (var cmd = new NpgsqlCommand("DELETE FROM objects WHERE \"IsTemporary\" AND \"RegionID\" = @regionid", connection))
+                {
+                    cmd.Parameters.AddParameter("@regionid", regionID);
+                    cmd.CommandTimeout = 3600;
+                    cmd.ExecuteNonQuery();
+                }
 
                 using (var cmd = new NpgsqlCommand("SELECT * FROM objects WHERE \"RegionID\" = @regionid", connection))
                 {

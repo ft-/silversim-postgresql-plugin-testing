@@ -81,6 +81,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<UUID>("RezzingObjectID") {IsNullAllowed = false, Default = UUID.Zero },
             new TableRevision(10),
             new PrimaryKeyInfo("RegionID", "ID"),
+            new TableRevision(11),
+            new ChangeColumn<bool>("IsTemporary") { OldName = "IsTempOnRez", IsNullAllowed = false, Default = false },
             #endregion
 
             #region Table prims
