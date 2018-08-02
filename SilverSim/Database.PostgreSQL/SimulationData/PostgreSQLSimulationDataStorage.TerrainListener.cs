@@ -81,57 +81,86 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                             continue;
                         }
 
-                        uint serialNumber = req.Serial;
-
-                        if (!knownSerialNumbers.Contains(req.ExtendedPatchID) || knownSerialNumbers[req.ExtendedPatchID] != req.Serial)
+                        if (req == null)
                         {
-                            updateRequestData.Add("PatchID" + updateRequestCount, req.ExtendedPatchID);
-                            updateRequestData.Add("TerrainData" + updateRequestCount, req.Serialization);
-                            ++updateRequestCount;
-                            knownSerialNumbers[req.ExtendedPatchID] = serialNumber;
-                        }
-
-                        if ((m_StorageTerrainRequestQueue.Count == 0 && updateRequestCount > 0) || updateRequestCount >= 256)
-                        {
-                            StringBuilder updateCmd = new StringBuilder();
-                            try
+                            using (var connection = new NpgsqlConnection(m_ConnectionString))
                             {
-                                using (NpgsqlConnection conn = new NpgsqlConnection(m_ConnectionString))
+                                connection.Open();
+                                connection.InsideTransaction((transaction) =>
                                 {
-                                    conn.Open();
-                                    if (conn.HasOnConflict() && m_EnableOnConflict)
+                                    using (var cmd = new NpgsqlCommand("DELETE FROM defaultterrains WHERE RegionID=@regionid", connection)
                                     {
-                                        for (int i = 0; i < updateRequestCount; ++i)
-                                        {
-                                            updateCmd.AppendFormat("INSERT INTO terrains (\"RegionID\", \"PatchID\", \"TerrainData\") VALUES (@regionid, @patchid{0}, @terraindata{0}) ON CONFLICT(\"RegionID\", \"PatchID\") DO UPDATE SET \"TerrainData\"= @terraindata{0};", i);
-                                        }
-                                    }
-                                    else
+                                        Transaction = transaction
+                                    })
                                     {
-                                        for (int i = 0; i < updateRequestCount; ++i)
-                                        {
-                                            updateCmd.AppendFormat("UPDATE terrains SET \"TerrainData\"=@terraindata{0} WHERE \"RegionID\" = @regionid AND \"PatchID\" = @patchid{0};", i);
-                                            updateCmd.AppendFormat("INSERT INTO terrains (\"RegionID\", \"PatchID\", \"TerrainData\") SELECT @regionid, @patchid{0}, @terraindata{0} WHERE NOT EXISTS " +
-                                                    "(SELECT 1 FROM terrains WHERE \"RegionID\" = @regionid AND \"PatchID\" = @patchid{0});", i);
-                                        }
-                                    }
-                                    using (NpgsqlCommand cmd = new NpgsqlCommand(updateCmd.ToString(), conn))
-                                    {
-                                        cmd.Parameters.AddParameter("@regionid", RegionID);
-                                        foreach (KeyValuePair<string, object> kvp in updateRequestData)
-                                        {
-                                            cmd.Parameters.AddParameter(kvp.Key, kvp.Value);
-                                        }
+                                        cmd.Parameters.AddParameter("@RegionID", RegionID);
                                         cmd.ExecuteNonQuery();
                                     }
-                                }
-                                updateRequestData.Clear();
-                                updateRequestCount = 0;
-                                Interlocked.Increment(ref m_ProcessedPatches);
+                                    using (var cmd = new NpgsqlCommand("INSERT INTO defaultterrains (RegionID, PatchID, TerrainData) SELECT RegionID, PatchID, TerrainData FROM terrains WHERE RegionID=@regionid", connection)
+                                    {
+                                        Transaction = transaction
+                                    })
+                                    {
+                                        cmd.Parameters.AddParameter("@RegionID", RegionID);
+                                        cmd.ExecuteNonQuery();
+                                    }
+                                });
                             }
-                            catch (Exception e)
+                        }
+                        else
+                        {
+                            uint serialNumber = req.Serial;
+
+                            if (!knownSerialNumbers.Contains(req.ExtendedPatchID) || knownSerialNumbers[req.ExtendedPatchID] != req.Serial)
                             {
-                                m_Log.Error("Terrain store failed", e);
+                                updateRequestData.Add("PatchID" + updateRequestCount, req.ExtendedPatchID);
+                                updateRequestData.Add("TerrainData" + updateRequestCount, req.Serialization);
+                                ++updateRequestCount;
+                                knownSerialNumbers[req.ExtendedPatchID] = serialNumber;
+                            }
+
+                            if ((m_StorageTerrainRequestQueue.Count == 0 && updateRequestCount > 0) || updateRequestCount >= 256)
+                            {
+                                StringBuilder updateCmd = new StringBuilder();
+                                try
+                                {
+                                    using (NpgsqlConnection conn = new NpgsqlConnection(m_ConnectionString))
+                                    {
+                                        conn.Open();
+                                        if (conn.HasOnConflict() && m_EnableOnConflict)
+                                        {
+                                            for (int i = 0; i < updateRequestCount; ++i)
+                                            {
+                                                updateCmd.AppendFormat("INSERT INTO terrains (\"RegionID\", \"PatchID\", \"TerrainData\") VALUES (@regionid, @patchid{0}, @terraindata{0}) ON CONFLICT(\"RegionID\", \"PatchID\") DO UPDATE SET \"TerrainData\"= @terraindata{0};", i);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            for (int i = 0; i < updateRequestCount; ++i)
+                                            {
+                                                updateCmd.AppendFormat("UPDATE terrains SET \"TerrainData\"=@terraindata{0} WHERE \"RegionID\" = @regionid AND \"PatchID\" = @patchid{0};", i);
+                                                updateCmd.AppendFormat("INSERT INTO terrains (\"RegionID\", \"PatchID\", \"TerrainData\") SELECT @regionid, @patchid{0}, @terraindata{0} WHERE NOT EXISTS " +
+                                                        "(SELECT 1 FROM terrains WHERE \"RegionID\" = @regionid AND \"PatchID\" = @patchid{0});", i);
+                                            }
+                                        }
+                                        using (NpgsqlCommand cmd = new NpgsqlCommand(updateCmd.ToString(), conn))
+                                        {
+                                            cmd.Parameters.AddParameter("@regionid", RegionID);
+                                            foreach (KeyValuePair<string, object> kvp in updateRequestData)
+                                            {
+                                                cmd.Parameters.AddParameter(kvp.Key, kvp.Value);
+                                            }
+                                            cmd.ExecuteNonQuery();
+                                        }
+                                    }
+                                    updateRequestData.Clear();
+                                    updateRequestCount = 0;
+                                    Interlocked.Increment(ref m_ProcessedPatches);
+                                }
+                                catch (Exception e)
+                                {
+                                    m_Log.Error("Terrain store failed", e);
+                                }
                             }
                         }
                     }
