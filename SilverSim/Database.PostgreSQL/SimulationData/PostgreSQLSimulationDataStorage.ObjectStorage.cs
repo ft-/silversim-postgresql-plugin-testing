@@ -213,7 +213,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 IsUnSitTargetActive = (bool)dbReader["IsUnSitTargetActive"],
                 UnSitTargetOffset = dbReader.GetVector3("UnSitTargetOffset"),
                 UnSitTargetOrientation = dbReader.GetQuaternion("UnSitTargetOrientation"),
-                LocalizationSerialization = dbReader.GetBytes("LocalizationData")
+                LocalizationSerialization = dbReader.GetBytes("LocalizationData"),
+                Damage = (double)dbReader["Damage"]
             };
             objpart.LoadFromVehicleSerialization(dbReader.GetBytes("VehicleData"));
 
