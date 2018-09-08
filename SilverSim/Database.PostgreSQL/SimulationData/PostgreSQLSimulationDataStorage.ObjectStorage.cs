@@ -102,6 +102,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             PayPrice3 = (int)dbReader["PayPrice3"],
             PayPrice4 = (int)dbReader["PayPrice4"],
             AttachedPos = dbReader.GetVector3("AttachedPos"),
+            AttachedRot = dbReader.GetQuaternion("AttachedRot"),
             AttachPoint = dbReader.GetEnum<AttachmentPoint>("AttachPoint"),
             IsIncludedInSearch = (bool)dbReader["IsIncludedInSearch"],
             RezzingObjectID = dbReader.GetUUID("RezzingObjectID")

@@ -83,6 +83,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new PrimaryKeyInfo("RegionID", "ID"),
             new TableRevision(11),
             new ChangeColumn<bool>("IsTemporary") { OldName = "IsTempOnRez", IsNullAllowed = false, Default = false },
+            new TableRevision(12),
+            new AddColumn<Quaternion>("AttachedRot") { IsNullAllowed = false, Default = Quaternion.Identity },
             #endregion
 
             #region Table prims
