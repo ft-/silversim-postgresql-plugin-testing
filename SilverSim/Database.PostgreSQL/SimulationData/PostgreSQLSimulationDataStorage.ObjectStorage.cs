@@ -140,7 +140,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 WalkableCoefficientD = (double)dbReader["WalkableCoefficientD"],
                 Material = dbReader.GetEnum<PrimitiveMaterial>("Material"),
                 Size = dbReader.GetVector3("Size"),
-                Slice = dbReader.GetVector3("Slice"),
 
                 MediaURL = (string)dbReader["MediaURL"],
 

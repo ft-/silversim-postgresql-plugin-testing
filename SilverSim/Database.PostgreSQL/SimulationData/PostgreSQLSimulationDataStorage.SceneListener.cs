@@ -448,7 +448,6 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["WalkableCoefficientD"] = objpart.WalkableCoefficientD,
                     ["Material"] = objpart.Material,
                     ["Size"] = objpart.Size,
-                    ["Slice"] = objpart.Slice,
                     ["MediaURL"] = objpart.MediaURL,
                     ["Creator"] = objpart.Creator,
                     ["CreationDate"] = objpart.CreationDate,
