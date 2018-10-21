@@ -217,6 +217,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<double>("Damage") { IsNullAllowed = false, Default = 0.0 },
             new TableRevision(27),
             new DropColumn("Slice"),
+            new TableRevision(28),
+            new PrimaryKeyInfo("RegionID", "ID"),
             #endregion
 
             #region Table primitems
