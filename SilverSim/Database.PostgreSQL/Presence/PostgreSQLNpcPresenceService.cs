@@ -88,18 +88,11 @@ namespace SilverSim.Database.PostgreSQL.Presence
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                try
-                {
-                    conn.ReplaceInto("npcpresence", post, new string[] { "NpcID" }, m_EnableOnConflict);
-                }
-                catch
-                {
-                    throw new PresenceUpdateFailedException();
-                }
+                conn.ReplaceInto("npcpresence", post, new string[] { "NpcID" }, m_EnableOnConflict);
             }
         }
 
-        public override void Remove(UUID scopeID, UUID npcID)
+        public override void Remove(UUID npcID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {

@@ -128,42 +128,26 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             new AddColumn<Vector3>("HomePosition") { IsNullAllowed = false, Default = Vector3.Zero },
             new AddColumn<Vector3>("HomeLookAt") { IsNullAllowed = false, Default = Vector3.Zero },
             new AddColumn<string>("HomeGatekeeperURI") { Cardinality = 255, IsNullAllowed = false, Default = string.Empty },
+            new TableRevision(3),
+            new DropColumn("ScopeID"),
 
             new SqlTable("useraccounts_serial"),
             new AddColumn<ulong>("SerialNumber") { IsNullAllowed = false, Default = (ulong)0 }
         };
 
-        public override bool ContainsKey(UUID scopeID, UUID accountID)
+        public override bool ContainsKey(UUID accountID)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                if (scopeID != UUID.Zero)
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM useraccounts WHERE \"ID\" = @id LIMIT 1", connection))
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT ID FROM useraccounts WHERE \"ScopeID\" = @scopeid AND \"ID\" = @id LIMIT 1", connection))
+                    cmd.Parameters.AddParameter("@id", accountID);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
-                        cmd.Parameters.AddParameter("@scopeid", scopeID);
-                        cmd.Parameters.AddParameter("@id", accountID);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                        if (reader.Read())
                         {
-                            if (reader.Read())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM useraccounts WHERE \"ID\" = @id LIMIT 1", connection))
-                    {
-                        cmd.Parameters.AddParameter("@id", accountID);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
@@ -172,39 +156,20 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return false;
         }
 
-        public override bool TryGetValue(UUID scopeID, UUID accountID, out UserAccount account)
+        public override bool TryGetValue(UUID accountID, out UserAccount account)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                if (scopeID != UUID.Zero)
+                using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"ID\" = @id LIMIT 1", connection))
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"ScopeID\" = @scopeid AND \"ID\" = @id LIMIT 1", connection))
+                    cmd.Parameters.AddParameter("@id", accountID);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
-                        cmd.Parameters.AddParameter("@scopeid", scopeID);
-                        cmd.Parameters.AddParameter("@id", accountID);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                        if (reader.Read())
                         {
-                            if (reader.Read())
-                            {
-                                account = reader.ToUserAccount(m_HomeURI);
-                                return true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"ID\" = @id LIMIT 1", connection))
-                    {
-                        cmd.Parameters.AddParameter("@id", accountID);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                account = reader.ToUserAccount(m_HomeURI);
-                                return true;
-                            }
+                            account = reader.ToUserAccount(m_HomeURI);
+                            return true;
                         }
                     }
                 }
@@ -214,27 +179,13 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return false;
         }
 
-        public override UserAccount this[UUID scopeID, UUID accountID]
-        {
-            get
-            {
-                UserAccount account;
-                if (!TryGetValue(scopeID, accountID, out account))
-                {
-                    throw new UserAccountNotFoundException();
-                }
-                return account;
-            }
-        }
-
-        public override bool ContainsKey(UUID scopeID, string email)
+        public override bool ContainsKey(string email)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"ScopeID\" FROM useraccounts WHERE \"ScopeID\" = @scopeid AND \"Email\" = @email LIMIT 1", connection))
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM useraccounts WHERE \"Email\" = @email LIMIT 1", connection))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     cmd.Parameters.AddParameter("@email", email);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -249,14 +200,13 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return false;
         }
 
-        public override bool TryGetValue(UUID scopeID, string email, out UserAccount account)
+        public override bool TryGetValue(string email, out UserAccount account)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"ScopeID\" = @scopeid AND \"Email\" = @email LIMIT 1", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"Email\" = @email LIMIT 1", connection))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     cmd.Parameters.AddParameter("@email", email);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -273,52 +223,20 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return false;
         }
 
-        public override UserAccount this[UUID scopeID, string email]
-        {
-            get
-            {
-                UserAccount account;
-                if (!TryGetValue(scopeID, email, out account))
-                {
-                    throw new UserAccountNotFoundException();
-                }
-                return account;
-            }
-        }
-
-        public override bool ContainsKey(UUID scopeID, string firstName, string lastName)
+        public override bool ContainsKey(string firstName, string lastName)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                if (scopeID != UUID.Zero)
+                using (var cmd = new NpgsqlCommand("SELECT NULL FROM useraccounts WHERE \"FirstName\" = @firstname AND \"LastName\" = @lastname LIMIT 1", connection))
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT \"ScopeID\" FROM useraccounts WHERE \"ScopeID\" = @scopeid AND \"FirstName\" = @firstname AND \"LastName\" = @lastname LIMIT 1", connection))
+                    cmd.Parameters.AddParameter("@firstname", firstName);
+                    cmd.Parameters.AddParameter("@lastname", lastName);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
-                        cmd.Parameters.AddParameter("@scopeid", scopeID);
-                        cmd.Parameters.AddParameter("@firstname", firstName);
-                        cmd.Parameters.AddParameter("@lastname", lastName);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                        if (reader.Read())
                         {
-                            if (reader.Read())
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    using (var cmd = new NpgsqlCommand("SELECT \"ScopeID\" FROM useraccounts WHERE \"FirstName\" = @firstname AND \"LastName\" = @lastname LIMIT 1", connection))
-                    {
-                        cmd.Parameters.AddParameter("@firstname", firstName);
-                        cmd.Parameters.AddParameter("@lastname", lastName);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
@@ -327,41 +245,21 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return false;
         }
 
-        public override bool TryGetValue(UUID scopeID, string firstName, string lastName, out UserAccount account)
+        public override bool TryGetValue(string firstName, string lastName, out UserAccount account)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                if (scopeID != UUID.Zero)
+                using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"FirstName\" = @firstname AND \"LastName\" = @lastname LIMIT 1", connection))
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"ScopeID\" = @scopeid AND \"FirstName\" = @firstname AND \"LastName\" = @lastname LIMIT 1", connection))
+                    cmd.Parameters.AddParameter("@firstname", firstName);
+                    cmd.Parameters.AddParameter("@lastname", lastName);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
-                        cmd.Parameters.AddParameter("@scopeid", scopeID);
-                        cmd.Parameters.AddParameter("@firstname", firstName);
-                        cmd.Parameters.AddParameter("@lastname", lastName);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                        if (reader.Read())
                         {
-                            if (reader.Read())
-                            {
-                                account = reader.ToUserAccount(m_HomeURI);
-                                return true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE \"FirstName\" = @firstname AND \"LastName\" = @lastname LIMIT 1", connection))
-                    {
-                        cmd.Parameters.AddParameter("@firstname", firstName);
-                        cmd.Parameters.AddParameter("@lastname", lastName);
-                        using (NpgsqlDataReader reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                account = reader.ToUserAccount(m_HomeURI);
-                                return true;
-                            }
+                            account = reader.ToUserAccount(m_HomeURI);
+                            return true;
                         }
                     }
                 }
@@ -371,20 +269,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             return false;
         }
 
-        public override UserAccount this[UUID scopeID, string firstName, string lastName]
-        {
-            get
-            {
-                UserAccount account;
-                if (!TryGetValue(scopeID, firstName, lastName, out account))
-                {
-                    throw new UserAccountNotFoundException();
-                }
-                return account;
-            }
-        }
-
-        public override List<UserAccount> GetAccounts(UUID scopeID, string query)
+        public override List<UserAccount> GetAccounts(string query)
         {
             string[] words = query.Split(new char[] { ' ' }, 2);
             var accounts = new List<UserAccount>();
@@ -393,9 +278,8 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
                 using (var connection = new NpgsqlConnection(m_ConnectionString))
                 {
                     connection.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts WHERE (\"ScopeID\" = @ScopeID or \"ScopeID\" = '00000000-0000-0000-0000-000000000000')", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM useraccounts", connection))
                     {
-                        cmd.Parameters.AddParameter("@ScopeID", scopeID);
                         using (NpgsqlDataReader dbreader = cmd.ExecuteReader())
                         {
                             while (dbreader.Read())
@@ -411,14 +295,13 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                string cmdstr = "select * from useraccounts where (\"ScopeID\" = @ScopeID or \"ScopeID\" = '00000000-0000-0000-0000-000000000000') and (\"FirstName\" LIKE @word0 or \"LastName\" LIKE @word0)";
+                string cmdstr = "select * from useraccounts where (\"FirstName\" LIKE @word0 or \"LastName\" LIKE @word0)";
                 if (words.Length == 2)
                 {
-                    cmdstr = "select * from useraccounts where (\"ScopeID\" = @ScopeID or \"ScopeID\" = '00000000-0000-0000-0000-000000000000') and (\"FirstName\" LIKE @word0 or \"LastName\" LIKE @word1)";
+                    cmdstr = "select * from useraccounts where (\"FirstName\" LIKE @word0 or \"LastName\" LIKE @word1)";
                 }
                 using (var cmd = new NpgsqlCommand(cmdstr, connection))
                 {
-                    cmd.Parameters.AddParameter("@ScopeID", scopeID);
                     for (int i = 0; i < words.Length; ++i)
                     {
                         cmd.Parameters.AddParameter("@word" + i.ToString(), words[i]);
@@ -440,7 +323,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             var data = new Dictionary<string, object>
             {
                 ["ID"] = userAccount.Principal.ID,
-                ["ScopeID"] = userAccount.ScopeID,
                 ["FirstName"] = userAccount.Principal.FirstName,
                 ["LastName"] = userAccount.Principal.LastName,
                 ["Email"] = userAccount.Email,
@@ -501,15 +383,14 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void Remove(UUID scopeID, UUID accountID)
+        public override void Remove(UUID accountID)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM useraccounts WHERE \"ID\" = @id AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("DELETE FROM useraccounts WHERE \"ID\" = @id", connection))
                 {
                     cmd.Parameters.AddParameter("@id", accountID);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     if (cmd.ExecuteNonQuery() < 1)
                     {
                         throw new KeyNotFoundException();
@@ -549,7 +430,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
         }
 
         #region Online Status
-        public override void LoggedOut(UUID scopeID, UUID accountID, UserRegionData regionData = null)
+        public override void LoggedOut(UUID accountID, UserRegionData regionData = null)
         {
             var data = new Dictionary<string, object>
             {
@@ -564,7 +445,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -574,7 +454,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void SetHome(UUID scopeID, UUID accountID, UserRegionData regionData)
+        public override void SetHome(UUID accountID, UserRegionData regionData)
         {
             if (regionData == null)
             {
@@ -589,7 +469,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             };
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -599,7 +478,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void SetPosition(UUID scopeID, UUID accountID, UserRegionData regionData)
+        public override void SetPosition(UUID accountID, UserRegionData regionData)
         {
             if (regionData == null)
             {
@@ -614,7 +493,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             };
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -625,15 +503,14 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
         }
         #endregion
 
-        public override void SetEverLoggedIn(UUID scopeID, UUID accountID)
+        public override void SetEverLoggedIn(UUID accountID)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("UPDATE useraccounts SET \"IsEverLoggedIn\"=1 WHERE \"ID\" = @id AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("UPDATE useraccounts SET \"IsEverLoggedIn\"=1 WHERE \"ID\" = @id", connection))
                 {
                     cmd.Parameters.AddParameter("@id", accountID);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     if (cmd.ExecuteNonQuery() < 1)
                     {
                         throw new KeyNotFoundException();
@@ -642,7 +519,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void SetEmail(UUID scopeID, UUID accountID, string email)
+        public override void SetEmail(UUID accountID, string email)
         {
             if (email == null)
             {
@@ -654,7 +531,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             };
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -664,7 +540,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void SetUserLevel(UUID scopeID, UUID accountID, int userLevel)
+        public override void SetUserLevel(UUID accountID, int userLevel)
         {
             if (userLevel < -1 || userLevel > 255)
             {
@@ -676,7 +552,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             };
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -686,7 +561,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void SetUserFlags(UUID scopeID, UUID accountID, UserFlags userFlags)
+        public override void SetUserFlags(UUID accountID, UserFlags userFlags)
         {
             var data = new Dictionary<string, object>
             {
@@ -694,7 +569,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             };
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -704,7 +578,7 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             }
         }
 
-        public override void SetUserTitle(UUID scopeID, UUID accountID, string title)
+        public override void SetUserTitle(UUID accountID, string title)
         {
             if (title == null)
             {
@@ -716,7 +590,6 @@ namespace SilverSim.Database.PostgreSQL.UserAccounts
             };
             var w = new Dictionary<string, object>
             {
-                ["ScopeID"] = scopeID,
                 ["ID"] = accountID
             };
             using (var connection = new NpgsqlConnection(m_ConnectionString))

@@ -269,7 +269,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             }
         }
 
-        public void Remove(UUID scopeID, UUID accountID)
+        void IUserAccountDeleteServiceInterface.Remove(UUID accountID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {

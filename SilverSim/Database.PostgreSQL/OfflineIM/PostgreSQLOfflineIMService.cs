@@ -124,7 +124,7 @@ namespace SilverSim.Database.PostgreSQL.OfflineIM
             new AddColumn<Date>("Timestamp") {IsNullAllowed = false }
         };
 
-        public void Remove(UUID scopeID, UUID accountID)
+        void IUserAccountDeleteServiceInterface.Remove(UUID accountID)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {

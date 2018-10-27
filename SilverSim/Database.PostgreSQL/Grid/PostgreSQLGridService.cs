@@ -105,131 +105,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
         }
 
         #region Accessors
-        public override bool TryGetValue(UUID scopeID, UUID regionID, out RegionInfo rInfo)
-        {
-            using (var connection = new NpgsqlConnection(m_ConnectionString))
-            {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid LIMIT 1", connection))
-                {
-                    cmd.Parameters.AddParameter("@id", regionID);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                    {
-                        if (dbReader.Read())
-                        {
-                            rInfo = ToRegionInfo(dbReader);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            rInfo = default(RegionInfo);
-            return false;
-        }
-
-        public override bool ContainsKey(UUID scopeID, UUID regionID)
-        {
-            using (var connection = new NpgsqlConnection(m_ConnectionString))
-            {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"uuid\" = @id AND \"ScopeID\" = @scopeid LIMIT 1", connection))
-                {
-                    cmd.Parameters.AddParameter("@id", regionID);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                    {
-                        return dbReader.Read();
-                    }
-                }
-            }
-        }
-
-        public override bool TryGetValue(UUID scopeID, uint gridX, uint gridY, out RegionInfo rInfo)
-        {
-            using (var connection = new NpgsqlConnection(m_ConnectionString))
-            {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y AND \"ScopeID\" = @scopeid LIMIT 1", connection))
-                {
-                    cmd.Parameters.AddParameter("@x", gridX);
-                    cmd.Parameters.AddParameter("@y", gridY);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                    {
-                        if (dbReader.Read())
-                        {
-                            rInfo = ToRegionInfo(dbReader);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            rInfo = default(RegionInfo);
-            return false;
-        }
-
-        public override bool ContainsKey(UUID scopeID, uint gridX, uint gridY)
-        {
-            using (var connection = new NpgsqlConnection(m_ConnectionString))
-            {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y AND \"ScopeID\" = @scopeid LIMIT 1", connection))
-                {
-                    cmd.Parameters.AddParameter("@x", gridX);
-                    cmd.Parameters.AddParameter("@y", gridY);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                    {
-                        return dbReader.Read();
-                    }
-                }
-            }
-        }
-
-        public override bool TryGetValue(UUID scopeID, string regionName, out RegionInfo rInfo)
-        {
-            using (var connection = new NpgsqlConnection(m_ConnectionString))
-            {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid LIMIT 1", connection))
-                {
-                    cmd.Parameters.AddParameter("@name", regionName);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                    {
-                        if (dbReader.Read())
-                        {
-                            rInfo = ToRegionInfo(dbReader);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            rInfo = default(RegionInfo);
-            return false;
-        }
-
-        public override bool ContainsKey(UUID scopeID, string regionName)
-        {
-            using (var connection = new NpgsqlConnection(m_ConnectionString))
-            {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name AND \"ScopeID\" = @scopeid LIMIT 1", connection))
-                {
-                    cmd.Parameters.AddParameter("@name", regionName);
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
-                    {
-                        return dbReader.Read();
-                    }
-                }
-            }
-        }
-
         public override bool TryGetValue(UUID regionID, out RegionInfo rInfo)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -268,6 +143,86 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 }
             }
         }
+
+        public override bool TryGetValue(uint gridX, uint gridY, out RegionInfo rInfo)
+        {
+            using (var connection = new NpgsqlConnection(m_ConnectionString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y LIMIT 1", connection))
+                {
+                    cmd.Parameters.AddParameter("@x", gridX);
+                    cmd.Parameters.AddParameter("@y", gridY);
+                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                    {
+                        if (dbReader.Read())
+                        {
+                            rInfo = ToRegionInfo(dbReader);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            rInfo = default(RegionInfo);
+            return false;
+        }
+
+        public override bool ContainsKey(uint gridX, uint gridY)
+        {
+            using (var connection = new NpgsqlConnection(m_ConnectionString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"locX\" <= @x AND \"locY\" <= @y AND \"locX\" + \"sizeX\" > @x AND \"locY\" + \"sizeY\" > @y LIMIT 1", connection))
+                {
+                    cmd.Parameters.AddParameter("@x", gridX);
+                    cmd.Parameters.AddParameter("@y", gridY);
+                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                    {
+                        return dbReader.Read();
+                    }
+                }
+            }
+        }
+
+        public override bool TryGetValue(string regionName, out RegionInfo rInfo)
+        {
+            using (var connection = new NpgsqlConnection(m_ConnectionString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name LIMIT 1", connection))
+                {
+                    cmd.Parameters.AddParameter("@name", regionName);
+                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                    {
+                        if (dbReader.Read())
+                        {
+                            rInfo = ToRegionInfo(dbReader);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            rInfo = default(RegionInfo);
+            return false;
+        }
+
+        public override bool ContainsKey(string regionName)
+        {
+            using (var connection = new NpgsqlConnection(m_ConnectionString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" = @name LIMIT 1", connection))
+                {
+                    cmd.Parameters.AddParameter("@name", regionName);
+                    using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
+                    {
+                        return dbReader.Read();
+                    }
+                }
+            }
+        }
         #endregion
 
         #region dbData to RegionInfo
@@ -284,7 +239,6 @@ namespace SilverSim.Database.PostgreSQL.Grid
             ServerHttpPort = (uint)(int)dbReader["serverHttpPort"],
             Owner = dbReader.GetUGUI("owner"),
             Access = dbReader.GetEnum<RegionAccess>("access"),
-            ScopeID = dbReader.GetUUID("ScopeID"),
             Size = dbReader.GetGridVector("size"),
             Flags = dbReader.GetEnum<RegionFlags>("flags"),
             AuthenticatingToken = (string)dbReader["AuthenticatingToken"],
@@ -341,9 +295,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
                 if (!m_AllowDuplicateRegionNames)
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT \"uuid\" FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" = @name LIMIT 1", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"uuid\" FROM " + m_TableName + " WHERE \"regionName\" = @name LIMIT 1", conn))
                     {
-                        cmd.Parameters.AddParameter("@scopeid", regionInfo.ScopeID);
                         cmd.Parameters.AddParameter("@name", regionInfo.Name);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
@@ -358,9 +311,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
 
                 if (keepOnlineUnmodified)
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT \"flags\" FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"uuid\" = @id LIMIT 1", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"flags\" FROM " + m_TableName + " WHERE \"uuid\" = @id LIMIT 1", conn))
                     {
-                        cmd.Parameters.AddParameter("@scopeid", regionInfo.ScopeID);
                         cmd.Parameters.AddParameter("@id", regionInfo.ID);
                         using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                         {
@@ -378,13 +330,11 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 using (var cmd = new NpgsqlCommand("SELECT \"uuid\" FROM " + m_TableName + " WHERE (" +
                             "(\"locX\" >= @minx AND \"locY\" >= @miny AND \"locX\" < @maxx AND \"locY\" < @maxy) OR " +
                             "(\"locX\" + \"sizeX\" > @minx AND \"locY\"+\"sizeY\" > @miny AND \"locX\" + \"sizeX\" < @maxx AND \"locY\" + \"sizeY\" < @maxy)" +
-                            ") AND (NOT \"uuid\" = @regionid) AND " +
-                            "\"ScopeID\" = @scopeid LIMIT 1", conn))
+                            ") AND (NOT \"uuid\" = @regionid) LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@min", regionInfo.Location);
                     cmd.Parameters.AddParameter("@max", regionInfo.Location + regionInfo.Size);
                     cmd.Parameters.AddParameter("@regionid", regionInfo.ID);
-                    cmd.Parameters.AddParameter("@scopeid", regionInfo.ScopeID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         if (dbReader.Read() &&
@@ -414,14 +364,13 @@ namespace SilverSim.Database.PostgreSQL.Grid
                     ["AuthenticatingToken"] = regionInfo.AuthenticatingToken,
                     ["AuthenticatingPrincipalID"] = regionInfo.AuthenticatingPrincipal,
                     ["flags"] = regionInfo.Flags,
-                    ["ScopeID"] = regionInfo.ScopeID,
                     ["ProductName"] = regionInfo.ProductName
                 };
                 PostgreSQLUtilities.ReplaceInto(conn, m_TableName, regionData, new string[] { "uuid" }, m_EnableOnConflict);
             }
         }
 
-        public override void UnregisterRegion(UUID scopeID, UUID regionID)
+        public override void UnregisterRegion(UUID regionID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -431,9 +380,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
                 {
                     /* we handoff most stuff to mysql here */
                     /* first line deletes only when region is not persistent */
-                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"uuid\" = @regionid AND (\"flags\" & @persistent) != 0", conn))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE AND \"uuid\" = @regionid AND (\"flags\" & @persistent) != 0", conn))
                     {
-                        cmd.Parameters.AddParameter("@scopeid", scopeID);
                         cmd.Parameters.AddParameter("@regionid", regionID);
                         cmd.Parameters.AddParameter("@persistent", RegionFlags.Persistent);
                         cmd.ExecuteNonQuery();
@@ -442,9 +390,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
                     /* second step is to set it offline when it is persistent */
                 }
 
-                using (var cmd = new NpgsqlCommand("UPDATE " + m_TableName + " SET \"flags\" = \"flags\" - @online, \"last_seen\"=@unixtime WHERE \"ScopeID\" = @scopeid AND \"uuid\" = @regionid AND (\"flags\" & @online) != 0", conn))
+                using (var cmd = new NpgsqlCommand("UPDATE " + m_TableName + " SET \"flags\" = \"flags\" - @online, \"last_seen\"=@unixtime WHERE \"uuid\" = @regionid AND (\"flags\" & @online) != 0", conn))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.Parameters.AddParameter("@online", RegionFlags.RegionOnline);
                     cmd.Parameters.AddParameter("@unixtime", Date.Now);
@@ -453,14 +400,13 @@ namespace SilverSim.Database.PostgreSQL.Grid
             }
         }
 
-        public override void DeleteRegion(UUID scopeID, UUID regionID)
+        public override void DeleteRegion(UUID regionID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"uuid\" = @regionid", conn))
+                using (var cmd = new NpgsqlCommand("DELETE FROM " + m_TableName + " WHERE \"uuid\" = @regionid", conn))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     cmd.Parameters.AddParameter("@regionid", regionID);
                     cmd.ExecuteNonQuery();
                 }
@@ -470,22 +416,16 @@ namespace SilverSim.Database.PostgreSQL.Grid
         #endregion
 
         #region List accessors
-        private List<RegionInfo> GetRegionsByFlag(UUID scopeID, RegionFlags flags)
+        private List<RegionInfo> GetRegionsByFlag(RegionFlags flags)
         {
             var result = new List<RegionInfo>();
 
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(scopeID == UUID.Zero ?
-                    "SELECT * FROM regions WHERE \"flags\" & @flag != 0" :
-                    "SELECT * FROM regions WHERE \"flags\" & @flag != 0 AND \"ScopeID\" = @scopeid", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM regions WHERE \"flags\" & @flag != 0", connection))
                 {
                     cmd.Parameters.AddParameter("@flag", flags);
-                    if (scopeID != UUID.Zero)
-                    {
-                        cmd.Parameters.AddParameter("@scopeid", scopeID);
-                    }
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
@@ -499,25 +439,22 @@ namespace SilverSim.Database.PostgreSQL.Grid
             return result;
         }
 
-        public override List<RegionInfo> GetHyperlinks(UUID scopeID) =>
-            GetRegionsByFlag(scopeID, RegionFlags.Hyperlink);
+        public override List<RegionInfo> GetHyperlinks() =>
+            GetRegionsByFlag(RegionFlags.Hyperlink);
 
-        public override List<RegionInfo> GetDefaultRegions(UUID scopeID) =>
-            GetRegionsByFlag(scopeID, RegionFlags.DefaultRegion);
-
-        public override List<RegionInfo> GetOnlineRegions(UUID scopeID) =>
-            GetRegionsByFlag(scopeID, RegionFlags.RegionOnline);
+        public override List<RegionInfo> GetDefaultRegions() =>
+            GetRegionsByFlag(RegionFlags.DefaultRegion);
 
         public override List<RegionInfo> GetOnlineRegions() =>
-            GetRegionsByFlag(UUID.Zero, RegionFlags.RegionOnline);
+            GetRegionsByFlag(RegionFlags.RegionOnline);
 
-        public override List<RegionInfo> GetFallbackRegions(UUID scopeID) =>
-            GetRegionsByFlag(scopeID, RegionFlags.FallbackRegion);
+        public override List<RegionInfo> GetFallbackRegions() =>
+            GetRegionsByFlag(RegionFlags.FallbackRegion);
 
-        public override List<RegionInfo> GetDefaultIntergridRegions(UUID scopeID) =>
-            GetRegionsByFlag(scopeID, RegionFlags.DefaultIntergridRegion);
+        public override List<RegionInfo> GetDefaultIntergridRegions() =>
+            GetRegionsByFlag(RegionFlags.DefaultIntergridRegion);
 
-        public override List<RegionInfo> GetRegionsByRange(UUID scopeID, GridVector min, GridVector max)
+        public override List<RegionInfo> GetRegionsByRange(GridVector min, GridVector max)
         {
             var result = new List<RegionInfo>();
 
@@ -525,10 +462,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
             {
                 connection.Open();
                 using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE " +
-                        "\"locX\"+\"sizeX\" > @xmin AND \"locX\" <= @xmax AND \"locY\"+\"sizeY\" > @ymin AND \"locY\" <= @ymax " +
-                        " AND \"ScopeID\" = @scopeid", connection))
+                        "\"locX\"+\"sizeX\" > @xmin AND \"locX\" <= @xmax AND \"locY\"+\"sizeY\" > @ymin AND \"locY\" <= @ymax", connection))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     cmd.Parameters.AddParameter("@xmin", min.X);
                     cmd.Parameters.AddParameter("@ymin", min.Y);
                     cmd.Parameters.AddParameter("@xmax", max.X);
@@ -546,9 +481,9 @@ namespace SilverSim.Database.PostgreSQL.Grid
             return result;
         }
 
-        public override List<RegionInfo> GetNeighbours(UUID scopeID, UUID regionID)
+        public override List<RegionInfo> GetNeighbours(UUID regionID)
         {
-            RegionInfo ri = this[scopeID, regionID];
+            RegionInfo ri = this[regionID];
             var result = new List<RegionInfo>();
 
             using (var connection = new NpgsqlConnection(m_ConnectionString))
@@ -560,10 +495,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
                                                             " OR " +
                                                             "((\"locY\" = @maxY OR \"locY\" + \"sizeY\" = @locY) AND " +
                                                             "(\"locX\" <= @maxX AND \"locX\" + \"sizeX\" >= @locX))" +
-                                                            ") AND " +
-                                                            "\"ScopeID\" = @scopeid", connection))
+                                                            ")", connection))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     cmd.Parameters.AddParameter("@locX", ri.Location.X);
                     cmd.Parameters.AddParameter("@locY", ri.Location.Y);
                     cmd.Parameters.AddParameter("@maxX", ri.Size.X + ri.Location.X);
@@ -581,7 +514,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             return result;
         }
 
-        public override List<RegionInfo> GetAllRegions(UUID scopeID)
+        public override List<RegionInfo> GetAllRegions()
         {
             var result = new List<RegionInfo>();
 
@@ -603,7 +536,7 @@ namespace SilverSim.Database.PostgreSQL.Grid
             return result;
         }
 
-        public override List<RegionInfo> SearchRegionsByName(UUID scopeID, string searchString)
+        public override List<RegionInfo> SearchRegionsByName(string searchString)
         {
             var result = new List<RegionInfo>();
 
@@ -611,9 +544,8 @@ namespace SilverSim.Database.PostgreSQL.Grid
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"ScopeID\" = @scopeid AND \"regionName\" LIKE '" + searchString.ToNpgsqlQuotedWithoutQuotes() + "%'", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM " + m_TableName + " WHERE \"regionName\" LIKE '" + searchString.ToNpgsqlQuotedWithoutQuotes() + "%'", connection))
                 {
-                    cmd.Parameters.AddParameter("@scopeid", scopeID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
@@ -658,6 +590,9 @@ namespace SilverSim.Database.PostgreSQL.Grid
             new NamedKeyInfo("ScopeID", "ScopeID"),
             new NamedKeyInfo("flags", "flags"),
             new AddColumn<string>("ProductName") { Cardinality = 255, IsNullAllowed = false, Default = "Mainland" },
+            new TableRevision(2),
+            new DropNamedKeyInfo("ScopeID"),
+            new DropColumn("ScopeID")
         };
     }
 }
