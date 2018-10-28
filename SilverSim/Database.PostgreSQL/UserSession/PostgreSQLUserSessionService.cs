@@ -459,7 +459,7 @@ namespace SilverSim.Database.MsSql.UserSession
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM usersessiondata WHERE sessionid=@sessionid AND \"assoc\"=@assoc AND \"varname\"=@varname AND (NOT isexpiring OR expirydate > @now)", conn))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM usersessiondata WHERE sessionid=@sessionid AND \"assoc\"=@assoc AND \"varname\"=@varname AND (NOT isexpiring OR expirydate >= @now)", conn))
                 {
                     cmd.Parameters.AddParameter("@sessionid", sessionID);
                     cmd.Parameters.AddParameter("@assoc", assoc);
@@ -537,7 +537,7 @@ namespace SilverSim.Database.MsSql.UserSession
                             cmd.Parameters.AddParameter("@sessionid", sessionID);
                             cmd.Parameters.AddParameter("@assoc", assoc);
                             cmd.Parameters.AddParameter("@varname", varname);
-                            return cmd.ExecuteNonQuery() > 0;
+                            cmd.ExecuteNonQuery();
                         }
                     }
                     return true;
