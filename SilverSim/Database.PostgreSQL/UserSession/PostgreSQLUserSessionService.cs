@@ -527,14 +527,13 @@ namespace SilverSim.Database.MsSql.UserSession
 
                     if (val.ExpiryDate != null)
                     {
-                        Date newExpiry = val.ExpiryDate.Add(span);
-                        val.ExpiryDate = newExpiry;
+                        val.ExpiryDate = val.ExpiryDate.Add(span);
                         using (var cmd = new NpgsqlCommand("UPDATE usersessiondata SET expirydate = @expirydate WHERE sessionid = @sessionid AND \"assoc\" = @assoc AND \"varname\" = @varname", conn)
                         {
                             Transaction = transaction
                         })
                         {
-                            cmd.Parameters.AddParameter("@expirydate", newExpiry);
+                            cmd.Parameters.AddParameter("@expirydate", val.ExpiryDate);
                             cmd.Parameters.AddParameter("@sessionid", sessionID);
                             cmd.Parameters.AddParameter("@assoc", assoc);
                             cmd.Parameters.AddParameter("@varname", varname);
