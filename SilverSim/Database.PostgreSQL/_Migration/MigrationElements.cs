@@ -56,6 +56,15 @@ namespace SilverSim.Database.PostgreSQL._Migration
             FieldNames = fieldNames;
         }
 
+        public PrimaryKeyInfo(PrimaryKeyInfo src)
+        {
+            FieldNames = new string[src.FieldNames.Length];
+            for (int i = 0; i < src.FieldNames.Length; ++i)
+            {
+                FieldNames[i] = src.FieldNames[i];
+            }
+        }
+
         public string FieldSql()
         {
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
@@ -85,6 +94,17 @@ namespace SilverSim.Database.PostgreSQL._Migration
         {
             Name = name;
             FieldNames = fieldNames;
+        }
+
+        public NamedKeyInfo(NamedKeyInfo src)
+        {
+            IsUnique = src.IsUnique;
+            Name = src.Name;
+            FieldNames = new string[src.FieldNames.Length];
+            for (int i = 0; i < src.FieldNames.Length; ++i)
+            {
+                FieldNames[i] = src.FieldNames[i];
+            }
         }
 
         private string FieldSql()
@@ -539,9 +559,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
             for(int i = 0; i < fieldNames.Length; ++i)
             {
-                fieldNames[i] = string.Format("DROP COLUMN ", b.QuoteIdentifier(fieldNames[i]));
+                fieldNames[i] = $"DROP COLUMN {b.QuoteIdentifier(fieldNames[i])}";
             }
-            return string.Format("ALTER TABLE {0} {1};", b.QuoteIdentifier(tableName), string.Join(",", fieldNames));
+            return $"ALTER TABLE {b.QuoteIdentifier(tableName)} {string.Join(",", fieldNames)};";
         }
     }
 
@@ -636,15 +656,21 @@ namespace SilverSim.Database.PostgreSQL._Migration
                 if(oldFields.Contains(kvp.Key))
                 {
                     string oldName = OldName + kvp.Key.Substring(Name.Length);
-                    sqlPart = string.Format("ALTER COLUMN {0} {1}",
-                        b.QuoteIdentifier(oldName),
-                        b.QuoteIdentifier(kvp.Key));
+                    if (oldName != kvp.Key)
+                    {
+                        sqlPart = $"RENAME COLUMN {b.QuoteIdentifier(oldName)} TO {b.QuoteIdentifier(kvp.Key)},";
+                    }
+                    else
+                    {
+                        sqlPart = string.Empty;
+                    }
+                    sqlPart += $"ALTER COLUMN {b.QuoteIdentifier(kvp.Key)} ";
                 }
                 else
                 {
                     sqlPart = "ADD " + b.QuoteIdentifier(kvp.Key);
                 }
-                sqlPart += " " + kvp.Value;
+                sqlPart += " TYPE " + kvp.Value;
                 sqlParts.Add(sqlPart);
             }
 

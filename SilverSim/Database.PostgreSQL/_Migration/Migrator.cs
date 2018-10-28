@@ -28,7 +28,7 @@ using PostgreSQLMigrationException = SilverSim.Database.PostgreSQL.PostgreSQLUti
 
 namespace SilverSim.Database.PostgreSQL._Migration
 {
-    public static class Migrator
+    public static partial class Migrator
     {
         static void ExecuteStatement(NpgsqlConnection conn, string command, ILog log)
         {
@@ -84,8 +84,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
             uint processingTableRevision = 0;
             uint currentAtRevision = 0;
             NpgsqlTransaction insideTransaction = null;
+            m_MaxAvailableMigrationRevision = 1;
 
-            if(processTable.Length == 0)
+            if (processTable.Length == 0)
             {
                 throw new PostgreSQLMigrationException("Invalid PostgreSQL migration");
             }
@@ -95,12 +96,15 @@ namespace SilverSim.Database.PostgreSQL._Migration
                 throw new PostgreSQLMigrationException("First entry must be table name");
             }
 
+            bool skipToNext = false;
+
             foreach (IMigrationElement migration in processTable)
             {
                 Type migrationType = migration.GetType();
 
                 if (typeof(SqlTable) == migrationType)
                 {
+                    skipToNext = false;
                     if(insideTransaction != null)
                     {
                         ExecuteStatement(conn, string.Format("COMMENT ON TABLE {0} IS '{1}';", table.Name, processingTableRevision), log);
@@ -125,6 +129,20 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     table = (SqlTable)migration;
                     currentAtRevision = conn.GetTableRevision(table.Name);
                     processingTableRevision = 1;
+                    if (currentAtRevision != 0 && m_DeleteTablesBefore)
+                    {
+                        log.Info($"Dropping table {table.Name}");
+                        ExecuteStatement(conn, $"DROP TABLE {table.Name}", log);
+                        currentAtRevision = 0;
+                    }
+                }
+                else if (skipToNext)
+                {
+                    /* skip processing */
+                    if (typeof(TableRevision) == migrationType)
+                    {
+                        m_MaxAvailableMigrationRevision = Math.Max(m_MaxAvailableMigrationRevision, ((TableRevision)migration).Revision);
+                    }
                 }
                 else if (typeof(TableRevision) == migrationType)
                 {
@@ -140,7 +158,15 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
 
                     var rev = (TableRevision)migration;
-                    if(rev.Revision != processingTableRevision + 1)
+                    m_MaxAvailableMigrationRevision = Math.Max(m_MaxAvailableMigrationRevision, rev.Revision);
+                    if (processingTableRevision == m_StopAtMigrationRevision)
+                    {
+                        /* advance to next table for testing */
+                        skipToNext = true;
+                        continue;
+                    }
+
+                    if (rev.Revision != processingTableRevision + 1)
                     {
                         throw new PostgreSQLMigrationException(string.Format("Invalid TableRevision entry. Expected {0}. Got {1}", processingTableRevision + 1, rev.Revision));
                     }
@@ -243,9 +269,9 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     {
                         if(null != primaryKey && insideTransaction != null)
                         {
-                            ExecuteStatement(conn, "ALTER TABLE " + b.QuoteIdentifier(table.Name) + " DROP PRIMARY KEY;", log);
+                            ExecuteStatement(conn, "ALTER TABLE " + b.QuoteIdentifier(table.Name) + " DROP CONSTRAINT " + b.QuoteIdentifier(table.Name + "_pkey") + ";", log);
                         }
-                        primaryKey = (PrimaryKeyInfo)migration;
+                        primaryKey = new PrimaryKeyInfo((PrimaryKeyInfo)migration);
                         if (insideTransaction != null)
                         {
                             ExecuteStatement(conn, primaryKey.Sql(table.Name), log);
@@ -261,7 +287,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     }
                     else if(migrationType == typeof(NamedKeyInfo))
                     {
-                        var namedKey = (NamedKeyInfo)migration;
+                        var namedKey = new NamedKeyInfo((NamedKeyInfo)migration);
                         if (insideTransaction != null)
                         {
                             ExecuteStatement(conn, namedKey.Sql(table.Name), log);
