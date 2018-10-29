@@ -1061,6 +1061,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
 
             var sqlParts = new List<string>();
             var sqlAttrs = new List<string>();
+            var sqlRenames = new List<string>();
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
 
             /* remove anything that is not needed anymore */
@@ -1074,24 +1075,20 @@ namespace SilverSim.Database.PostgreSQL._Migration
 
             foreach(KeyValuePair<string, string> kvp in newFields)
             {
-                string sqlPart;
+                string sqlPart = string.Empty;
                 if(oldFields.Contains(kvp.Key))
                 {
                     string oldName = OldName + kvp.Key.Substring(Name.Length);
                     if (oldName != kvp.Key)
                     {
-                        sqlPart = $"RENAME COLUMN {b.QuoteIdentifier(oldName)} TO {b.QuoteIdentifier(kvp.Key)},";
-                    }
-                    else
-                    {
-                        sqlPart = string.Empty;
+                        sqlRenames.Add($"RENAME COLUMN {b.QuoteIdentifier(oldName)} TO {b.QuoteIdentifier(kvp.Key)}");
                     }
                     string drop;
                     if(newFieldDropDefaults.TryGetValue(kvp.Key, out drop))
                     {
                         sqlPart += drop + ",";
                     }
-                    sqlPart += $"ALTER COLUMN {b.QuoteIdentifier(kvp.Key)} ";
+                    sqlPart += $"ALTER {b.QuoteIdentifier(kvp.Key)} TYPE";
                 }
                 else
                 {
@@ -1099,7 +1096,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     newFieldDropNotNulls.Remove(kvp.Key);
                     sqlPart = "ADD " + b.QuoteIdentifier(kvp.Key);
                 }
-                sqlPart += " TYPE " + kvp.Value;
+                sqlPart += " " + kvp.Value;
                 sqlParts.Add(sqlPart);
                 string def;
                 if (newFieldDefaults.TryGetValue(kvp.Key, out def))
@@ -1113,8 +1110,12 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
 
             sqlParts.AddRange(sqlAttrs);
-
-            return "ALTER TABLE " + b.QuoteIdentifier(tableName) + " " + string.Join(",", sqlParts) + ";";
+            string renameInst = string.Empty;
+            if(sqlRenames.Count != 0)
+            {
+                renameInst = "ALTER TABLE " + b.QuoteIdentifier(tableName) + " " + string.Join(",", sqlRenames) + ";";
+            }
+            return renameInst + "ALTER TABLE " + b.QuoteIdentifier(tableName) + " " + string.Join(",", sqlParts) + ";";
         }
     }
     #endregion
