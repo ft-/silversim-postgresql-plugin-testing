@@ -24,6 +24,7 @@ using SilverSim.Scene.Types.SceneEnvironment;
 using SilverSim.Types;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace SilverSim.Database.PostgreSQL._Migration
 {
@@ -121,7 +122,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
         public string Sql(string tableName)
         {
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
-            return "CREATE " + (IsUnique ? " UNIQUE " : "") + b.QuoteIdentifier(tableName + "_" + Name) + " ON " + b.QuoteIdentifier(tableName) + " " + FieldSql() + ";";
+            return "CREATE " + (IsUnique ? " UNIQUE " : "") + " INDEX " + b.QuoteIdentifier(tableName + "_" + Name) + " ON " + b.QuoteIdentifier(tableName) + " " + FieldSql() + ";";
         }
     }
 
@@ -157,10 +158,422 @@ namespace SilverSim.Database.PostgreSQL._Migration
 
     static class ColumnGenerator
     {
-        public static Dictionary<string, string> ColumnSql(this IColumnInfo colInfo)
+        public static Dictionary<string, string> DropDefault(this IColumnInfo colInfo)
         {
             var result = new Dictionary<string, string>();
-            string notNull = colInfo.IsNullAllowed ? string.Empty : "NOT NULL ";
+            var t = new NpgsqlCommandBuilder();
+            Type f = colInfo.FieldType;
+            string cmdgen = "ALTER {0} DROP DEFAULT";
+
+            if (f == typeof(Vector3))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                result.Add(colInfo.Name + "Z", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Z")));
+                return result;
+            }
+            else if (f == typeof(GridVector))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                return result;
+            }
+            else if (f == typeof(Vector4))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                result.Add(colInfo.Name + "Z", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Z")));
+                result.Add(colInfo.Name + "W", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "W")));
+                return result;
+            }
+            else if (f == typeof(Quaternion))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                result.Add(colInfo.Name + "Z", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Z")));
+                result.Add(colInfo.Name + "W", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "W")));
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector2))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector4))
+            {
+                result.Add(colInfo.Name + "Red", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Red")));
+                result.Add(colInfo.Name + "Green", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Green")));
+                result.Add(colInfo.Name + "Blue", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                result.Add(colInfo.Name + "Value", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Value")));
+                return result;
+            }
+            else if (f == typeof(Color))
+            {
+                result.Add(colInfo.Name + "Red", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Red")));
+                result.Add(colInfo.Name + "Green", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Green")));
+                result.Add(colInfo.Name + "Blue", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                return result;
+            }
+            else if (f == typeof(ColorAlpha))
+            {
+                result.Add(colInfo.Name + "Red", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Red")));
+                result.Add(colInfo.Name + "Green", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Green")));
+                result.Add(colInfo.Name + "Blue", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                result.Add(colInfo.Name + "Alpha", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Alpha")));
+                return result;
+            }
+            else
+            {
+                result.Add(colInfo.Name, string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name)));
+                return result;
+            }
+        }
+
+        public static Dictionary<string, string> AddDefault(this IColumnInfo colInfo)
+        {
+            var result = new Dictionary<string, string>();
+            var t = new NpgsqlCommandBuilder();
+            Type f = colInfo.FieldType;
+            if (f == typeof(Vector3))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a Vector3 for field " + colInfo.Name);
+                    }
+
+                    var v = (Vector3)colInfo.Default;
+                    result.Add(colInfo.Name + "X", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.X, t.QuoteIdentifier(colInfo.Name + "X")));
+                    result.Add(colInfo.Name + "Y", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Y, t.QuoteIdentifier(colInfo.Name + "Y")));
+                    result.Add(colInfo.Name + "Z", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Z, t.QuoteIdentifier(colInfo.Name + "Z")));
+                }
+                return result;
+            }
+            else if (f == typeof(GridVector))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a GridVector for field " + colInfo.Name);
+                    }
+
+                    var v = (GridVector)colInfo.Default;
+                    result.Add(colInfo.Name + "X", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.X, t.QuoteIdentifier(colInfo.Name + "X")));
+                    result.Add(colInfo.Name + "Y", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Y, t.QuoteIdentifier(colInfo.Name + "Y")));
+                }
+                return result;
+            }
+            else if (f == typeof(Vector4))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a Vector4 for field " + colInfo.Name);
+                    }
+
+                    var v = (Vector4)colInfo.Default;
+                    result.Add(colInfo.Name + "X", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.X, t.QuoteIdentifier(colInfo.Name + "X")));
+                    result.Add(colInfo.Name + "Y", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Y, t.QuoteIdentifier(colInfo.Name + "Y")));
+                    result.Add(colInfo.Name + "Z", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Z, t.QuoteIdentifier(colInfo.Name + "Z")));
+                    result.Add(colInfo.Name + "W", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.W, t.QuoteIdentifier(colInfo.Name + "W")));
+                }
+                return result;
+            }
+            else if (f == typeof(Quaternion))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a Quaternion for " + colInfo.Name);
+                    }
+
+                    var v = (Quaternion)colInfo.Default;
+                    result.Add(colInfo.Name + "X", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.X, t.QuoteIdentifier(colInfo.Name + "X")));
+                    result.Add(colInfo.Name + "Y", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Y, t.QuoteIdentifier(colInfo.Name + "Y")));
+                    result.Add(colInfo.Name + "Z", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.Z, t.QuoteIdentifier(colInfo.Name + "Z")));
+                    result.Add(colInfo.Name + "W", string.Format(CultureInfo.InvariantCulture, "ALTER {1} SET DEFAULT '{0}'", v.W, t.QuoteIdentifier(colInfo.Name + "W")));
+                }
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector2))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a EnvironmentController.WLVector2 for field " + colInfo.Name);
+                    }
+
+                    var v = (EnvironmentController.WLVector2)colInfo.Default;
+                    result.Add(colInfo.Name + "X", string.Format("ALTER {1} SET DEFAULT '{0}'", v.X, t.QuoteIdentifier(colInfo.Name + "X")));
+                    result.Add(colInfo.Name + "Y", string.Format("ALTER {1} SET DEFAULT '{0}'", v.Y, t.QuoteIdentifier(colInfo.Name + "Y")));
+                }
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector4))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a EnvironmentController.WLVector4 for field " + colInfo.Name);
+                    }
+
+                    var v = (EnvironmentController.WLVector4)colInfo.Default;
+                    result.Add(colInfo.Name + "Red", string.Format("ALTER {1} SET DEFAULT '{0}'", v.X, t.QuoteIdentifier(colInfo.Name + "Red")));
+                    result.Add(colInfo.Name + "Green", string.Format("ALTER {1} SET DEFAULT '{0}'", v.Y, t.QuoteIdentifier(colInfo.Name + "Green")));
+                    result.Add(colInfo.Name + "Blue", string.Format("ALTER {1} SET DEFAULT '{0}'", v.Z, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                    result.Add(colInfo.Name + "Value", string.Format("ALTER {1} SET DEFAULT '{0}'", v.W, t.QuoteIdentifier(colInfo.Name + "Value")));
+                }
+                return result;
+            }
+            else if (f == typeof(Color))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a Color for field " + colInfo.Name);
+                    }
+
+                    var v = (Color)colInfo.Default;
+                    result.Add(colInfo.Name + "Red", string.Format("ALTER {1} SET DEFAULT '{0}'", v.R, t.QuoteIdentifier(colInfo.Name + "Red")));
+                    result.Add(colInfo.Name + "Green", string.Format("ALTER {1} SET DEFAULT '{0}'", v.G, t.QuoteIdentifier(colInfo.Name + "Green")));
+                    result.Add(colInfo.Name + "Blue", string.Format("ALTER {1} SET DEFAULT '{0}'", v.B, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                }
+                return result;
+            }
+            else if (f == typeof(ColorAlpha))
+            {
+                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                {
+                    if (colInfo.Default.GetType() != f)
+                    {
+                        throw new ArgumentException("Default is not a ColorAlpha for field " + colInfo.Name);
+                    }
+
+                    var v = (ColorAlpha)colInfo.Default;
+                    result.Add(colInfo.Name + "Red", string.Format("ALTER {1} SET DEFAULT '{0}'", v.R, t.QuoteIdentifier(colInfo.Name + "Red")));
+                    result.Add(colInfo.Name + "Green", string.Format("ALTER {1} SET DEFAULT '{0}'", v.G, t.QuoteIdentifier(colInfo.Name + "Green")));
+                    result.Add(colInfo.Name + "Blue", string.Format("ALTER {1} SET DEFAULT '{0}'", v.B, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                    result.Add(colInfo.Name + "Alpha", string.Format("ALTER {1} SET DEFAULT '{0}'", v.A, t.QuoteIdentifier(colInfo.Name + "Alpha")));
+                }
+                return result;
+            }
+
+            if (colInfo.Default != null && !colInfo.IsNullAllowed)
+            {
+                if (colInfo.Default.GetType() != colInfo.FieldType &&
+                    !(colInfo.Default.GetType() == typeof(UUID) &&
+                    colInfo.FieldType == typeof(UGUI)) &&
+                    !(colInfo.Default.GetType() == typeof(UUID) &&
+                    colInfo.FieldType == typeof(UGUIWithName)) &&
+                    !(colInfo.Default.GetType() == typeof(UUID) &&
+                    colInfo.FieldType == typeof(UGI)))
+                {
+                    throw new ArgumentOutOfRangeException("Default does not match expected type in field " + colInfo.Name + " target type=" + colInfo.FieldType.FullName + " defaultType=" + colInfo.Default.GetType().FullName);
+                }
+
+                object def = colInfo.Default;
+                if (typeof(bool) == f)
+                {
+                    def = ((bool)def) ? 1 : 0;
+                }
+                else if (typeof(Date) == f)
+                {
+                    def = ((Date)def).AsULong;
+                }
+                else if (typeof(ParcelID) == f)
+                {
+                    def = (Guid)new UUID(((ParcelID)def).GetBytes(), 0);
+                }
+                else if (f.IsEnum)
+                {
+                    def = Convert.ChangeType(def, f.GetEnumUnderlyingType());
+                }
+                result.Add(colInfo.Name, string.Format("ALTER {1} SET DEFAULT {0}", def.ToString().ToNpgsqlQuoted(), t.QuoteIdentifier(colInfo.Name)));
+            }
+
+            return result;
+        }
+
+        public static Dictionary<string, string> DropNotNull(this IColumnInfo colInfo)
+        {
+            var result = new Dictionary<string, string>();
+            var t = new NpgsqlCommandBuilder();
+            Type f = colInfo.FieldType;
+            string cmdgen = "ALTER {0} DROP NOT NULL";
+
+            if (f == typeof(Vector3))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                result.Add(colInfo.Name + "Z", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Z")));
+                return result;
+            }
+            else if (f == typeof(GridVector))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                return result;
+            }
+            else if (f == typeof(Vector4))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                result.Add(colInfo.Name + "Z", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Z")));
+                result.Add(colInfo.Name + "W", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "W")));
+                return result;
+            }
+            else if (f == typeof(Quaternion))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                result.Add(colInfo.Name + "Z", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Z")));
+                result.Add(colInfo.Name + "W", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "W")));
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector2))
+            {
+                result.Add(colInfo.Name + "X", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "X")));
+                result.Add(colInfo.Name + "Y", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Y")));
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector4))
+            {
+                result.Add(colInfo.Name + "Red", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Red")));
+                result.Add(colInfo.Name + "Green", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Green")));
+                result.Add(colInfo.Name + "Blue", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                result.Add(colInfo.Name + "Value", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Value")));
+                return result;
+            }
+            else if (f == typeof(Color))
+            {
+                result.Add(colInfo.Name + "Red", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Red")));
+                result.Add(colInfo.Name + "Green", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Green")));
+                result.Add(colInfo.Name + "Blue", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                return result;
+            }
+            else if (f == typeof(ColorAlpha))
+            {
+                result.Add(colInfo.Name + "Red", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Red")));
+                result.Add(colInfo.Name + "Green", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Green")));
+                result.Add(colInfo.Name + "Blue", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Blue")));
+                result.Add(colInfo.Name + "Alpha", string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name + "Alpha")));
+                return result;
+            }
+            else
+            {
+                result.Add(colInfo.Name, string.Format(cmdgen, t.QuoteIdentifier(colInfo.Name)));
+                return result;
+            }
+        }
+
+        public static Dictionary<string, string> AddNotNull(this IColumnInfo colInfo)
+        {
+            var result = new Dictionary<string, string>();
+            var t = new NpgsqlCommandBuilder();
+            Type f = colInfo.FieldType;
+            if (f == typeof(Vector3))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "X", $"ALTER {t.QuoteIdentifier(colInfo.Name + "X")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Y", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Y")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Z", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Z")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(GridVector))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "X", $"ALTER {t.QuoteIdentifier(colInfo.Name + "X")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Y", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Y")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(Vector4))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "X", $"ALTER {t.QuoteIdentifier(colInfo.Name + "X")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Y", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Y")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Z", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Z")} SET NOT NULL");
+                    result.Add(colInfo.Name + "W", $"ALTER {t.QuoteIdentifier(colInfo.Name + "W")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(Quaternion))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "X", $"ALTER {t.QuoteIdentifier(colInfo.Name + "X")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Y", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Y")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Z", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Z")} SET NOT NULL");
+                    result.Add(colInfo.Name + "W", $"ALTER {t.QuoteIdentifier(colInfo.Name + "W")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector2))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "X", $"ALTER {t.QuoteIdentifier(colInfo.Name + "X")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Y", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Y")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(EnvironmentController.WLVector4))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "Red", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Red")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Green", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Green")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Blue", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Blue")} NOT NULL");
+                    result.Add(colInfo.Name + "Value", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Value")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(Color))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "Red", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Red")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Green", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Green")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Blue", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Blue")} SET NOT NULL");
+                }
+                return result;
+            }
+            else if (f == typeof(ColorAlpha))
+            {
+                if (!colInfo.IsNullAllowed)
+                {
+                    result.Add(colInfo.Name + "Red", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Red")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Green", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Green")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Blue", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Blue")} SET NOT NULL");
+                    result.Add(colInfo.Name + "Alpha", $"ALTER {t.QuoteIdentifier(colInfo.Name + "Alpha")} SET NOT NULL");
+                }
+                return result;
+            }
+
+            if (colInfo.Default != null && !colInfo.IsNullAllowed)
+            {
+                result.Add(colInfo.Name, $"ALTER {t.QuoteIdentifier(colInfo.Name)} SET NOT NULL");
+            }
+
+            return result;
+        }
+
+        public static Dictionary<string, string> ColumnSql(this IColumnInfo colInfo, bool useDefaultAndNotNull = true)
+        {
+            var result = new Dictionary<string, string>();
+            string notNull = colInfo.IsNullAllowed || !useDefaultAndNotNull ? string.Empty : "NOT NULL ";
             string typeSql;
             Type f = colInfo.FieldType;
             if (f == typeof(string))
@@ -219,7 +632,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(Vector3))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -241,7 +654,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(GridVector))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -261,7 +674,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(Vector4))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -285,7 +698,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(Quaternion))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -309,7 +722,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(EnvironmentController.WLVector2))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -329,7 +742,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(EnvironmentController.WLVector4))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -353,7 +766,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(Color))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -375,7 +788,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
             }
             else if (f == typeof(ColorAlpha))
             {
-                if (colInfo.Default != null && !colInfo.IsNullAllowed)
+                if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
                 {
                     if (colInfo.Default.GetType() != f)
                     {
@@ -406,7 +819,7 @@ namespace SilverSim.Database.PostgreSQL._Migration
                 throw new ArgumentOutOfRangeException("FieldType " + f.FullName + " is not supported in field " + colInfo.Name);
             }
 
-            if (colInfo.Default != null && !colInfo.IsNullAllowed)
+            if (colInfo.Default != null && !colInfo.IsNullAllowed && useDefaultAndNotNull)
             {
                 if(colInfo.Default.GetType() != colInfo.FieldType &&
                     !(colInfo.Default.GetType() == typeof(UUID) &&
@@ -634,11 +1047,20 @@ namespace SilverSim.Database.PostgreSQL._Migration
             var oldField = new FormerFieldInfo(this, formerType);
             List<string> oldFields;
             Dictionary<string, string> newFields;
+            Dictionary<string, string> newFieldDefaults;
+            Dictionary<string, string> newFieldNotNulls;
+            Dictionary<string, string> newFieldDropDefaults;
+            Dictionary<string, string> newFieldDropNotNulls;
 
             oldFields = new List<string>(oldField.ColumnSql().Keys);
-            newFields = this.ColumnSql();
+            newFields = this.ColumnSql(false);
+            newFieldDropDefaults = this.DropDefault();
+            newFieldDefaults = this.AddDefault();
+            newFieldDropNotNulls = this.DropNotNull();
+            newFieldNotNulls = this.AddNotNull();
 
             var sqlParts = new List<string>();
+            var sqlAttrs = new List<string>();
             NpgsqlCommandBuilder b = new NpgsqlCommandBuilder();
 
             /* remove anything that is not needed anymore */
@@ -664,15 +1086,33 @@ namespace SilverSim.Database.PostgreSQL._Migration
                     {
                         sqlPart = string.Empty;
                     }
+                    string drop;
+                    if(newFieldDropDefaults.TryGetValue(kvp.Key, out drop))
+                    {
+                        sqlPart += drop + ",";
+                    }
                     sqlPart += $"ALTER COLUMN {b.QuoteIdentifier(kvp.Key)} ";
                 }
                 else
                 {
+                    newFieldDropDefaults.Remove(kvp.Key);
+                    newFieldDropNotNulls.Remove(kvp.Key);
                     sqlPart = "ADD " + b.QuoteIdentifier(kvp.Key);
                 }
                 sqlPart += " TYPE " + kvp.Value;
                 sqlParts.Add(sqlPart);
+                string def;
+                if (newFieldDefaults.TryGetValue(kvp.Key, out def))
+                {
+                    sqlAttrs.Add(def);
+                }
+                if (newFieldNotNulls.TryGetValue(kvp.Key, out def))
+                {
+                    sqlAttrs.Add(def);
+                }
             }
+
+            sqlParts.AddRange(sqlAttrs);
 
             return "ALTER TABLE " + b.QuoteIdentifier(tableName) + " " + string.Join(",", sqlParts) + ";";
         }

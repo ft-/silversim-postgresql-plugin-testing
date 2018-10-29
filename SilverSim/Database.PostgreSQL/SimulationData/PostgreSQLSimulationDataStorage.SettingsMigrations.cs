@@ -121,7 +121,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<string>("ScriptState") { IsLong = true },
             new PrimaryKeyInfo("RegionID", "PrimID", "ItemID"),
             new TableRevision(2),
-            new ChangeColumn<byte[]>("ScriptState") { IsLong = true },
+            new DropColumn("ScriptState"),
+            new AddColumn<byte[]>("ScriptState") { IsLong = true },
             #endregion
 
             #region Table regionsettings
