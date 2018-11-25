@@ -293,7 +293,7 @@ namespace SilverSim.Database.PostgreSQL
             {
                 sqlparam.AddWithValue(key, (Guid)(UUID)value);
             }
-            else if (t == typeof(UGUI) || t == typeof(UGUIWithName) || t == typeof(UGI) || t == typeof(Uri))
+            else if (t == typeof(UGUI) || t == typeof(UGUIWithName) || t == typeof(UGI) || t == typeof(Uri) || t == typeof(UEI))
             {
                 sqlparam.AddWithValue(key, value.ToString());
             }
@@ -1041,6 +1041,23 @@ namespace SilverSim.Database.PostgreSQL
             }
 
             throw new InvalidCastException("GetUUID could not convert value for " + prefix);
+        }
+
+        public static UEI GetUEI(this NpgsqlDataReader dbReader, string prefix)
+        {
+            object v = dbReader[prefix];
+            var t = v?.GetType();
+            if (t == typeof(Guid))
+            {
+                return new UEI((Guid)v);
+            }
+
+            if (t == typeof(string))
+            {
+                return new UEI((string)v);
+            }
+
+            throw new InvalidCastException("GetUEI could not convert value for " + prefix);
         }
 
         public static UGUI GetUGUI(this NpgsqlDataReader dbReader, string prefix)

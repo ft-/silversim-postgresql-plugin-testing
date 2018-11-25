@@ -40,8 +40,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
     {
         public static ExperienceInfo ToExperienceInfo(this NpgsqlDataReader reader) => new ExperienceInfo
         {
-            ID = reader.GetUUID("ID"),
-            Name = (string)reader["Name"],
+            ID = new UEI(reader.GetUUID("ID"), (string)reader["Name"], reader.GetUri("HomeURI")),
             Description = (string)reader["Description"],
             Properties = reader.GetEnum<ExperiencePropertyFlags>("Properties"),
             Owner = reader.GetUGUI("Owner"),
@@ -83,8 +82,9 @@ namespace SilverSim.Database.PostgreSQL.Experience
         {
             var vals = new Dictionary<string, object>
             {
-                { "ID", info.ID },
-                { "Name", info.Name },
+                { "ID", info.ID.ID },
+                { "Name", info.ID.ExperienceName },
+                { "HomeURI", info.ID.HomeURI },
                 { "Description", info.Description },
                 { "Properties", info.Properties },
                 { "Owner", info.Owner },
@@ -103,20 +103,20 @@ namespace SilverSim.Database.PostgreSQL.Experience
             }
         }
 
-        public override List<UUID> FindExperienceByName(string query)
+        public override List<UEI> FindExperienceByName(string query)
         {
-            var result = new List<UUID>();
+            var result = new List<UEI>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"ID\" FROM experiences WHERE \"Name\" LIKE @name", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"ID\", \"Name\", \"HomeURI\" FROM experiences WHERE \"Name\" LIKE @name", conn))
                 {
                     cmd.Parameters.AddParameter("@name", "%" + query + "%");
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            result.Add(reader.GetUUID("ID"));
+                            result.Add(new UEI(reader.GetUUID("ID"), (string)reader["Name"], reader.GetUri("HomeURI")));
                         }
                     }
                 }
@@ -145,13 +145,13 @@ namespace SilverSim.Database.PostgreSQL.Experience
             return result;
         }
 
-        public override List<UUID> GetCreatorExperiences(UGUI creator)
+        public override List<UEI> GetCreatorExperiences(UGUI creator)
         {
-            var result = new List<UUID>();
+            var result = new List<UEI>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Creator\", \"ID\" FROM experiences WHERE \"Creator\" LIKE @creator", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Creator\", \"ID\", \"Name\", \"HomeURI\" FROM experiences WHERE \"Creator\" LIKE @creator", conn))
                 {
                     cmd.Parameters.AddParameter("@creator", creator.ID.ToString() + "%");
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -160,7 +160,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         {
                             if (reader.GetUGUI("Creator").EqualsGrid(creator))
                             {
-                                result.Add(reader.GetUUID("ID"));
+                                result.Add(new UEI(reader.GetUUID("ID"), (string)reader["Name"], reader.GetUri("HomeURI")));
                             }
                         }
                     }
@@ -169,13 +169,13 @@ namespace SilverSim.Database.PostgreSQL.Experience
             return result;
         }
 
-        public override List<UUID> GetGroupExperiences(UGI group)
+        public override List<UEI> GetGroupExperiences(UGI group)
         {
-            var result = new List<UUID>();
+            var result = new List<UEI>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Group\", \"ID\" FROM experiences WHERE \"Group\" LIKE @group LIMIT 1", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Group\", \"ID\", \"Name\", \"HomeURI\" FROM experiences WHERE \"Group\" LIKE @group LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@group", group.ID.ToString() + "%");
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -184,7 +184,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         {
                             if (reader.GetUGI("Group").Equals(group))
                             {
-                                result.Add(reader.GetUUID("ID"));
+                                result.Add(new UEI(reader.GetUUID("ID"), (string)reader["Name"], reader.GetUri("HomeURI")));
                             }
                         }
                     }
@@ -193,13 +193,13 @@ namespace SilverSim.Database.PostgreSQL.Experience
             return result;
         }
 
-        public override List<UUID> GetOwnerExperiences(UGUI owner)
+        public override List<UEI> GetOwnerExperiences(UGUI owner)
         {
-            var result = new List<UUID>();
+            var result = new List<UEI>();
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("SELECT \"Owner\", \"ID\" FROM experiences WHERE \"Owner\" LIKE @owner", conn))
+                using (var cmd = new NpgsqlCommand("SELECT \"Owner\", \"ID\", \"Name\", \"HomeURI\" FROM experiences WHERE \"Owner\" LIKE @owner", conn))
                 {
                     cmd.Parameters.AddParameter("@owner", owner.ID.ToString() + "%");
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
@@ -208,7 +208,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         {
                             if (reader.GetUGUI("Owner").EqualsGrid(owner))
                             {
-                                result.Add(reader.GetUUID("ID"));
+                                result.Add(new UEI(reader.GetUUID("ID"), (string)reader["Name"], reader.GetUri("HomeURI")));
                             }
                         }
                     }
@@ -218,7 +218,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
         }
 
         private static readonly string[] m_RemoveFromTables = new string[] { "experiencekeyvalues", "experienceadmins", "experienceusers" };
-        public override bool Remove(UGUI requestingAgent, UUID id)
+        public override bool Remove(UGUI requestingAgent, UEI id)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -230,7 +230,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         Transaction = transaction
                     })
                     {
-                        cmd.Parameters.AddParameter("@experienceid", id);
+                        cmd.Parameters.AddParameter("@experienceid", id.ID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
                             if (!reader.Read())
@@ -252,7 +252,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                             Transaction = transaction
                         })
                         {
-                            cmd.Parameters.AddParameter("@experienceid", id);
+                            cmd.Parameters.AddParameter("@experienceid", id.ID);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -262,7 +262,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         Transaction = transaction
                     })
                     {
-                        cmd.Parameters.AddParameter("@experienceid", id);
+                        cmd.Parameters.AddParameter("@experienceid", id.ID);
                         return cmd.ExecuteNonQuery() > 0;
                     }
                 });
@@ -287,7 +287,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
             }
         }
 
-        public override bool TryGetValue(UUID experienceID, out ExperienceInfo experienceInfo)
+        public override bool TryGetValue(UUID experienceID, out UEI uei)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -295,6 +295,28 @@ namespace SilverSim.Database.PostgreSQL.Experience
                 using (var cmd = new NpgsqlCommand("SELECT * FROM experiences WHERE \"ID\" = @id LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@id", experienceID);
+                    using (NpgsqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            uei = new UEI(reader.GetUUID("ID"), (string)reader["Name"], reader.GetUri("HomeURI"));
+                            return true;
+                        }
+                    }
+                }
+            }
+            uei = default(UEI);
+            return false;
+        }
+
+        public override bool TryGetValue(UEI experienceID, out ExperienceInfo experienceInfo)
+        {
+            using (var conn = new NpgsqlConnection(m_ConnectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("SELECT * FROM experiences WHERE \"ID\" = @id LIMIT 1", conn))
+                {
+                    cmd.Parameters.AddParameter("@id", experienceID.ID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -313,7 +335,8 @@ namespace SilverSim.Database.PostgreSQL.Experience
         {
             var vals = new Dictionary<string, object>
             {
-                { "Name", info.Name },
+                { "Name", info.ID.ExperienceName },
+                { "HomeURI", info.ID.HomeURI },
                 { "Description", info.Description },
                 { "Properties", info.Properties },
                 { "Owner", info.Owner },
@@ -334,7 +357,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                         Transaction = transaction
                     })
                     {
-                        cmd.Parameters.AddParameter("@experienceid", info.ID);
+                        cmd.Parameters.AddParameter("@experienceid", info.ID.ID);
                         cmd.Parameters.AddParameter("@admin", requestingAgent.ID.ToString() + "%");
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
@@ -354,7 +377,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                             Transaction = transaction
                         })
                         {
-                            cmd.Parameters.AddParameter("@id", info.ID);
+                            cmd.Parameters.AddParameter("@id", info.ID.ID);
                             using (NpgsqlDataReader reader = cmd.ExecuteReader())
                             {
                                 if (reader.Read())
@@ -368,7 +391,7 @@ namespace SilverSim.Database.PostgreSQL.Experience
                     {
                         throw new InvalidOperationException("requesting agent is not allowed to edit experience");
                     }
-                    conn.UpdateSet("experiences", vals, "ID = \"" + info.ID.ToString() + "\"", transaction);
+                    conn.UpdateSet("experiences", vals, "ID = \"" + info.ID.ID.ToString() + "\"", transaction);
                 });
             }
         }
@@ -406,6 +429,8 @@ namespace SilverSim.Database.PostgreSQL.Experience
             new AddColumn<string>("SlUrl") {IsNullAllowed = false, Cardinality = 255, Default = string.Empty },
             new PrimaryKeyInfo("ID"),
             new NamedKeyInfo("NameKey", "Name"),
+            new TableRevision(2),
+            new AddColumn<Uri>("HomeURI"),
 
             new SqlTable("experienceadmins"),
             new AddColumn<UUID>("ExperienceID") { IsNullAllowed = false },

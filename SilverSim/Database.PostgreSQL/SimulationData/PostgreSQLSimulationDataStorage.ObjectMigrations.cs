@@ -272,6 +272,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             new AddColumn<byte[]>("CollisionFilterData") { Cardinality = 255 },
             new TableRevision(11),
             new AddColumn<UUID>("DebitPermissionKey") { IsNullAllowed = false, Default = UUID.Zero },
+            new TableRevision(12),
+            new ChangeColumn<UEI>("ExperienceID"),
             #endregion
         };
     }
