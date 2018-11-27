@@ -25,23 +25,27 @@ using Npgsql;
 using SilverSim.Database.PostgreSQL._Migration;
 using SilverSim.Main.Common;
 using SilverSim.ServiceInterfaces.Database;
-using SilverSim.ServiceInterfaces.Groups;
+using SilverSim.ServiceInterfaces.Experience;
 using SilverSim.Types;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace SilverSim.Database.PostgreSQL.Groups
+namespace SilverSim.Database.PostgreSQL.Experience
 {
-    [Description("PostgreSQL GroupsName Backend")]
-    [PluginName("GroupNames")]
-    public sealed class PostgreSQLGroupsNameService : GroupsNameServiceInterface, IDBServiceInterface, IPlugin
+    [Description("PostgreSQL ExperienceName Backend")]
+    [PluginName("ExperienceNames")]
+    public sealed class PostgreSQLExperienceNameService : ExperienceNameServiceInterface, IDBServiceInterface, IPlugin
     {
         private readonly string m_ConnectionString;
         private readonly bool m_EnableOnConflict;
-        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL GROUP NAMES SERVICE");
+        private static readonly ILog m_Log = LogManager.GetLogger("POSTGRESQL EXPERIENCE NAMES SERVICE");
 
         #region Constructor
-        public PostgreSQLGroupsNameService(IConfig ownSection)
+        public PostgreSQLExperienceNameService(IConfig ownSection)
         {
             m_ConnectionString = PostgreSQLUtilities.BuildConnectionString(ownSection, m_Log);
             m_EnableOnConflict = ownSection.GetBoolean("EnableOnConflict", true);
@@ -54,75 +58,75 @@ namespace SilverSim.Database.PostgreSQL.Groups
         #endregion
 
         #region Accessors
-        public override bool TryGetValue(UUID groupID, out UGI ugi)
+        public override bool TryGetValue(UUID experienceID, out UEI uei)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM groupnames WHERE \"GroupID\" = @groupid LIMIT 1", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM experiencenames WHERE \"ExperienceID\" = @experienceid LIMIT 1", connection))
                 {
-                    cmd.Parameters.AddParameter("@groupid", groupID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         if (dbReader.Read())
                         {
-                            ugi = ToUGI(dbReader);
+                            uei = ToUEI(dbReader);
                             return true;
                         }
                     }
                 }
             }
-            ugi = default(UGI);
+            uei = default(UEI);
             return false;
         }
 
-        private static UGI ToUGI(NpgsqlDataReader dbReader) =>
-            new UGI(dbReader.GetUUID("GroupID"), (string)dbReader["GroupName"], dbReader.GetUri("HomeURI"))
+        private static UEI ToUEI(NpgsqlDataReader dbReader) =>
+            new UEI(dbReader.GetUUID("ExperienceID"), (string)dbReader["ExperienceName"], dbReader.GetUri("HomeURI"))
             {
                 AuthorizationToken = dbReader.GetBytesOrNull("AuthorizationData")
             };
 
-        public override List<UGI> GetGroupsByName(string groupName, int limit)
+        public override List<UEI> GetExperiencesByName(string experienceName, int limit)
         {
-            var groups = new List<UGI>();
+            var experiences = new List<UEI>();
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
 
-                using (var cmd = new NpgsqlCommand("SELECT * FROM groupnames WHERE \"GroupName\" = @groupName LIMIT @limit", connection))
+                using (var cmd = new NpgsqlCommand("SELECT * FROM experiencenames WHERE \"ExperienceName\" = @experienceName LIMIT @limit", connection))
                 {
-                    cmd.Parameters.AddParameter("@groupName", groupName);
+                    cmd.Parameters.AddParameter("@experienceName", experienceName);
                     cmd.Parameters.AddParameter("@limit", limit);
                     using (NpgsqlDataReader dbReader = cmd.ExecuteReader())
                     {
                         while (dbReader.Read())
                         {
-                            groups.Add(ToUGI(dbReader));
+                            experiences.Add(ToUEI(dbReader));
                         }
                     }
                 }
             }
-            return groups;
+            return experiences;
         }
 
-        public override void Store(UGI group)
+        public override void Store(UEI experience)
         {
             using (var connection = new NpgsqlConnection(m_ConnectionString))
             {
                 connection.Open();
 
-                Dictionary<string, object> vars = new Dictionary<string, object>
+                var vars = new Dictionary<string, object>
                 {
-                    { "GroupID", group.ID },
-                    { "HomeURI", group.HomeURI },
-                    { "GroupName", group.GroupName }
+                    { "ExperienceID", experience.ID },
+                    { "HomeURI", experience.HomeURI },
+                    { "ExperienceName", experience.ExperienceName }
                 };
-                if(group.AuthorizationToken != null)
+                if (experience.AuthorizationToken != null)
                 {
-                    vars.Add("AuthorizationData", group.AuthorizationToken);
+                    vars.Add("AuthorizationData", experience.AuthorizationToken);
                 }
-                connection.ReplaceInto("groupnames", vars, new string[] { "GroupID" }, m_EnableOnConflict);
+                connection.ReplaceInto("experiencenames", vars, new string[] { "ExperienceID" }, m_EnableOnConflict);
             }
         }
         #endregion
@@ -146,15 +150,12 @@ namespace SilverSim.Database.PostgreSQL.Groups
 
         private static readonly IMigrationElement[] Migrations = new IMigrationElement[]
         {
-            new SqlTable("groupnames"),
-            new AddColumn<UUID>("GroupID") { IsNullAllowed = false, Default = UUID.Zero },
+            new SqlTable("experiencenames"),
+            new AddColumn<UUID>("ExperienceID") { IsNullAllowed = false, Default = UUID.Zero },
             new AddColumn<string>("HomeURI") { Cardinality = 255, IsNullAllowed = false, Default = string.Empty },
-            new AddColumn<string>("GroupName") { Cardinality = 255, IsNullAllowed = false, Default = string.Empty },
-            new PrimaryKeyInfo("GroupID", "HomeURI"),
-            new TableRevision(2),
+            new AddColumn<string>("ExperienceName") { Cardinality = 255, IsNullAllowed = false, Default = string.Empty },
+            new PrimaryKeyInfo("ExperienceID"),
             new AddColumn<byte[]>("AuthorizationData"),
-            new TableRevision(3),
-            new PrimaryKeyInfo("GroupID"),
         };
     }
 }
