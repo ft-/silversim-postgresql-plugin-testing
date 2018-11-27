@@ -29,11 +29,11 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
 {
     public sealed partial class PostgreSQLSimulationDataStorage : ISimulationDataRegionTrustedExperiencesStorageInterface
     {
-        List<UUID> IRegionTrustedExperienceList.this[UUID regionID]
+        List<UEI> IRegionTrustedExperienceList.this[UUID regionID]
         {
             get
             {
-                var result = new List<UUID>();
+                var result = new List<UEI>();
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
@@ -44,7 +44,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         {
                             while (reader.Read())
                             {
-                                result.Add(reader.GetUUID("ExperienceID"));
+                                result.Add(new UEI(reader.GetUUID("ExperienceID")));
                             }
                         }
                     }
@@ -54,7 +54,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
         }
 
         private static readonly string[] ReplaceTrustedExperienceKeys = new string[] { "RegionID", "ExperienceID" };
-        bool IRegionTrustedExperienceList.this[UUID regionID, UUID experienceID]
+        bool IRegionTrustedExperienceList.this[UUID regionID, UEI experienceID]
         {
             get
             {
@@ -64,7 +64,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     using (var cmd = new NpgsqlCommand("SELECT NULL FROM regiontrustedexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid LIMIT 1", conn))
                     {
                         cmd.Parameters.AddParameter("@regionid", regionID);
-                        cmd.Parameters.AddParameter("@experienceid", experienceID);
+                        cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                         using (NpgsqlDataReader reader = cmd.ExecuteReader())
                         {
                             return reader.Read();
@@ -81,7 +81,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     {
                         var vals = new Dictionary<string, object>();
                         vals.Add("RegionID", regionID);
-                        vals.Add("ExperienceID", experienceID);
+                        vals.Add("ExperienceID", experienceID.ID);
                         conn.ReplaceInto("regiontrustedexperiences", vals, ReplaceTrustedExperienceKeys, m_EnableOnConflict);
                     }
                     else
@@ -89,7 +89,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                         using (var cmd = new NpgsqlCommand("DELETE FROM regiontrustedexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid", conn))
                         {
                             cmd.Parameters.AddParameter("@regionid", regionID);
-                            cmd.Parameters.AddParameter("@experienceid", experienceID);
+                            cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -97,7 +97,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             }
         }
 
-        bool IRegionTrustedExperienceList.Remove(UUID regionID, UUID experienceID)
+        bool IRegionTrustedExperienceList.Remove(UUID regionID, UEI experienceID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -105,7 +105,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 using (var cmd = new NpgsqlCommand("DELETE FROM regiontrustedexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid", conn))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
-                    cmd.Parameters.AddParameter("@experienceid", experienceID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
@@ -124,7 +124,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
             }
         }
 
-        bool IRegionTrustedExperienceList.TryGetValue(UUID regionID, UUID experienceID, out bool trusted)
+        bool IRegionTrustedExperienceList.TryGetValue(UUID regionID, UEI experienceID, out bool trusted)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -132,7 +132,7 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                 using (var cmd = new NpgsqlCommand("SELECT NULL FROM regiontrustedexperiences WHERE \"RegionID\" = @regionid AND \"ExperienceID\" = @experienceid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@regionid", regionID);
-                    cmd.Parameters.AddParameter("@experienceid", experienceID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         trusted = reader.Read();

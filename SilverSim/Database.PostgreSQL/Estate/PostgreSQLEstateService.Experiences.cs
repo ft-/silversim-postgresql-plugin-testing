@@ -47,7 +47,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                                 result.Add(new EstateExperienceInfo
                                 {
                                     EstateID = (uint)(int)reader["EstateID"],
-                                    ExperienceID = reader.GetUUID("ExperienceID"),
+                                    ExperienceID = new UEI(reader.GetUUID("ExperienceID")),
                                     IsAllowed = (bool)reader["IsAllowed"]
                                 });
                             }
@@ -58,7 +58,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             }
         }
 
-        bool IEstateExperienceServiceInterface.Remove(uint estateID, UUID experienceID)
+        bool IEstateExperienceServiceInterface.Remove(uint estateID, UEI experienceID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -66,7 +66,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var cmd = new NpgsqlCommand("DELETE FROM estateexperiences WHERE \"EstateID\" = @estateid AND \"ExperienceID\" = @experienceid", conn))
                 {
                     cmd.Parameters.AddParameter("@estateid", estateID);
-                    cmd.Parameters.AddParameter("@experienceid", experienceID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
@@ -88,7 +88,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             }
         }
 
-        bool IEstateExperienceServiceInterface.TryGetValue(uint estateID, UUID experienceID, out EstateExperienceInfo info)
+        bool IEstateExperienceServiceInterface.TryGetValue(uint estateID, UEI experienceID, out EstateExperienceInfo info)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -96,7 +96,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var cmd = new NpgsqlCommand("SELECT * FROM estateexperiences WHERE \"EstateID\" = @estateid AND \"ExperienceID\" = @experienceid LIMIT 1", conn))
                 {
                     cmd.Parameters.AddParameter("@estateid", estateID);
-                    cmd.Parameters.AddParameter("@experienceid", experienceID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -104,7 +104,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                             info = new EstateExperienceInfo
                             {
                                 EstateID = estateID,
-                                ExperienceID = experienceID,
+                                ExperienceID = new UEI(experienceID),
                                 IsAllowed = (bool)reader["IsAllowed"]
                             };
                             return true;

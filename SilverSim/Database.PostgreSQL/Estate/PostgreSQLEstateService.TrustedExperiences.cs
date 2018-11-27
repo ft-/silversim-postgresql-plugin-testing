@@ -28,11 +28,11 @@ namespace SilverSim.Database.PostgreSQL.Estate
 {
     public sealed partial class PostgreSQLEstateService : IEstateTrustedExperienceServiceInterface
     {
-        List<UUID> IEstateTrustedExperienceServiceInterface.this[uint estateID]
+        List<UEI> IEstateTrustedExperienceServiceInterface.this[uint estateID]
         {
             get
             {
-                var result = new List<UUID>();
+                var result = new List<UEI>();
                 using (var conn = new NpgsqlConnection(m_ConnectionString))
                 {
                     conn.Open();
@@ -43,7 +43,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                         {
                             while (reader.Read())
                             {
-                                result.Add(reader.GetUUID("ExperienceID"));
+                                result.Add(new UEI(reader.GetUUID("ExperienceID")));
                             }
                         }
                     }
@@ -53,7 +53,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
         }
 
         private static readonly string[] EstateTrustedExperienceKeys = new string[] { "EstateID", "ExperienceID" };
-        bool IEstateTrustedExperienceServiceInterface.this[uint estateID, UUID experienceID]
+        bool IEstateTrustedExperienceServiceInterface.this[uint estateID, UEI experienceID]
         {
             get
             {
@@ -69,7 +69,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
                     var vals = new Dictionary<string, object>
                     {
                         ["EstateID"] = estateID,
-                        ["ExperienceID"] = experienceID
+                        ["ExperienceID"] = experienceID.ID
                     };
                     using (var conn = new NpgsqlConnection(m_ConnectionString))
                     {
@@ -84,7 +84,7 @@ namespace SilverSim.Database.PostgreSQL.Estate
             }
         }
 
-        bool IEstateTrustedExperienceServiceInterface.Remove(uint estateID, UUID experienceID)
+        bool IEstateTrustedExperienceServiceInterface.Remove(uint estateID, UEI experienceID)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
@@ -92,19 +92,21 @@ namespace SilverSim.Database.PostgreSQL.Estate
                 using (var cmd = new NpgsqlCommand("DELETE FROM estatetrustedexperiences WHERE \"EstateID\" = @estateid AND \"ExperienceID\" = @experienceid", conn))
                 {
                     cmd.Parameters.AddParameter("@estateid", estateID);
-                    cmd.Parameters.AddParameter("@experienceid", experienceID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                     return cmd.ExecuteNonQuery() > 0;
                 }
             }
         }
 
-        bool IEstateTrustedExperienceServiceInterface.TryGetValue(uint estateID, UUID experienceID, out bool trusted)
+        bool IEstateTrustedExperienceServiceInterface.TryGetValue(uint estateID, UEI experienceID, out bool trusted)
         {
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
                 using (var cmd = new NpgsqlCommand("SELECT NULL FROM estatetrustedexperiences WHERE \"EstateID\" = @estateid AND \"ExperienceID\" = @experienceid LIMIT 1", conn))
                 {
+                    cmd.Parameters.AddParameter("@estateid", estateID);
+                    cmd.Parameters.AddParameter("@experienceid", experienceID.ID);
                     using (NpgsqlDataReader reader = cmd.ExecuteReader())
                     {
                         trusted = reader.Read();
