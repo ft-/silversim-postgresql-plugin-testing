@@ -129,7 +129,7 @@ namespace SilverSim.Database.PostgreSQL.Profile
             using (var conn = new NpgsqlConnection(m_ConnectionString))
             {
                 conn.Open();
-                conn.ReplaceInto("userpicks", replaceVals, new string[] { "pickuui" }, m_EnableOnConflict);
+                conn.ReplaceInto("userpicks", replaceVals, new string[] { "pickuuid" }, m_EnableOnConflict);
             }
         }
 
