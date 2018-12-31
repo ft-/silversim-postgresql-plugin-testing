@@ -506,7 +506,8 @@ namespace SilverSim.Database.PostgreSQL.SimulationData
                     ["UnSitTargetOrientation"] = objpart.UnSitTargetOrientation,
                     ["LocalizationData"] = objpart.LocalizationSerialization,
                     ["VehicleData"] = objpart.VehicleParams.ToSerialization(),
-                    ["Damage"] = objpart.Damage
+                    ["Damage"] = objpart.Damage,
+                    ["AnimationData"] = objpart.AnimationController.DbSerialization
                 };
                 using (var ms = new MemoryStream())
                 {
